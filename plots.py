@@ -14,7 +14,10 @@ def inter_dropdown_plot(x,
                         ytitle,
                         legend_titles=None,
                         output_image=False,
-                        blend_legend=False):
+                        blend_legend=False,
+                        width=800,
+                        height=400,
+                        scale=2):
     """
     Creates interactive plotly plot with a dropdown
     or prints the plot as png.
@@ -64,6 +67,15 @@ def inter_dropdown_plot(x,
     blend_legend : bool (default=False)
         Indicates whether the legend will be in the top right
         corner, outside or inside the plot.
+    
+    width : int (default=800)
+        Width of the image
+    
+    height : int (default=400)
+        Height of the image
+    
+    scale : int (default=2)
+        Scale of the image
     
     Return
     ------
@@ -124,7 +136,7 @@ def inter_dropdown_plot(x,
     widget = widgets.VBox([origin,g])
 
     if output_image:
-        return Image(widget.children[1].to_image(format="png"))
+        return Image(widget.children[1].to_image(format="png", width=width, height=height, scale=scale))
     else:
         return widget
 
@@ -137,7 +149,10 @@ def general_plot(t,
                  modes=None, 
                  blend_legend=False,
                  xanchor='right',
-                 output_image=False):
+                 output_image=False,
+                 width=800,
+                 height=400,
+                 scale=2):
     """
     Plots a SIRD model output
 
@@ -176,6 +191,15 @@ def general_plot(t,
     output_image : bool (default=False)
         Indicates whether to produce the interactive plot
         or the png image.
+
+    width : int (default=800)
+        Width of the image
+    
+    height : int (default=400)
+        Height of the image
+    
+    scale : int (default=2)
+        Scale of the image
     """
 
     if names is None:
@@ -214,6 +238,6 @@ def general_plot(t,
         )
 
     if output_image:
-        return Image(fig.to_image(format="png"))
+        return Image(fig.to_image(format="png", width=width, height=height, scale=scale))
     else:
         return fig.show()
