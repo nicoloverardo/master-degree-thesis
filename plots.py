@@ -136,7 +136,10 @@ def inter_dropdown_plot(x,
     widget = widgets.VBox([origin,g])
 
     if output_image:
-        return Image(widget.children[1].to_image(format="png", width=width, height=height, scale=scale))
+        return Image(widget.children[1].to_image(format="png",
+                                                 width=width, 
+                                                 height=height, 
+                                                 scale=scale))
     else:
         return widget
 
@@ -238,6 +241,9 @@ def general_plot(t,
         )
 
     if output_image:
-        return Image(fig.to_image(format="png", width=width, height=height, scale=scale))
+        return Image(fig.to_image(format="png", 
+                                  width=width, 
+                                  height=height, 
+                                  scale=scale))
     else:
         return fig.show()
