@@ -68,7 +68,7 @@ def sird(province,
         (pop_prov_df.Eta == "Total")
         ]['Value'].values[0]
 
-    times = range(0, days)
+    times = range(days)
 
     # S0, I0, R0, D0: initial conditions vector
     init = N-1, 1, 0, 0

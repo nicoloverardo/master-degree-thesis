@@ -256,7 +256,7 @@ def data_for_plot(compart,
                   window=5, 
                   names=None, 
                   modes=None, 
-                  query='20200603 > Date'):
+                  query='20200604 > Date'):
     """
     Utility function that returns data useful for plots.
     """
