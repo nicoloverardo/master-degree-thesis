@@ -247,3 +247,34 @@ def general_plot(t,
                                   scale=scale))
     else:
         return fig.show()
+
+
+def data_for_plot(compart,
+                  df,
+                  mapping,
+                  province,
+                  window=5, 
+                  names=None, 
+                  modes=None, 
+                  query='20200603 > Date'):
+    """
+    Utility function that returns data useful for plots.
+    """
+                  
+    if names is None:
+        names = ['Real',
+                'Real (rolling ' + str(window) + ' days)',
+                'Predicted']
+    
+    if modes is None:
+        modes = ['lines'] * 3
+
+    title = compart + ' of ' + province
+    
+    c, l = mapping[compart]
+    
+    d1_real = df[df.Province == province].query(query)[c]
+    d2_rolling = d1_real.rolling(window=window).mean().fillna(0)
+    data = [d1_real.values, d2_rolling.values, l]
+
+    return names, title, data, modes
