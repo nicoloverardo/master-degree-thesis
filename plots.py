@@ -136,7 +136,8 @@ def general_plot(t,
                  traces_visibility=None, 
                  modes=None, 
                  blend_legend=False,
-                 xanchor='right'):
+                 xanchor='right',
+                 output_image=False):
     """
     Plots a SIRD model output
 
@@ -171,6 +172,10 @@ def general_plot(t,
     xanchor : str (default='right')
         Position of the blended legend inside the plot.
         Works only if `blend_legend` is `True`.
+
+    output_image : bool (default=False)
+        Indicates whether to produce the interactive plot
+        or the png image.
     """
 
     if names is None:
@@ -208,4 +213,7 @@ def general_plot(t,
             x=xpos)
         )
 
-    fig.show()
+    if output_image:
+        return Image(fig.to_image(format="png"))
+    else:
+        return fig.show()
