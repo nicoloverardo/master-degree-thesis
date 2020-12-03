@@ -100,13 +100,13 @@ def inter_dropdown_plot(x,
     )
 
     # set possibility of passing y as dictionary or zip or tuple?
-    if legend_titles is None:
+    if legend_titles == None:
         legend_titles = y
     
-    if traces_visibility is None:
+    if traces_visibility == None:
         traces_visibility = [True] * len(y)
     
-    if modes is None:
+    if modes == None:
         modes = ['lines'] * len(y)
 
     traces = []
@@ -173,7 +173,9 @@ def general_plot(t,
                  output_image=False,
                  width=800,
                  height=400,
-                 scale=2):
+                 scale=2,
+                 xtitle='Time (days)',
+                 ytitle='Number of individuals'):
     """
     Plots a SIRD model output
 
@@ -221,15 +223,21 @@ def general_plot(t,
     
     scale : int (default=2)
         Scale of the image
+    
+    xtitle : str
+        Label of the x-axis
+    
+    ytitle : str
+        Label of the y-axis
     """
 
-    if names is None:
+    if names == None:
         names = ['Susceptible', 'Infected', 'Recovered', 'Dead']
     
     if traces_visibility is None:
         traces_visibility = [True] * len(data)
     
-    if modes is None:
+    if modes == None:
         modes = ['lines'] * len(data)
 
     fig = go.Figure()
@@ -242,9 +250,9 @@ def general_plot(t,
             visible=traces_visibility[i])
         )
 
-    fig.update_layout(title='SIRD ' + title,
-                      xaxis_title='Time (days)',
-                      yaxis_title='Number of individuals',
+    fig.update_layout(title=title,
+                      xaxis_title=xtitle,
+                      yaxis_title=ytitle,
                       template='none',
                       barmode='overlay')
     
@@ -266,6 +274,57 @@ def general_plot(t,
     else:
         return fig.show()
 
+#TODO: write docum. and improve
+def custom_plot(df,
+                ydata,
+                title,
+                xtitle,
+                ytitle,
+                group_column='denominazione_provincia',
+                area_name='Firenze', 
+                xdata='data', 
+                modes=None, 
+                traces_visibility=None,
+                legend_titles=None,
+                blend_legend=False,
+                xanchor='right'):
+
+    if legend_titles == None:
+        legend_titles = ydata
+
+    if traces_visibility == None:
+        traces_visibility = [True] * len(ydata)
+    
+    if modes == None:
+        modes = ['lines'] * len(ydata)
+
+    fig = go.Figure()
+    for i, trace in enumerate(ydata):
+        fig.add_trace(go.Scatter(
+            x=df[df[group_column] == area_name][xdata], 
+            y=df[df[group_column] == area_name][trace],
+            mode=modes[i],
+            name=legend_titles[i],
+            visible=traces_visibility[i])
+        )
+    
+    fig.update_layout(title=title + area_name,
+                      xaxis_title=xtitle,
+                      yaxis_title=ytitle,
+                      template='none',
+                      barmode='overlay')
+    
+    if blend_legend:
+        xpos = 0.99 if xanchor is 'right' else 0.08
+
+        fig.update_layout(legend=dict(
+            yanchor="top",
+            y=0.99,
+            xanchor=xanchor,
+            x=xpos)
+        )
+    
+    return fig
 
 def data_for_plot(compart,
                   df,
@@ -279,15 +338,15 @@ def data_for_plot(compart,
     Utility function that returns data useful for plots.
     """
                   
-    if names is None:
+    if names == None:
         names = ['Real',
                 'Real (rolling ' + str(window) + ' days)',
                 'Predicted']
     
-    if modes is None:
+    if modes == None:
         modes = ['lines'] * 3
 
-    title = compart + ' of ' + province
+    title = 'SIRD ' + compart + ' of ' + province
     
     c, l = mapping[compart]
     
