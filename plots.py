@@ -17,7 +17,9 @@ def inter_dropdown_plot(x,
                         blend_legend=False,
                         width=800,
                         height=400,
-                        scale=2):
+                        scale=2,
+                        traces_visibility=None, 
+                        modes=None):
     """
     Creates interactive plotly plot with a dropdown
     or prints the plot as png.
@@ -77,6 +79,15 @@ def inter_dropdown_plot(x,
     scale : int (default=2)
         Scale of the image
     
+    traces_visibility : list or array (default=None)
+        A list or array that signals if the
+        corresponding line in the plot (by position in `data`)
+        is visible or not.
+    
+    modes : list or array (default=None)
+        A list or array containing the type of plot
+        of each trace.
+    
     Return
     ------
     Image or ipywidget
@@ -91,6 +102,12 @@ def inter_dropdown_plot(x,
     # set possibility of passing y as dictionary or zip or tuple?
     if legend_titles is None:
         legend_titles = y
+    
+    if traces_visibility is None:
+        traces_visibility = [True] * len(y)
+    
+    if modes is None:
+        modes = ['lines'] * len(y)
 
     traces = []
     for i, trace in enumerate(y):
@@ -99,7 +116,8 @@ def inter_dropdown_plot(x,
                 x=data[data[group_column] == default_value][x],
                 y=data[data[group_column] == default_value][trace],
                 name=legend_titles[i],
-                mode='lines'
+                mode=modes[i],
+                visible=traces_visibility[i]
             )
         )
 
