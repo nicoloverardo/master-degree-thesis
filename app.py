@@ -42,24 +42,33 @@ def load_data():
         .replace("L'Aquila", "L Aquila") \
         .replace("Reggio nell'Emilia", 'Reggio nell Emilia')
     
-    dpc_regioni_df['NC_R'] = dpc_regioni_df['nuovi_positivi']/dpc_regioni_df['tamponi']
-    dpc_regioni_df['NP_R'] = dpc_regioni_df['nuovi_positivi']/dpc_regioni_df['totale_positivi']
-    dpc_regioni_df['IC_R'] = dpc_regioni_df['terapia_intensiva']/dpc_regioni_df['totale_positivi']
-    dpc_regioni_df['Hosp_R'] = dpc_regioni_df['totale_ospedalizzati']/dpc_regioni_df['totale_positivi']
-    dpc_regioni_df['DR'] = dpc_regioni_df['deceduti']/dpc_regioni_df['totale_positivi']
+    dpc_regioni_df['NC_R'] = \
+        dpc_regioni_df['nuovi_positivi']/dpc_regioni_df['tamponi']
+    dpc_regioni_df['NP_R'] = \
+        dpc_regioni_df['nuovi_positivi']/dpc_regioni_df['totale_positivi']
+    dpc_regioni_df['IC_R'] = \
+        dpc_regioni_df['terapia_intensiva']/dpc_regioni_df['totale_positivi']
+    dpc_regioni_df['Hosp_R'] = \
+        dpc_regioni_df['totale_ospedalizzati']/dpc_regioni_df['totale_positivi']
+    dpc_regioni_df['DR'] = \
+        dpc_regioni_df['deceduti']/dpc_regioni_df['totale_positivi']
 
-    covidpro_df['New_cases'] = covidpro_df['New_cases'].apply(lambda x: 0 if x is np.NaN or x < 0 else x)
-    covidpro_df['Deaths'] = covidpro_df['Deaths'].apply(lambda x: 0 if x is np.NaN or x < 0 else x)
+    lmb_rep = lambda x: 0 if x is np.NaN or x < 0 else x
+    covidpro_df['New_cases'] = covidpro_df['New_cases'].apply(lmb_rep)
+    covidpro_df['Deaths'] = covidpro_df['Deaths'].apply(lmb_rep)
 
     covidpro_df['NP_R'] = covidpro_df.apply(compute_ratio_NP, axis=1)
     covidpro_df['DR'] = covidpro_df.apply(compute_ratio_DR, axis=1)
 
-    dpc_regioni_df['NC_R_Rolling'] = dpc_regioni_df['NC_R'].rolling(window=7).mean()
-    dpc_regioni_df['IC_R_Rolling'] = dpc_regioni_df['IC_R'].rolling(window=7).mean()
-    dpc_regioni_df['totale_positivi_Rolling'] = dpc_regioni_df['totale_positivi'].rolling(window=7).mean()
+    window = 5
 
-    covidpro_df['NP_R_Rolling'] = covidpro_df['NP_R'].rolling(window=7).mean()
-    covidpro_df['DR_Rolling'] = covidpro_df['DR'].rolling(window=7).mean()
+    dpc_regioni_df['NC_R_Rolling'] = dpc_regioni_df['NC_R'].rolling(window=window).mean()
+    dpc_regioni_df['IC_R_Rolling'] = dpc_regioni_df['IC_R'].rolling(window=window).mean()
+    dpc_regioni_df['totale_positivi_Rolling'] = \
+        dpc_regioni_df['totale_positivi'].rolling(window=window).mean()
+
+    covidpro_df['NP_R_Rolling'] = covidpro_df['NP_R'].rolling(window=window).mean()
+    covidpro_df['DR_Rolling'] = covidpro_df['DR'].rolling(window=window).mean()
 
     covidpro_df.fillna(0, inplace=True)
     dpc_regioni_df.fillna(0, inplace=True)
@@ -116,18 +125,28 @@ def main():
 
     st.header("Regional plots")
 
-    data_load_state = st.text('Loading data...')
+    data_load_state = st.text('Plotting data...')
 
     st.plotly_chart(
         custom_plot(
             df=dpc_regioni_df,
-            ydata=['totale_casi', 'totale_positivi', 'deceduti', 'totale_ospedalizzati', 'terapia_intensiva'],
+            ydata=[
+                'totale_casi',
+                'totale_positivi',
+                'deceduti',
+                'totale_ospedalizzati',
+                'terapia_intensiva'],
             title='COVID-19 trendlines of ',
             xtitle='Data',
             ytitle='Unità',
             group_column='denominazione_regione',
             area_name='Lombardia',
-            legend_titles=['Totale Casi', 'Totale Positivi', 'Deceduti', 'Totale Ospedalizzati', 'Terapia Intensiva']
+            legend_titles=[
+                'Totale Casi',
+                'Totale Positivi',
+                'Deceduti',
+                'Totale Ospedalizzati',
+                'Terapia Intensiva']
         ),
     use_container_width=True)
 
@@ -140,8 +159,14 @@ def main():
             ytitle='Unità',
             group_column='denominazione_regione',
             area_name='Lombardia',
-            legend_titles=['Intensive care over total cases', 'Hospitalized over total cases', 'Positives over tampons rolling average', 'Intensive care over total cases rolling average', 'Positives over tampons', 'Positives over total positives'],
-            blend_legend=True
+            blend_legend=True,
+            legend_titles=[
+                'Intensive care over total cases',
+                'Hospitalized over total cases',
+                'Positives over tampons rolling average',
+                'Intensive care over total cases rolling average',
+                'Positives over tampons',
+                'Positives over total positives']    
         ),
     use_container_width=True)
 
