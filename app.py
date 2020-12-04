@@ -12,82 +12,8 @@ os.chdir(os.path.dirname(os.path.realpath(__file__)))
 DATA_PATH = "data"
 
 @st.cache
-def load_data():
-    covidpro_df = pd.read_csv(Path(DATA_PATH, CSVName.COVIDPRO_CSV))
-    dpc_regioni_df = pd.read_csv(Path(DATA_PATH, CSVName.DPC_REGIONI))
-    dpc_province_df = pd.read_csv(Path(DATA_PATH, CSVName.DPC_PROVINCE))
-    pop_prov_df = pd.read_csv(Path(DATA_PATH, CSVName.POP_PROV_CSV))
-
-    dpc_province_df['data'] = pd.to_datetime(dpc_province_df['data'])
-    dpc_regioni_df['data'] = pd.to_datetime(dpc_regioni_df['data'])
-    covidpro_df['Date'] = pd.to_datetime(covidpro_df['Date'])
-
-    dpc_province_df.denominazione_provincia = \
-    dpc_province_df.denominazione_provincia.str \
-        .replace("Forlì-Cesena", "Forli-Cesena")
-
-    dpc_regioni_df.denominazione_regione = \
-        dpc_regioni_df.denominazione_regione.str \
-            .replace("P.A. Trento", "Trentino Alto Adige") \
-            .replace("P.A. Bolzano", "Trentino Alto Adige")
-    
-    covidpro_df.Region = covidpro_df.Region.str \
-        .replace("P.A. Trento", "Trentino Alto Adige") \
-        .replace("P.A. Bolzano", "Trentino Alto Adige")
-    
-    pop_prov_df.Territorio = pop_prov_df.Territorio.str \
-        .replace("Valle d'Aosta", "Aosta") \
-        .replace("Forlì-Cesena", "Forli-Cesena") \
-        .replace("Massa-Carrara", "Massa Carrara") \
-        .replace("L'Aquila", "L Aquila") \
-        .replace("Reggio nell'Emilia", 'Reggio nell Emilia')
-    
-    dpc_regioni_df['NC_R'] = \
-        dpc_regioni_df['nuovi_positivi']/dpc_regioni_df['tamponi']
-    dpc_regioni_df['NP_R'] = \
-        dpc_regioni_df['nuovi_positivi']/dpc_regioni_df['totale_positivi']
-    dpc_regioni_df['IC_R'] = \
-        dpc_regioni_df['terapia_intensiva']/dpc_regioni_df['totale_positivi']
-    dpc_regioni_df['Hosp_R'] = \
-        dpc_regioni_df['totale_ospedalizzati']/dpc_regioni_df['totale_positivi']
-    dpc_regioni_df['DR'] = \
-        dpc_regioni_df['deceduti']/dpc_regioni_df['totale_positivi']
-
-    lmb_rep = lambda x: 0 if x is np.NaN or x < 0 else x
-    covidpro_df['New_cases'] = covidpro_df['New_cases'].apply(lmb_rep)
-    covidpro_df['Deaths'] = covidpro_df['Deaths'].apply(lmb_rep)
-
-    covidpro_df['NP_R'] = covidpro_df.apply(compute_ratio_NP, axis=1)
-    covidpro_df['DR'] = covidpro_df.apply(compute_ratio_DR, axis=1)
-
-    window = 5
-
-    dpc_regioni_df['NC_R_Rolling'] = dpc_regioni_df['NC_R'].rolling(window=window).mean()
-    dpc_regioni_df['IC_R_Rolling'] = dpc_regioni_df['IC_R'].rolling(window=window).mean()
-    dpc_regioni_df['totale_positivi_Rolling'] = \
-        dpc_regioni_df['totale_positivi'].rolling(window=window).mean()
-
-    covidpro_df['NP_R_Rolling'] = covidpro_df['NP_R'].rolling(window=window).mean()
-    covidpro_df['DR_Rolling'] = covidpro_df['DR'].rolling(window=window).mean()
-
-    covidpro_df.fillna(0, inplace=True)
-    dpc_regioni_df.fillna(0, inplace=True)
-    dpc_province_df.fillna(0, inplace=True)
-
-    return covidpro_df, dpc_regioni_df, dpc_province_df, pop_prov_df
-
-def compute_ratio_NP(x):
-    if x['Curr_pos_cases'] == 0:
-        return 0
-    else:
-        return x['New_cases']/x['Curr_pos_cases']
-
-def compute_ratio_DR(x):
-    if x['Curr_pos_cases'] == 0:
-        return 0
-    else:
-        return x['Deaths']/x['Curr_pos_cases']
-
+def load_df():
+    return load_data(DATA_PATH)
 
 def main():
     st.set_page_config(
@@ -107,7 +33,7 @@ def main():
 
     data_load_state = st.text('Loading data...')
 
-    covidpro_df, dpc_regioni_df, dpc_province_df, pop_prov_df = load_data()
+    covidpro_df, dpc_regioni_df, dpc_province_df, pop_prov_df, prov_list_df = load_df()
 
     data_load_state.empty()
 
