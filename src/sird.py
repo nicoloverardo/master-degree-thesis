@@ -101,3 +101,18 @@ def sird(province,
                                                   ))
 
     return sirsol.T
+
+def Model(days, N, R_0_start, k, x0, R_0_end):
+    y0 = N-1.0, 1.0, 0.0, 0.0,
+    times = range(0, days)
+
+    alpha = 0.05
+    rho = 1/9
+    gamma = 1/7
+
+    sirsol = odeint(sird_calc, y0, times, args=(N, gamma, alpha, rho, R_0_start, k, x0, R_0_end, beta))
+
+    S, I, R, D = sirsol.T
+    R0_over_time = [beta(i, R_0_start, k, x0, R_0_end, gamma)/gamma for i in range(len(times))]
+
+    return times, S, I, R, D, R0_over_time
