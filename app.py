@@ -62,11 +62,12 @@ def main():
                 'deceduti',
                 'totale_ospedalizzati',
                 'terapia_intensiva'],
-            title='COVID-19 trendlines of ',
-            xtitle='Data',
-            ytitle='Unità',
+            title='COVID-19 - ',
+            xtitle='Date',
+            ytitle='Individuals',
             group_column='denominazione_regione',
             area_name='Lombardia',
+            blend_legend=False,
             legend_titles=[
                 'Totale Casi',
                 'Totale Positivi',
@@ -80,19 +81,60 @@ def main():
         custom_plot(
             df=dpc_regioni_df,
             ydata=['IC_R', 'Hosp_R', 'NC_R_Rolling', 'IC_R_Rolling', 'NC_R', 'NP_R'],
-            title='COVID-19 trendlines of ',
-            xtitle='Data',
-            ytitle='Unità',
+            title='COVID-19 - ',
+            xtitle='Date',
+            ytitle='Fraction',
             group_column='denominazione_regione',
             area_name='Lombardia',
             blend_legend=True,
             legend_titles=[
-                'Intensive care over total cases',
-                'Hospitalized over total cases',
-                'Positives over tampons rolling average',
-                'Intensive care over total cases rolling average',
+                'IC over tot. cases',
+                'Hospitalized over tot. cases',
+                'Positives over tampons (rolling avg.)',
+                'IC over tot. cases (rolling avg.)',
                 'Positives over tampons',
-                'Positives over total positives']    
+                'Positives over tot. positives']    
+        ),
+    use_container_width=True)
+
+    st.header("Provincial plots")
+
+    st.plotly_chart(
+        custom_plot(
+            df=covidpro_df,
+            xdata='Date',
+            ydata=[
+                'Deaths', 'New_cases',
+                'Tot_deaths', 'Curr_pos_cases'],
+            title='COVID-19 - ',
+            xtitle='Date',
+            ytitle='Individuals',
+            group_column='Province',
+            area_name='Firenze',
+            blend_legend=False,
+            legend_titles=[
+                'Deceduti', 'Nuovi casi',
+                'Tot. Morti', 'Totale positivi']
+        ),
+    use_container_width=True)
+
+    st.plotly_chart(
+        custom_plot(
+            df=covidpro_df,
+            xdata='Date',
+            ydata=['NP_R', 'NP_R_Rolling', 'DR', 'DR_Rolling'],
+            title='COVID-19 - ',
+            xtitle='Date',
+            ytitle='Fraction',
+            group_column='Province',
+            area_name='Firenze',
+            blend_legend=True,
+            legend_titles=[
+                'Positives over total cases', 
+                'Positives over total cases rolling',
+                'Deaths over total cases', 
+                'Deaths over total cases rolling'
+                ]    
         ),
     use_container_width=True)
 
