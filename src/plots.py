@@ -330,7 +330,7 @@ def data_for_plot(compart,
                   df,
                   mapping,
                   province,
-                  window=5, 
+                  window=7, 
                   names=None, 
                   modes=None, 
                   query='20200604 > Date'):
