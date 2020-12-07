@@ -100,7 +100,7 @@ def pre_process_csv(covidpro_df,
                     dpc_province_df, 
                     pop_prov_df, 
                     prov_list_df, 
-                    window=5):
+                    window=7):
 
     dpc_regioni_df['NC_R'] = \
         dpc_regioni_df['nuovi_positivi']/dpc_regioni_df['tamponi']
