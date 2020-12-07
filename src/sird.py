@@ -76,8 +76,8 @@ def sird(province,
     R_0_end : float (default=0.3)
         Final value of RO
     
-    Return
-    ------
+    Returns
+    -------
     A numpy array of shape (4, days).
     """
 

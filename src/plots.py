@@ -88,8 +88,8 @@ def inter_dropdown_plot(x,
         A list or array containing the type of plot
         of each trace.
     
-    Return
-    ------
+    Returns
+    -------
     Image or ipywidget
     """
 
