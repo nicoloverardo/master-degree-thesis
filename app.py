@@ -1,6 +1,4 @@
 import streamlit as st
-import pandas as pd
-import numpy as np
 
 from src.utils import *
 from src.plots import *
@@ -73,7 +71,7 @@ def main():
             xtitle='Date',
             ytitle='Individuals',
             group_column='denominazione_regione',
-            area_name='Lombardia',
+            area_name=region_selectbox,
             blend_legend=False,
             legend_titles=[
                 'Totale Casi',
@@ -95,7 +93,7 @@ def main():
             xtitle='Date',
             ytitle='Fraction',
             group_column='denominazione_regione',
-            area_name='Lombardia',
+            area_name=region_selectbox,
             blend_legend=True,
             legend_titles=[
                 'IC over tot. cases',
@@ -109,6 +107,11 @@ def main():
 
     st.header("Provincial plots")
 
+    province_selectbox = st.selectbox(
+        "Region:",
+        covidpro_df.Province.unique()
+    )
+
     st.plotly_chart(
         custom_plot(
             df=covidpro_df,
@@ -120,7 +123,7 @@ def main():
             xtitle='Date',
             ytitle='Individuals',
             group_column='Province',
-            area_name='Firenze',
+            area_name=province_selectbox,
             blend_legend=False,
             legend_titles=[
                 'Deceduti', 'Nuovi casi',
@@ -138,7 +141,7 @@ def main():
             title='COVID-19 - ',
             xtitle='Date',
             ytitle='Fraction',
-            group_column='Province',
+            group_column=province_selectbox,
             area_name='Firenze',
             blend_legend=True,
             legend_titles=[
