@@ -20,7 +20,7 @@ def inter_dropdown_plot(x,
                         scale=2,
                         traces_visibility=None, 
                         modes=None,
-                        template='none'):
+                        template='simple_white'):
     """
     Creates interactive plotly plot with a dropdown
     or prints the plot as png.
@@ -89,7 +89,7 @@ def inter_dropdown_plot(x,
         A list or array containing the type of plot
         of each trace.
 
-    template : str (default='none')
+    template : str (default='simple_white')
         The template to use.
     
     Returns
@@ -113,12 +113,14 @@ def inter_dropdown_plot(x,
     if modes == None:
         modes = ['lines'] * len(y)
     
-    templates = ['none', 'plotly', 'plotly_white',
-        'plotly_dark', 'simple_white']
+    templates = ['ggplot2', 'seaborn', 'simple_white', 'plotly',
+         'plotly_white', 'plotly_dark', 'presentation', 'xgridoff',
+         'ygridoff', 'gridon', 'none']
     if template not in templates:
         raise ValueError(
-            """Template must be one of 'none', 'plotly', 'plotly_white',
-            'plotly_dark', 'simple_white'
+            """Template must be one of 'ggplot2', 'seaborn', 'simple_white',
+            'plotly', 'plotly_white', 'plotly_dark', 'presentation', 
+            'xgridoff', 'ygridoff', 'gridon', 'none'
             """)
 
     traces = []
@@ -142,7 +144,7 @@ def inter_dropdown_plot(x,
             yaxis_title=ytitle)
         )
 
-    g.update_layout(template=template)
+    g.update_layout(template=template, title_x=0.5)
 
     if blend_legend:
         g.update_layout(legend=dict(yanchor="top",
@@ -188,7 +190,7 @@ def general_plot(t,
                  scale=2,
                  xtitle='Time (days)',
                  ytitle='Number of individuals',
-                 template='none'):
+                 template='simple_white'):
     """
     Plots a SIRD model output
 
@@ -243,7 +245,7 @@ def general_plot(t,
     ytitle : str
         Label of the y-axis
 
-    template : str (default='none')
+    template : str (default='simple_white')
         The template to use.
     """
 
@@ -256,12 +258,14 @@ def general_plot(t,
     if modes == None:
         modes = ['lines'] * len(data)
 
-    templates = ['none', 'plotly', 'plotly_white',
-        'plotly_dark', 'simple_white']
+    templates = ['ggplot2', 'seaborn', 'simple_white', 'plotly',
+         'plotly_white', 'plotly_dark', 'presentation', 'xgridoff',
+         'ygridoff', 'gridon', 'none']
     if template not in templates:
         raise ValueError(
-            """Template must be one of 'none', 'plotly', 'plotly_white',
-            'plotly_dark', 'simple_white'
+            """Template must be one of 'ggplot2', 'seaborn', 'simple_white',
+            'plotly', 'plotly_white', 'plotly_dark', 'presentation', 
+            'xgridoff', 'ygridoff', 'gridon', 'none'
             """)
 
     fig = go.Figure()
@@ -278,7 +282,8 @@ def general_plot(t,
                       xaxis_title=xtitle,
                       yaxis_title=ytitle,
                       template=template,
-                      barmode='overlay')
+                      barmode='overlay',
+                      title_x=0.5)
     
     if blend_legend:
         xpos = 0.99 if xanchor is 'right' else 0.08
@@ -312,7 +317,7 @@ def custom_plot(df,
                 legend_titles=None,
                 blend_legend=False,
                 xanchor='right',
-                template='none'):
+                template='simple_white'):
 
     if legend_titles == None:
         legend_titles = ydata
@@ -323,12 +328,14 @@ def custom_plot(df,
     if modes == None:
         modes = ['lines'] * len(ydata)
 
-    templates = ['none', 'plotly', 'plotly_white',
-        'plotly_dark', 'simple_white']
+    templates = ['ggplot2', 'seaborn', 'simple_white', 'plotly',
+         'plotly_white', 'plotly_dark', 'presentation', 'xgridoff',
+         'ygridoff', 'gridon', 'none']
     if template not in templates:
         raise ValueError(
-            """Template must be one of 'none', 'plotly', 'plotly_white',
-            'plotly_dark', 'simple_white'
+            """Template must be one of 'ggplot2', 'seaborn', 'simple_white',
+            'plotly', 'plotly_white', 'plotly_dark', 'presentation', 
+            'xgridoff', 'ygridoff', 'gridon', 'none'
             """)
 
     fig = go.Figure()
@@ -345,7 +352,8 @@ def custom_plot(df,
                       xaxis_title=xtitle,
                       yaxis_title=ytitle,
                       template=template,
-                      barmode='overlay')
+                      barmode='overlay',
+                      title_x=0.5)
     
     if blend_legend:
         xpos = 0.99 if xanchor is 'right' else 0.08
