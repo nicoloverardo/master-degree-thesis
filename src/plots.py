@@ -381,8 +381,8 @@ def data_for_plot(compart,
                   
     if names == None:
         names = ['Real',
-                'Real (rolling ' + str(window) + ' days)',
-                'Predicted']
+                 'Real (rolling ' + str(window) + ' days)',
+                 'Predicted']
     
     if modes == None:
         modes = ['lines'] * 3
