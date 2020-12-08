@@ -56,8 +56,6 @@ def main():
         dpc_regioni_df.denominazione_regione.unique()
     )
 
-    data_load_state = st.text('Plotting data...')
-
     st.plotly_chart(
         custom_plot(
             df=dpc_regioni_df,
@@ -78,7 +76,8 @@ def main():
                 'Totale Positivi',
                 'Deceduti',
                 'Totale Ospedalizzati',
-                'Terapia Intensiva']
+                'Terapia Intensiva'],
+            template='simple_white'
         ),
     use_container_width=True)
 
@@ -101,7 +100,8 @@ def main():
                 'Positives over tampons (rolling avg.)',
                 'IC over tot. cases (rolling avg.)',
                 'Positives over tampons',
-                'Positives over tot. positives']    
+                'Positives over tot. positives'],
+            template='simple_white' 
         ),
     use_container_width=True)
 
@@ -127,7 +127,8 @@ def main():
             blend_legend=False,
             legend_titles=[
                 'Deceduti', 'Nuovi casi',
-                'Tot. Morti', 'Totale positivi']
+                'Tot. Morti', 'Totale positivi'],
+            template='simple_white'
         ),
     use_container_width=True)
 
@@ -141,19 +142,18 @@ def main():
             title='COVID-19 - ',
             xtitle='Date',
             ytitle='Fraction',
-            group_column=province_selectbox,
-            area_name='Firenze',
+            group_column='Province',
+            area_name=province_selectbox,
             blend_legend=True,
             legend_titles=[
                 'Positives over total cases', 
                 'Positives over total cases rolling',
                 'Deaths over total cases', 
                 'Deaths over total cases rolling'
-                ]    
+                ],
+            template='simple_white'
         ),
     use_container_width=True)
-
-    data_load_state.empty()
 
 
 if __name__ == "__main__":
