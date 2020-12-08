@@ -19,7 +19,8 @@ def inter_dropdown_plot(x,
                         height=400,
                         scale=2,
                         traces_visibility=None, 
-                        modes=None):
+                        modes=None,
+                        template='none'):
     """
     Creates interactive plotly plot with a dropdown
     or prints the plot as png.
@@ -87,6 +88,9 @@ def inter_dropdown_plot(x,
     modes : list or array (default=None)
         A list or array containing the type of plot
         of each trace.
+
+    template : str (default='none')
+        The template to use.
     
     Returns
     -------
@@ -108,6 +112,14 @@ def inter_dropdown_plot(x,
     
     if modes == None:
         modes = ['lines'] * len(y)
+    
+    templates = ['none', 'plotly', 'plotly_white',
+        'plotly_dark', 'simple_white']
+    if template not in templates:
+        raise ValueError(
+            """Template must be one of 'none', 'plotly', 'plotly_white',
+            'plotly_dark', 'simple_white'
+            """)
 
     traces = []
     for i, trace in enumerate(y):
@@ -130,7 +142,7 @@ def inter_dropdown_plot(x,
             yaxis_title=ytitle)
         )
 
-    g.update_layout(template='none')
+    g.update_layout(template=template)
 
     if blend_legend:
         g.update_layout(legend=dict(yanchor="top",
@@ -175,7 +187,8 @@ def general_plot(t,
                  height=400,
                  scale=2,
                  xtitle='Time (days)',
-                 ytitle='Number of individuals'):
+                 ytitle='Number of individuals',
+                 template='none'):
     """
     Plots a SIRD model output
 
@@ -229,6 +242,9 @@ def general_plot(t,
     
     ytitle : str
         Label of the y-axis
+
+    template : str (default='none')
+        The template to use.
     """
 
     if names == None:
@@ -239,6 +255,14 @@ def general_plot(t,
     
     if modes == None:
         modes = ['lines'] * len(data)
+
+    templates = ['none', 'plotly', 'plotly_white',
+        'plotly_dark', 'simple_white']
+    if template not in templates:
+        raise ValueError(
+            """Template must be one of 'none', 'plotly', 'plotly_white',
+            'plotly_dark', 'simple_white'
+            """)
 
     fig = go.Figure()
     for i, comp in enumerate(data):
@@ -253,7 +277,7 @@ def general_plot(t,
     fig.update_layout(title=title,
                       xaxis_title=xtitle,
                       yaxis_title=ytitle,
-                      template='none',
+                      template=template,
                       barmode='overlay')
     
     if blend_legend:
@@ -287,7 +311,8 @@ def custom_plot(df,
                 traces_visibility=None,
                 legend_titles=None,
                 blend_legend=False,
-                xanchor='right'):
+                xanchor='right',
+                template='none'):
 
     if legend_titles == None:
         legend_titles = ydata
@@ -297,6 +322,14 @@ def custom_plot(df,
     
     if modes == None:
         modes = ['lines'] * len(ydata)
+
+    templates = ['none', 'plotly', 'plotly_white',
+        'plotly_dark', 'simple_white']
+    if template not in templates:
+        raise ValueError(
+            """Template must be one of 'none', 'plotly', 'plotly_white',
+            'plotly_dark', 'simple_white'
+            """)
 
     fig = go.Figure()
     for i, trace in enumerate(ydata):
@@ -311,7 +344,7 @@ def custom_plot(df,
     fig.update_layout(title=title + area_name,
                       xaxis_title=xtitle,
                       yaxis_title=ytitle,
-                      template='none',
+                      template=template,
                       barmode='overlay')
     
     if blend_legend:
