@@ -369,7 +369,8 @@ def custom_plot(df,
 
 def data_for_plot(compart,
                   df,
-                  mapping,
+                  column,
+                  comp_array,
                   province,
                   window=7, 
                   names=None, 
@@ -389,10 +390,8 @@ def data_for_plot(compart,
 
     title = 'SIRD ' + compart + ' of ' + province
     
-    c, l = mapping[compart]
-    
-    d1_real = df[df.Province == province].query(query)[c]
+    d1_real = df[df.Province == province].query(query)[column]
     d2_rolling = d1_real.rolling(window=window).mean().fillna(0)
-    data = [d1_real.values, d2_rolling.values, l]
+    data = [d1_real.values, d2_rolling.values, comp_array]
 
     return names, title, data, modes
