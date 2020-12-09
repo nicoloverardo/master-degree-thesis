@@ -7,9 +7,9 @@ import numpy as np
 
 
 class CSVUrl():
-    COVIDPRO_CSV = "https://raw.githubusercontent.com/CEEDS-DEMM/COVID-Pro-Dataset/master/deathsItaProv.csv"
-    DPC_REGIONI = "https://raw.githubusercontent.com/pcm-dpc/COVID-19/master/dati-regioni/dpc-covid19-ita-regioni.csv"
-    DPC_PROVINCE = "https://raw.githubusercontent.com/pcm-dpc/COVID-19/master/dati-province/dpc-covid19-ita-province.csv"
+    COVIDPRO_CSV = "https://raw.githubusercontent.com/CEEDS-DEMM/COVID-Pro-Dataset/master/deathsItaProv.csv"  # noqa
+    DPC_REGIONI = "https://raw.githubusercontent.com/pcm-dpc/COVID-19/master/dati-regioni/dpc-covid19-ita-regioni.csv"  # noqa
+    DPC_PROVINCE = "https://raw.githubusercontent.com/pcm-dpc/COVID-19/master/dati-province/dpc-covid19-ita-province.csv"  # noqa
 
 
 class CSVName():
@@ -122,7 +122,7 @@ def pre_process_csv(covidpro_df,
         dpc_regioni_df['terapia_intensiva']/dpc_regioni_df['totale_positivi']
 
     dpc_regioni_df['Hosp_R'] = \
-        dpc_regioni_df['totale_ospedalizzati']/dpc_regioni_df['totale_positivi']
+        dpc_regioni_df['totale_ospedalizzati']/dpc_regioni_df['totale_positivi']  # noqa
 
     dpc_regioni_df['DR'] = \
         dpc_regioni_df['deceduti']/dpc_regioni_df['totale_positivi']
@@ -142,8 +142,11 @@ def pre_process_csv(covidpro_df,
     dpc_regioni_df['totale_positivi_Rolling'] = \
         dpc_regioni_df['totale_positivi'].rolling(window=window).mean()
 
-    covidpro_df['NP_R_Rolling'] = covidpro_df['NP_R'].rolling(window=window).mean()
-    covidpro_df['DR_Rolling'] = covidpro_df['DR'].rolling(window=window).mean()
+    covidpro_df['NP_R_Rolling'] = \
+        covidpro_df['NP_R'].rolling(window=window).mean()
+
+    covidpro_df['DR_Rolling'] = \
+        covidpro_df['DR'].rolling(window=window).mean()
 
     covidpro_df.fillna(0, inplace=True)
     dpc_regioni_df.fillna(0, inplace=True)
