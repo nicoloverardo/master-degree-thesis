@@ -69,13 +69,12 @@ def load_csv(path):
     pop_prov_df = pd.read_csv(Path(path, CSVName.POP_PROV_CSV))
     prov_list_df = pd.read_csv(Path(path, CSVName.PROV_LIST_CSV))
 
-    dpc_province_df['data'] = pd.to_datetime(dpc_province_df['data'])
-    dpc_regioni_df['data'] = pd.to_datetime(dpc_regioni_df['data'])
-    covidpro_df['Date'] = pd.to_datetime(covidpro_df['Date'])
-
-    dpc_province_df['data'] = pd.to_datetime(dpc_province_df['data']).dt.normalize()
-    dpc_regioni_df['data'] = pd.to_datetime(dpc_regioni_df['data']).dt.normalize()
-    covidpro_df['Date'] = pd.to_datetime(covidpro_df['Date']).dt.normalize()
+    dpc_province_df['data'] = pd.to_datetime(dpc_province_df['data']) \
+        .dt.normalize()
+    dpc_regioni_df['data'] = pd.to_datetime(dpc_regioni_df['data']) \
+        .dt.normalize()
+    covidpro_df['Date'] = pd.to_datetime(covidpro_df['Date']) \
+        .dt.normalize()
 
     dpc_province_df.denominazione_provincia = \
         dpc_province_df.denominazione_provincia.str \
@@ -101,7 +100,9 @@ def load_csv(path):
     dpc_regioni_df.fillna(0, inplace=True)
     dpc_province_df.fillna(0, inplace=True)
 
-    return covidpro_df, dpc_regioni_df, dpc_province_df, pop_prov_df, prov_list_df
+    return (
+        covidpro_df, dpc_regioni_df,
+        dpc_province_df, pop_prov_df, prov_list_df)
 
 
 def pre_process_csv(covidpro_df,
@@ -126,9 +127,8 @@ def pre_process_csv(covidpro_df,
     dpc_regioni_df['DR'] = \
         dpc_regioni_df['deceduti']/dpc_regioni_df['totale_positivi']
 
-    lmb_rep = lambda x: 0 if x is np.NaN or x < 0 else x
-    covidpro_df['New_cases'] = covidpro_df['New_cases'].apply(lmb_rep)
-    covidpro_df['Deaths'] = covidpro_df['Deaths'].apply(lmb_rep)
+    covidpro_df['New_cases'] = covidpro_df['New_cases'].apply(convert_nan)
+    covidpro_df['Deaths'] = covidpro_df['Deaths'].apply(convert_nan)
 
     covidpro_df['NP_R'] = covidpro_df.apply(compute_ratio_NP, axis=1)
     covidpro_df['DR'] = covidpro_df.apply(compute_ratio_DR, axis=1)
@@ -149,7 +149,16 @@ def pre_process_csv(covidpro_df,
     dpc_regioni_df.fillna(0, inplace=True)
     dpc_province_df.fillna(0, inplace=True)
 
-    return covidpro_df, dpc_regioni_df, dpc_province_df, pop_prov_df, prov_list_df
+    return (
+        covidpro_df, dpc_regioni_df,
+        dpc_province_df, pop_prov_df, prov_list_df)
+
+
+def convert_nan(x):
+    if x is np.NaN or x < 0:
+        return 0
+    else:
+        return x
 
 
 def compute_ratio_NP(x):
