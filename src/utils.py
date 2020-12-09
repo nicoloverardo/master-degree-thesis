@@ -7,9 +7,9 @@ import numpy as np
 
 
 class CSVUrl():
-    COVIDPRO_CSV = "https://raw.githubusercontent.com/CEEDS-DEMM/COVID-Pro-Dataset/master/deathsItaProv.csv"  # noqa
-    DPC_REGIONI = "https://raw.githubusercontent.com/pcm-dpc/COVID-19/master/dati-regioni/dpc-covid19-ita-regioni.csv"  # noqa
-    DPC_PROVINCE = "https://raw.githubusercontent.com/pcm-dpc/COVID-19/master/dati-province/dpc-covid19-ita-province.csv"  # noqa
+    COVIDPRO_CSV = "https://raw.githubusercontent.com/CEEDS-DEMM/COVID-Pro-Dataset/master/deathsItaProv.csv"  # nopep8
+    DPC_REGIONI = "https://raw.githubusercontent.com/pcm-dpc/COVID-19/master/dati-regioni/dpc-covid19-ita-regioni.csv"  # nopep8
+    DPC_PROVINCE = "https://raw.githubusercontent.com/pcm-dpc/COVID-19/master/dati-province/dpc-covid19-ita-province.csv"  # nopep8
 
 
 class CSVName():
@@ -122,7 +122,7 @@ def pre_process_csv(covidpro_df,
         dpc_regioni_df['terapia_intensiva']/dpc_regioni_df['totale_positivi']
 
     dpc_regioni_df['Hosp_R'] = \
-        dpc_regioni_df['totale_ospedalizzati']/dpc_regioni_df['totale_positivi']  # noqa
+        dpc_regioni_df['totale_ospedalizzati']/dpc_regioni_df['totale_positivi']  # nopep8
 
     dpc_regioni_df['DR'] = \
         dpc_regioni_df['deceduti']/dpc_regioni_df['totale_positivi']
