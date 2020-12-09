@@ -2,12 +2,13 @@ import plotly.graph_objects as go
 from ipywidgets import widgets
 from IPython.display import Image
 
-def inter_dropdown_plot(x, 
+
+def inter_dropdown_plot(x,
                         y,
                         data,
                         options,
                         group_column,
-                        default_value, 
+                        default_value,
                         dropdown_label,
                         title,
                         xtitle,
@@ -18,7 +19,7 @@ def inter_dropdown_plot(x,
                         width=800,
                         height=400,
                         scale=2,
-                        traces_visibility=None, 
+                        traces_visibility=None,
                         modes=None,
                         template='simple_white'):
     """
@@ -29,69 +30,69 @@ def inter_dropdown_plot(x,
     ----------
 
     x : str
-        The name of the column of the DataFrame whose data will go 
+        The name of the column of the DataFrame whose data will go
         on the x-axis.
 
     y : list or array
         The name(s) of the column(s) of the DataFrame whose data
         will go on the y-axis.
-    
+
     data : pandas DataFrame
         The DataFrame containing the data.
-    
+
     options : list or array
         The options shown in the dropdown menu.
-    
+
     group_column : str
         The column of the DataFrame used to filter data.
-    
+
     default_value : str
         The default value of the dropdown menu.
-    
+
     dropdown_label : str
         The label shown next to the dropdown menu.
-    
+
     title : str
         The title of the plot.
-    
+
     xtitle : str
         Label of the x-axis
-    
+
     ytitle : str
         Label of the y-axis
-    
+
     legend_titles : list or array (default=None)
         The labels shown in the legend.
-    
+
     output_image : bool (default=False)
         Indicates whether to produce the interactive plot
         or the png image.
-    
+
     blend_legend : bool (default=False)
         Indicates whether the legend will be in the top right
         corner, outside or inside the plot.
-    
+
     width : int (default=800)
         Width of the image
-    
+
     height : int (default=400)
         Height of the image
-    
+
     scale : int (default=2)
         Scale of the image
-    
+
     traces_visibility : list or array (default=None)
         A list or array that signals if the
         corresponding line in the plot (by position in `data`)
         is visible or not.
-    
+
     modes : list or array (default=None)
         A list or array containing the type of plot
         of each trace.
 
     template : str (default='simple_white')
         The template to use.
-    
+
     Returns
     -------
     Image or ipywidget
@@ -104,24 +105,14 @@ def inter_dropdown_plot(x,
     )
 
     # set possibility of passing y as dictionary or zip or tuple?
-    if legend_titles == None:
+    if legend_titles is None:
         legend_titles = y
-    
-    if traces_visibility == None:
+
+    if traces_visibility is None:
         traces_visibility = [True] * len(y)
-    
-    if modes == None:
+
+    if modes is None:
         modes = ['lines'] * len(y)
-    
-    templates = ['ggplot2', 'seaborn', 'simple_white', 'plotly',
-         'plotly_white', 'plotly_dark', 'presentation', 'xgridoff',
-         'ygridoff', 'gridon', 'none']
-    if template not in templates:
-        raise ValueError(
-            """Template must be one of 'ggplot2', 'seaborn', 'simple_white',
-            'plotly', 'plotly_white', 'plotly_dark', 'presentation', 
-            'xgridoff', 'ygridoff', 'gridon', 'none'
-            """)
 
     traces = []
     for i, trace in enumerate(y):
@@ -165,23 +156,23 @@ def inter_dropdown_plot(x,
                 g.layout.title = title + origin.value
 
     origin.observe(response, names="value")
-    widget = widgets.VBox([origin,g])
+    widget = widgets.VBox([origin, g])
 
     if output_image:
         return Image(widget.children[1].to_image(format="png",
-                                                 width=width, 
-                                                 height=height, 
+                                                 width=width,
+                                                 height=height,
                                                  scale=scale))
     else:
         return widget
 
 
 def general_plot(t,
-                 data, 
-                 title=None, 
-                 names=None, 
-                 traces_visibility=None, 
-                 modes=None, 
+                 data,
+                 title=None,
+                 names=None,
+                 traces_visibility=None,
+                 modes=None,
                  blend_legend=False,
                  xanchor='right',
                  output_image=False,
@@ -202,10 +193,10 @@ def general_plot(t,
 
     data : list or array
         A list or array containing data to plot.
-    
-    tile : str (default=None)
+
+    title : str (default=None)
         Name of the province or region
-    
+
     names : list or array (default=None)
         Legend name of each curve of the plot
 
@@ -213,7 +204,7 @@ def general_plot(t,
         A list or array that signals if the
         corresponding line in the plot (by position in `data`)
         is visible or not.
-    
+
     modes : list or array (default=None)
         A list or array containing the type of plot
         of each trace.
@@ -221,7 +212,7 @@ def general_plot(t,
     blend_legend : bool (default=False)
         Indicates whether the legend will be in the top right
         corner, outside or inside the plot.
-    
+
     xanchor : str (default='right')
         Position of the blended legend inside the plot.
         Works only if `blend_legend` is `True`.
@@ -232,16 +223,16 @@ def general_plot(t,
 
     width : int (default=800)
         Width of the image
-    
+
     height : int (default=400)
         Height of the image
-    
+
     scale : int (default=2)
         Scale of the image
-    
+
     xtitle : str
         Label of the x-axis
-    
+
     ytitle : str
         Label of the y-axis
 
@@ -249,29 +240,19 @@ def general_plot(t,
         The template to use.
     """
 
-    if names == None:
+    if names is None:
         names = ['Susceptible', 'Infected', 'Recovered', 'Dead']
-    
+
     if traces_visibility is None:
         traces_visibility = [True] * len(data)
-    
-    if modes == None:
-        modes = ['lines'] * len(data)
 
-    templates = ['ggplot2', 'seaborn', 'simple_white', 'plotly',
-         'plotly_white', 'plotly_dark', 'presentation', 'xgridoff',
-         'ygridoff', 'gridon', 'none']
-    if template not in templates:
-        raise ValueError(
-            """Template must be one of 'ggplot2', 'seaborn', 'simple_white',
-            'plotly', 'plotly_white', 'plotly_dark', 'presentation', 
-            'xgridoff', 'ygridoff', 'gridon', 'none'
-            """)
+    if modes is None:
+        modes = ['lines'] * len(data)
 
     fig = go.Figure()
     for i, comp in enumerate(data):
         fig.add_trace(go.Scatter(
-            x=t, 
+            x=t,
             y=comp,
             mode=modes[i],
             name=names[i],
@@ -284,7 +265,7 @@ def general_plot(t,
                       template=template,
                       barmode='overlay',
                       title_x=0.5)
-    
+
     if blend_legend:
         xpos = 0.99 if xanchor is 'right' else 0.08
 
@@ -296,65 +277,56 @@ def general_plot(t,
         )
 
     if output_image:
-        return Image(fig.to_image(format="png", 
-                                  width=width, 
-                                  height=height, 
+        return Image(fig.to_image(format="png",
+                                  width=width,
+                                  height=height,
                                   scale=scale))
     else:
         return fig.show()
 
-#TODO: write docum. and improve
+
+# TODO: write docum. and improve
 def custom_plot(df,
                 ydata,
                 title,
                 xtitle,
                 ytitle,
                 group_column='denominazione_provincia',
-                area_name='Firenze', 
-                xdata='data', 
-                modes=None, 
+                area_name='Firenze',
+                xdata='data',
+                modes=None,
                 traces_visibility=None,
                 legend_titles=None,
                 blend_legend=False,
                 xanchor='right',
                 template='simple_white'):
 
-    if legend_titles == None:
+    if legend_titles is None:
         legend_titles = ydata
 
-    if traces_visibility == None:
+    if traces_visibility is None:
         traces_visibility = [True] * len(ydata)
-    
-    if modes == None:
-        modes = ['lines'] * len(ydata)
 
-    templates = ['ggplot2', 'seaborn', 'simple_white', 'plotly',
-         'plotly_white', 'plotly_dark', 'presentation', 'xgridoff',
-         'ygridoff', 'gridon', 'none']
-    if template not in templates:
-        raise ValueError(
-            """Template must be one of 'ggplot2', 'seaborn', 'simple_white',
-            'plotly', 'plotly_white', 'plotly_dark', 'presentation', 
-            'xgridoff', 'ygridoff', 'gridon', 'none'
-            """)
+    if modes is None:
+        modes = ['lines'] * len(ydata)
 
     fig = go.Figure()
     for i, trace in enumerate(ydata):
         fig.add_trace(go.Scatter(
-            x=df[df[group_column] == area_name][xdata], 
+            x=df[df[group_column] == area_name][xdata],
             y=df[df[group_column] == area_name][trace],
             mode=modes[i],
             name=legend_titles[i],
             visible=traces_visibility[i])
         )
-    
+
     fig.update_layout(title=title + area_name,
                       xaxis_title=xtitle,
                       yaxis_title=ytitle,
                       template=template,
                       barmode='overlay',
                       title_x=0.5)
-    
+
     if blend_legend:
         xpos = 0.99 if xanchor is 'right' else 0.08
 
@@ -364,32 +336,33 @@ def custom_plot(df,
             xanchor=xanchor,
             x=xpos)
         )
-    
+
     return fig
+
 
 def data_for_plot(compart,
                   df,
                   column,
                   comp_array,
                   province,
-                  window=7, 
-                  names=None, 
-                  modes=None, 
+                  window=7,
+                  names=None,
+                  modes=None,
                   query='20200604 > Date'):
     """
     Utility function that returns data useful for plots.
     """
-                  
-    if names == None:
+
+    if names is None:
         names = ['Real',
                  'Real (rolling ' + str(window) + ' days)',
                  'Predicted']
-    
-    if modes == None:
+
+    if modes is None:
         modes = ['lines'] * 3
 
     title = 'SIRD ' + compart + ' of ' + province
-    
+
     d1_real = df[df.Province == province].query(query)[column]
     d2_rolling = d1_real.rolling(window=window).mean().fillna(0)
     data = [d1_real.values, d2_rolling.values, comp_array]
