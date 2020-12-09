@@ -22,7 +22,11 @@ if __name__ == "__main__":
         df1 = df.loc[df["Territorio"] == provincia]
 
         a = df1[df1["ETA1"] <= 25].groupby(["Territorio"]).agg({"Value": sum})
-        b = df1[(df1["ETA1"] > 25) & (df1["ETA1"] <= 65)].groupby(["Territorio"]).agg({"Value": sum})
+
+        b = df1[
+            (df1["ETA1"] > 25) & (df1["ETA1"] <= 65)
+            ].groupby(["Territorio"]).agg({"Value": sum})
+
         c = df1[df1["ETA1"] > 65].groupby(["Territorio"]).agg({"Value": sum})
 
         tmp = pd.concat([a, b, c])
