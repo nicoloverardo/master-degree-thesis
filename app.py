@@ -9,9 +9,11 @@ os.chdir(os.path.dirname(os.path.realpath(__file__)))
 
 DATA_PATH = "data"
 
+
 @st.cache
 def load_df():
     return load_data(DATA_PATH)
+
 
 def main():
     """Main routine of the app"""
@@ -24,7 +26,7 @@ def main():
 
     """
     Welcome to the interactive dashboard of my thesis
-    for the MSc in Data Science and Economics at 
+    for the MSc in Data Science and Economics at
     Università degli Studi di Milano.
     """
 
@@ -78,8 +80,7 @@ def main():
                 'Totale Ospedalizzati',
                 'Terapia Intensiva'],
             template='simple_white'
-        ),
-    use_container_width=True)
+        ), use_container_width=True)
 
     st.plotly_chart(
         custom_plot(
@@ -101,9 +102,8 @@ def main():
                 'IC over tot. cases (rolling avg.)',
                 'Positives over tampons',
                 'Positives over tot. positives'],
-            template='simple_white' 
-        ),
-    use_container_width=True)
+            template='simple_white'
+        ), use_container_width=True)
 
     st.header("Provincial plots")
 
@@ -129,8 +129,7 @@ def main():
                 'Deceduti', 'Nuovi casi',
                 'Tot. Morti', 'Totale positivi'],
             template='simple_white'
-        ),
-    use_container_width=True)
+        ), use_container_width=True)
 
     st.plotly_chart(
         custom_plot(
@@ -146,14 +145,13 @@ def main():
             area_name=province_selectbox,
             blend_legend=True,
             legend_titles=[
-                'Positives over total cases', 
+                'Positives over total cases',
                 'Positives over total cases rolling',
-                'Deaths over total cases', 
+                'Deaths over total cases',
                 'Deaths over total cases rolling'
                 ],
             template='simple_white'
-        ),
-    use_container_width=True)
+        ), use_container_width=True)
 
 
 if __name__ == "__main__":
