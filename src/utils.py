@@ -73,6 +73,10 @@ def load_csv(path):
     dpc_regioni_df['data'] = pd.to_datetime(dpc_regioni_df['data'])
     covidpro_df['Date'] = pd.to_datetime(covidpro_df['Date'])
 
+    dpc_province_df['data'] = pd.to_datetime(dpc_province_df['data']).dt.normalize()
+    dpc_regioni_df['data'] = pd.to_datetime(dpc_regioni_df['data']).dt.normalize()
+    covidpro_df['Date'] = pd.to_datetime(covidpro_df['Date']).dt.normalize()
+
     dpc_province_df.denominazione_provincia = \
         dpc_province_df.denominazione_provincia.str \
         .replace("Forlì-Cesena", "Forli-Cesena")
