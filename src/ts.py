@@ -47,13 +47,13 @@ def plot_decomposition(df=None, column=None, result=None):
     _plot_decomp(result)
 
 
-def adf_test(df, column):
+def adf_test(data):
     """
     ADF test: null hypothesis is the time series
     possesses a unit root and is non-stationary
     """
 
-    result = adfuller(df[column].values, autolag='AIC')
+    result = adfuller(data, autolag='AIC')
     print(f'ADF Statistic: {result[0]}')
     print(f'p-value: {result[1]}')
     for key, value in result[4].items():
@@ -61,12 +61,12 @@ def adf_test(df, column):
         print(f'   {key}, {value}')
 
 
-def kpss_test(df, column):
+def kpss_test(data):
     """
     KPSS test: opposite of ADF
     """
 
-    result = kpss(df[column].values, regression='c')
+    result = kpss(data, regression='c')
     print('\nKPSS Statistic: %f' % result[0])
     print('p-value: %f' % result[1])
     for key, value in result[3].items():
