@@ -32,8 +32,8 @@ def decompose_ts(df, column, model='additive'):
 
 
 def _plot_decomp(result):
-    plt.rcParams.update({'figure.figsize': (12, 10)})
     result.plot()
+    plt.gcf().set_size_inches(12, 10)
     plt.show()
 
 
@@ -104,8 +104,9 @@ def plot_deseason_ma(df, column, province, windows=[7, 30]):
 
 
 def plot_autocorr(df, column):
-    plt.rcParams.update({'figure.figsize': (9, 5)})
+    # plt.rcParams.update({'figure.figsize': (9, 5)})
     autocorrelation_plot(df[column].tolist())
+    plt.gcf().set_size_inches(9, 5)
     plt.show()
 
 
