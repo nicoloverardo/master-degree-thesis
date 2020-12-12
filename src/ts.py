@@ -161,6 +161,27 @@ def plot_smoothing(df, column):
     plt.show()
 
 
+def tsplot(y, lags=50, figsize=(12, 7)):
+    if not isinstance(y, pd.Series):
+        y = pd.Series(y)
+
+    plt.figure(figsize=figsize)
+    layout = (2, 2)
+    ts_ax = plt.subplot2grid(layout, (0, 0), colspan=2)
+    acf_ax = plt.subplot2grid(layout, (1, 0))
+    pacf_ax = plt.subplot2grid(layout, (1, 1))
+
+    y.plot(ax=ts_ax)
+    p_value = adfuller(y)[1]
+    ts_ax.set_title(
+        'Time Series Analysis Plots\n Dickey-Fuller: p={0:.5f}'.format(p_value)
+    )
+    plot_acf(y, lags=lags, ax=acf_ax)
+    plot_pacf(y, lags=lags, ax=pacf_ax)
+    plt.tight_layout()
+    plt.show()
+
+
 def ApEn(U, m, r):
     """Compute Aproximate entropy"""
     def _maxdist(x_i, x_j):
