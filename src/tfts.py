@@ -1,3 +1,8 @@
+"""
+Some classes are taken from the example:
+https://www.tensorflow.org/tutorials/structured_data/time_series
+"""
+
 import numpy as np
 import tensorflow as tf
 import matplotlib.pyplot as plt
@@ -55,6 +60,7 @@ class WindowGenerator():
         if result is None:
             # No example batch was found, so get one from the `.train` dataset
             result = next(iter(self.train))
+
             # And cache it for next time
             self._example = result
         return result
@@ -74,7 +80,7 @@ class WindowGenerator():
 
         return inputs, labels
 
-    def plot(self, model=None, plot_col='New_cases', max_subplots=3):
+    def plot(self, model=None, plot_col='New_cases', max_subplots=1):
         inputs, labels = self.example
         plt.figure(figsize=(12, 8))
         plot_col_index = self.column_indices[plot_col]
@@ -228,8 +234,7 @@ def compile_and_fit(model, window, patience=2, epochs=50):
     model.compile(loss=tf.losses.MeanSquaredError(),
                   optimizer=tf.optimizers.Adam(),
                   metrics=[tf.metrics.MeanAbsoluteError(),
-                           tf.metrics.MeanSquaredError(),
-                           tf.metrics.MeanAbsolutePercentageError()])
+                           tf.metrics.MeanSquaredError()])
 
     history = model.fit(window.train, epochs=epochs,
                         validation_data=window.val,
@@ -287,7 +292,7 @@ def plot_comparison_results(metrics_names, val_performance, performance):
 
     x = np.arange(len(performance))
     width = 0.3
-    plt.figure(figsize=(12, 10))
+    plt.figure(figsize=(10, 5))
     for n, metric_name in enumerate(metrics):
         plt.subplot(n_rows, n_cols, n+1)
         metric_index = metrics_names.index(metric_name)
