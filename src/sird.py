@@ -1,5 +1,9 @@
+import pandas as pd
 import numpy as np
+
 from scipy.integrate import odeint
+from sklearn.linear_model import LinearRegression
+from sklearn.metrics import mean_absolute_error, mean_squared_error
 
 
 def logistic_R0(t, R_0_start, k, x0, R_0_end):
@@ -115,3 +119,249 @@ def Model(days, N, R_0_start, k, x0, R_0_end, alpha, gamma):
                     for i in range(len(times))]
 
     return times, S, I, R, D, R0_over_time
+
+
+class DeterministicSird():
+    def __init__(self, data_df, pop_prov_df, prov_list_df, regione,
+                 group_column, data_column, data_filter, lag, days_to_predict):
+
+        self.data_df = data_df
+        self.pop_prov_df = pop_prov_df
+        self.prov_list_df = prov_list_df
+        self.regione = regione
+        self.group_column = group_column
+        self.data_column = data_column
+        self.data_filter = data_filter
+        self.lag = lag
+        self.days_to_predict = days_to_predict
+
+    def get_region_pop(self, region, pop_df, prov_df):
+        prov_list = prov_df[prov_df.Region == region]['Province'].values
+
+        N = 0
+        for prov in prov_list:
+            N += pop_df.loc[
+                (pop_df.Territorio == prov) &
+                (pop_df.Eta == "Total")
+                ]['Value'].values[0]
+
+        return N
+
+    def fix_arr(self, arr):
+        arr[arr < 0] = 0
+        arr[np.isinf(arr)] = 0
+        return np.nan_to_num(arr)
+
+    def lag_data(self, data, lag=7, return_all=False):
+        if isinstance(data, np.ndarray):
+            N = data.shape[0]
+        else:
+            N = len(data)
+
+        X = np.empty(shape=(N-lag, lag+1))
+
+        for i in range(lag, N):
+            X[i-lag, ] = [data[i-j] for j in range(lag+1)]
+
+        if not return_all:
+            return X[-1, 1:]
+        else:
+            return X[:, 1:], X[:, 0]
+
+    def fit(self):
+        pop = self.get_region_pop(
+            region=self.regione,
+            pop_df=self.pop_prov_df,
+            prov_df=self.prov_list_df
+        )
+
+        filtered_df = self.data_df[self.data_df[self.group_column] == self.regione][['data', 'totale_positivi', 'dimessi_guariti', 'deceduti', 'totale_casi', 'nuovi_positivi']]
+
+        filtered_df = filtered_df.query(self.data_filter + ' > ' + self.data_column)
+
+        filtered_df['suscettibili'] = pop - filtered_df['totale_casi']
+
+        filtered_df = filtered_df[[
+            'data',
+            'totale_positivi',
+            'dimessi_guariti',
+            'deceduti',
+            'suscettibili',
+            'nuovi_positivi'
+        ]]
+
+        n = filtered_df.shape[0]
+
+        gamma = np.diff(filtered_df['dimessi_guariti'].values)/filtered_df.iloc[:n-1]['totale_positivi'].values
+        alpha = np.diff(filtered_df['deceduti'].values)/filtered_df.iloc[:n-1]['totale_positivi'].values
+        beta = (pop/filtered_df.iloc[:n-1]['suscettibili'].values)*(np.diff(filtered_df['totale_positivi'].values)+np.diff(filtered_df['dimessi_guariti'].values)+np.diff(filtered_df['deceduti'].values))/filtered_df.iloc[:n-1]['totale_positivi'].values
+        R0 = beta/(gamma+alpha)
+
+        gamma = self.fix_arr(gamma)
+        alpha = self.fix_arr(alpha)
+        beta = self.fix_arr(beta)
+        R0 = self.fix_arr(R0)
+
+        reg_beta = LinearRegression().fit(
+            *self.lag_data(beta, self.lag, True)
+        )
+        reg_gamma = LinearRegression().fit(
+            *self.lag_data(gamma, self.lag, True)
+        )
+        reg_alpha = LinearRegression().fit(
+            *self.lag_data(alpha, self.lag, True)
+        )
+
+        S = np.zeros(self.days_to_predict + 2)
+        I = np.zeros(self.days_to_predict + 2)
+        R = np.zeros(self.days_to_predict + 2)
+        D = np.zeros(self.days_to_predict + 2)
+        S[0] = filtered_df.iloc[-1]['suscettibili']
+        I[0] = filtered_df.iloc[-1]['totale_positivi']
+        R[0] = filtered_df.iloc[-1]['dimessi_guariti']
+        D[0] = filtered_df.iloc[-1]['deceduti']
+
+        for i in range(self.days_to_predict + 1):
+            _beta = self.fix_arr(
+                reg_beta.predict(
+                    self.lag_data(beta, self.lag).reshape(1, -1)
+                )
+            )
+            _gamma = self.fix_arr(
+                reg_gamma.predict(
+                    self.lag_data(gamma, self.lag).reshape(1, -1)
+                )
+            )
+            _alpha = self.fix_arr(
+                reg_alpha.predict(
+                    self.lag_data(alpha, self.lag).reshape(1, -1)
+                )
+            )
+
+            beta = np.append(beta, _beta, axis=0)
+            gamma = np.append(gamma, _gamma, axis=0)
+            alpha = np.append(alpha, _alpha, axis=0)
+
+            dIdt = np.round((1 + _beta * (S[i]/pop) - _gamma - _alpha)*I[i])
+            dRdt = np.round(R[i] + _gamma * I[i])
+            dDdt = np.round(D[i] + _alpha * I[i])
+            dSdt = pop-dIdt[0]-dRdt[0]-dDdt[0]
+
+            S[i+1] = dSdt
+            I[i+1] = dIdt
+            R[i+1] = dRdt
+            D[i+1] = dDdt
+
+        S = S[1:]
+        I = I[1:]
+        R = R[1:]
+        D = D[1:]
+
+        dates = pd.date_range(
+            start=(
+                filtered_df.iloc[-1]['data'] + pd.DateOffset(1)
+            ).strftime('%Y-%m-%d'),
+            periods=self.days_to_predict + 1
+        )
+
+        tmp_df = pd.DataFrame(
+            np.column_stack([np.zeros(self.days_to_predict + 1), I, R, D, S]),
+            columns=[
+                'data',
+                'totale_positivi',
+                'dimessi_guariti',
+                'deceduti',
+                'suscettibili'])
+
+        tmp_df['data'] = dates
+
+        filtered_df = pd.concat([filtered_df, tmp_df], ignore_index=True)
+
+        filtered_df['nuovi_positivi'] = [0] + list(
+            np.diff(filtered_df['totale_positivi'].values) +
+            np.diff(filtered_df['dimessi_guariti'].values) +
+            np.diff(filtered_df['deceduti'].values))
+
+        filtered_df['nuovi_positivi'] = \
+            filtered_df['nuovi_positivi'].apply(lambda x: 0 if x < 0 else x)
+
+        beta = np.append(beta, np.zeros((1,)), axis=0)
+        gamma = np.append(gamma, np.zeros((1,)), axis=0)
+        alpha = np.append(alpha, np.zeros((1,)), axis=0)
+
+        filtered_df['beta'] = beta
+        filtered_df['gamma'] = gamma
+        filtered_df['alpha'] = alpha
+        filtered_df['R0'] = self.fix_arr(beta/(gamma+alpha))
+        filtered_df = filtered_df[:-1]
+
+        filtered_df = filtered_df.astype({
+            'totale_positivi': 'int32',
+            'dimessi_guariti': 'int32',
+            'deceduti': 'int32',
+            'suscettibili': 'int32',
+            'nuovi_positivi': 'int32'})
+    
+        self._fdf = filtered_df
+        self._realdf = self._get_real_data()
+
+        return filtered_df
+
+    @property
+    def fitted_df(self):
+        return self._fdf
+
+    @property
+    def real_df(self):
+        return self._realdf
+
+    def _get_real_data(self):
+        pop = self.get_region_pop(
+            region=self.regione,
+            pop_df=self.pop_prov_df,
+            prov_df=self.prov_list_df
+        )
+
+        real_df = self.data_df[self.data_df[self.group_column] == self.regione][[
+            'data',
+            'totale_positivi',
+            'dimessi_guariti',
+            'deceduti',
+            'totale_casi',
+            'nuovi_positivi'
+        ]]
+
+        query = (
+            pd.Timestamp(self.data_filter) + pd.DateOffset(self.days_to_predict)
+            ).strftime('%Y%m%d') + ' > ' + self.data_column
+
+        real_df = real_df.query(query)
+        real_df['suscettibili'] = pop - real_df['totale_casi']
+        real_df = real_df[[
+            'data',
+            'totale_positivi',
+            'dimessi_guariti',
+            'deceduti',
+            'suscettibili',
+            'nuovi_positivi'
+        ]]
+
+        self._realdf = real_df
+
+        return real_df
+
+    def extract_ys(self, y_true, y_pred, compart):
+        if y_true is None or y_pred is None:
+            y_true = self.real_df[compart].values
+            y_pred = self.fitted_df[compart].values
+
+        return y_true, y_pred
+
+    def mae(self, y_true=None, y_pred=None, compart=None):
+        return mean_absolute_error(*self.extract_ys(y_true, y_pred, compart))
+
+    def mse(self, y_true=None, y_pred=None, compart=None):
+        return mean_squared_error(*self.extract_ys(y_true, y_pred, compart))
+
+    def rmse(self, y_true=None, y_pred=None, compart=None):
+        return mean_squared_error(*self.extract_ys(y_true, y_pred, compart), squared=False)
