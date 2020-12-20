@@ -80,21 +80,19 @@ def load_csv(path):
         dpc_province_df.denominazione_provincia.str \
         .replace("Forlì-Cesena", "Forli-Cesena")
 
-    dpc_regioni_df.denominazione_regione = \
-        dpc_regioni_df.denominazione_regione.str \
-        .replace("P.A. Trento", "Trentino Alto Adige") \
-        .replace("P.A. Bolzano", "Trentino Alto Adige")
+    dpc_regioni_df = fix_trentino(dpc_regioni_df)
 
-    covidpro_df.Region = covidpro_df.Region.str \
-        .replace("P.A. Trento", "Trentino Alto Adige") \
-        .replace("P.A. Bolzano", "Trentino Alto Adige")
+    #covidpro_df.Region = covidpro_df.Region.str \
+    #    .replace("P.A. Trento", "Trentino Alto Adige") \
+    #    .replace("P.A. Bolzano", "Trentino Alto Adige")
 
     pop_prov_df.Territorio = pop_prov_df.Territorio.str \
         .replace("Valle d'Aosta", "Aosta") \
         .replace("Forlì-Cesena", "Forli-Cesena") \
-        .replace("Massa-Carrara", "Massa Carrara") \
-        .replace("L'Aquila", "L Aquila") \
-        .replace("Reggio nell'Emilia", 'Reggio nell Emilia')
+        .replace("Massa-Carrara", "Massa Carrara")
+
+    # .replace("Reggio nell'Emilia", 'Reggio nell Emilia') \
+    # .replace("L'Aquila", "L Aquila")
 
     covidpro_df.fillna(0, inplace=True)
     dpc_regioni_df.fillna(0, inplace=True)
@@ -104,6 +102,44 @@ def load_csv(path):
         covidpro_df, dpc_regioni_df,
         dpc_province_df, pop_prov_df, prov_list_df)
 
+
+def fix_trentino(df):
+    """
+    We need to sum all values by date for the
+    two autonomous provinces of Trentino, and
+    then replace these values with the original
+    ones in the original df.
+    """
+
+    df_bolzano = df[df.denominazione_regione == 'P.A. Bolzano']
+    df_trento = df[df.denominazione_regione == 'P.A. Trento']
+
+    cols_to_drop = ['data', 'stato', 'codice_regione',
+                    'denominazione_regione', 'lat', 'long',
+                    'variazione_totale_positivi', 'note_test',
+                    'note_casi', 'note']
+
+    res_df = df_trento.drop(columns=cols_to_drop).reset_index(drop=True) + \
+        df_bolzano.drop(columns=cols_to_drop).reset_index(drop=True)
+
+    res_df.insert(0, 'data', df_bolzano.reset_index(drop=True)['data'])
+    res_df.insert(0, 'denominazione_regione', 'Trentino Alto Adige')
+
+    # We don't care about these atm
+    res_df[[
+        'stato',
+        'codice_regione',
+        'lat', 'long',
+        'variazione_totale_positivi', 'note_test',
+        'note_casi', 'note']] = 0
+
+    df_filtered = df[df.denominazione_regione != 'P.A. Bolzano']
+    df_filtered = df_filtered[
+        df_filtered.denominazione_regione != 'P.A. Trento']
+
+    df_res = pd.concat([df_filtered, res_df])
+
+    return df_res
 
 def pre_process_csv(covidpro_df,
                     dpc_regioni_df,
