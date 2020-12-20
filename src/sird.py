@@ -122,13 +122,13 @@ def Model(days, N, R_0_start, k, x0, R_0_end, alpha, gamma):
 
 
 class DeterministicSird():
-    def __init__(self, data_df, pop_prov_df, prov_list_df, regione,
+    def __init__(self, data_df, pop_prov_df, prov_list_df, area,
                  group_column, data_column, data_filter, lag, days_to_predict):
 
         self.data_df = data_df
         self.pop_prov_df = pop_prov_df
         self.prov_list_df = prov_list_df
-        self.regione = regione
+        self.area = area
         self.group_column = group_column
         self.data_column = data_column
         self.data_filter = data_filter
@@ -168,15 +168,9 @@ class DeterministicSird():
         else:
             return X[:, 1:], X[:, 0]
 
-    def fit(self):
-        pop = self.get_region_pop(
-            region=self.regione,
-            pop_df=self.pop_prov_df,
-            prov_df=self.prov_list_df
-        )
-
+    def _prepare_data(self):
         data_df = self.data_df[
-            self.data_df[self.group_column] == self.regione
+            self.data_df[self.group_column] == self.area
             ][[
                 'data',
                 'totale_positivi',
@@ -189,7 +183,7 @@ class DeterministicSird():
             self.data_filter + ' > ' + self.data_column
         )
 
-        data_df['suscettibili'] = pop - data_df['totale_casi']
+        data_df['suscettibili'] = self.pop - data_df['totale_casi']
 
         data_df = data_df[[
             'data',
@@ -200,6 +194,17 @@ class DeterministicSird():
             'nuovi_positivi'
         ]]
 
+        return data_df
+
+    def fit(self):
+        self.pop = self.get_region_pop(
+            region=self.area,
+            pop_df=self.pop_prov_df,
+            prov_df=self.prov_list_df
+        )
+
+        data_df = self._prepare_data()
+
         n = data_df.shape[0]
 
         gamma = np.diff(data_df['dimessi_guariti'].values) / \
@@ -208,7 +213,7 @@ class DeterministicSird():
         alpha = np.diff(data_df['deceduti'].values) / \
             data_df.iloc[:n-1]['totale_positivi'].values
 
-        beta = (pop/data_df.iloc[:n-1]['suscettibili'].values) * \
+        beta = (self.pop/data_df.iloc[:n-1]['suscettibili'].values) * \
             (np.diff(data_df['totale_positivi'].values) +
              np.diff(data_df['dimessi_guariti'].values) +
              np.diff(data_df['deceduti'].values)) / \
@@ -260,10 +265,10 @@ class DeterministicSird():
             gamma = np.append(gamma, _gamma, axis=0)
             alpha = np.append(alpha, _alpha, axis=0)
 
-            dIdt = np.round((1 + _beta * (S[i]/pop) - _gamma - _alpha)*I[i])
+            dIdt = np.round((1 + _beta*(S[i]/self.pop) - _gamma - _alpha)*I[i])
             dRdt = np.round(R[i] + _gamma * I[i])
             dDdt = np.round(D[i] + _alpha * I[i])
-            dSdt = pop-dIdt[0]-dRdt[0]-dDdt[0]
+            dSdt = self.pop-dIdt[0]-dRdt[0]-dDdt[0]
 
             S[i+1] = dSdt
             I[i+1] = dIdt
@@ -334,14 +339,8 @@ class DeterministicSird():
         return self._realdf
 
     def _get_real_data(self):
-        pop = self.get_region_pop(
-            region=self.regione,
-            pop_df=self.pop_prov_df,
-            prov_df=self.prov_list_df
-        )
-
         real_df = self.data_df[
-            self.data_df[self.group_column] == self.regione
+            self.data_df[self.group_column] == self.area
         ][[
             'data',
             'totale_positivi',
@@ -357,7 +356,7 @@ class DeterministicSird():
             ).strftime('%Y%m%d') + ' > ' + self.data_column
 
         real_df = real_df.query(query)
-        real_df['suscettibili'] = pop - real_df['totale_casi']
+        real_df['suscettibili'] = self.pop - real_df['totale_casi']
         real_df = real_df[[
             'data',
             'totale_positivi',
