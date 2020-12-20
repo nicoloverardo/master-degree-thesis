@@ -175,13 +175,23 @@ class DeterministicSird():
             prov_df=self.prov_list_df
         )
 
-        filtered_df = self.data_df[self.data_df[self.group_column] == self.regione][['data', 'totale_positivi', 'dimessi_guariti', 'deceduti', 'totale_casi', 'nuovi_positivi']]
+        data_df = self.data_df[
+            self.data_df[self.group_column] == self.regione
+            ][[
+                'data',
+                'totale_positivi',
+                'dimessi_guariti',
+                'deceduti', 'totale_casi',
+                'nuovi_positivi'
+            ]]
 
-        filtered_df = filtered_df.query(self.data_filter + ' > ' + self.data_column)
+        data_df = data_df.query(
+            self.data_filter + ' > ' + self.data_column
+        )
 
-        filtered_df['suscettibili'] = pop - filtered_df['totale_casi']
+        data_df['suscettibili'] = pop - data_df['totale_casi']
 
-        filtered_df = filtered_df[[
+        data_df = data_df[[
             'data',
             'totale_positivi',
             'dimessi_guariti',
@@ -190,11 +200,19 @@ class DeterministicSird():
             'nuovi_positivi'
         ]]
 
-        n = filtered_df.shape[0]
+        n = data_df.shape[0]
 
-        gamma = np.diff(filtered_df['dimessi_guariti'].values)/filtered_df.iloc[:n-1]['totale_positivi'].values
-        alpha = np.diff(filtered_df['deceduti'].values)/filtered_df.iloc[:n-1]['totale_positivi'].values
-        beta = (pop/filtered_df.iloc[:n-1]['suscettibili'].values)*(np.diff(filtered_df['totale_positivi'].values)+np.diff(filtered_df['dimessi_guariti'].values)+np.diff(filtered_df['deceduti'].values))/filtered_df.iloc[:n-1]['totale_positivi'].values
+        gamma = np.diff(data_df['dimessi_guariti'].values) / \
+            data_df.iloc[:n-1]['totale_positivi'].values
+
+        alpha = np.diff(data_df['deceduti'].values) / \
+            data_df.iloc[:n-1]['totale_positivi'].values
+
+        beta = (pop/data_df.iloc[:n-1]['suscettibili'].values) * \
+            (np.diff(data_df['totale_positivi'].values) +
+             np.diff(data_df['dimessi_guariti'].values) +
+             np.diff(data_df['deceduti'].values)) / \
+            data_df.iloc[:n-1]['totale_positivi'].values
         R0 = beta/(gamma+alpha)
 
         gamma = self.fix_arr(gamma)
@@ -216,10 +234,10 @@ class DeterministicSird():
         I = np.zeros(self.days_to_predict + 2)
         R = np.zeros(self.days_to_predict + 2)
         D = np.zeros(self.days_to_predict + 2)
-        S[0] = filtered_df.iloc[-1]['suscettibili']
-        I[0] = filtered_df.iloc[-1]['totale_positivi']
-        R[0] = filtered_df.iloc[-1]['dimessi_guariti']
-        D[0] = filtered_df.iloc[-1]['deceduti']
+        S[0] = data_df.iloc[-1]['suscettibili']
+        I[0] = data_df.iloc[-1]['totale_positivi']
+        R[0] = data_df.iloc[-1]['dimessi_guariti']
+        D[0] = data_df.iloc[-1]['deceduti']
 
         for i in range(self.days_to_predict + 1):
             _beta = self.fix_arr(
@@ -259,7 +277,7 @@ class DeterministicSird():
 
         dates = pd.date_range(
             start=(
-                filtered_df.iloc[-1]['data'] + pd.DateOffset(1)
+                data_df.iloc[-1]['data'] + pd.DateOffset(1)
             ).strftime('%Y-%m-%d'),
             periods=self.days_to_predict + 1
         )
@@ -275,37 +293,37 @@ class DeterministicSird():
 
         tmp_df['data'] = dates
 
-        filtered_df = pd.concat([filtered_df, tmp_df], ignore_index=True)
+        data_df = pd.concat([data_df, tmp_df], ignore_index=True)
 
-        filtered_df['nuovi_positivi'] = [0] + list(
-            np.diff(filtered_df['totale_positivi'].values) +
-            np.diff(filtered_df['dimessi_guariti'].values) +
-            np.diff(filtered_df['deceduti'].values))
+        data_df['nuovi_positivi'] = [0] + list(
+            np.diff(data_df['totale_positivi'].values) +
+            np.diff(data_df['dimessi_guariti'].values) +
+            np.diff(data_df['deceduti'].values))
 
-        filtered_df['nuovi_positivi'] = \
-            filtered_df['nuovi_positivi'].apply(lambda x: 0 if x < 0 else x)
+        data_df['nuovi_positivi'] = \
+            data_df['nuovi_positivi'].apply(lambda x: 0 if x < 0 else x)
 
         beta = np.append(beta, np.zeros((1,)), axis=0)
         gamma = np.append(gamma, np.zeros((1,)), axis=0)
         alpha = np.append(alpha, np.zeros((1,)), axis=0)
 
-        filtered_df['beta'] = beta
-        filtered_df['gamma'] = gamma
-        filtered_df['alpha'] = alpha
-        filtered_df['R0'] = self.fix_arr(beta/(gamma+alpha))
-        filtered_df = filtered_df[:-1]
+        data_df['beta'] = beta
+        data_df['gamma'] = gamma
+        data_df['alpha'] = alpha
+        data_df['R0'] = self.fix_arr(beta/(gamma+alpha))
+        data_df = data_df[:-1]
 
-        filtered_df = filtered_df.astype({
+        data_df = data_df.astype({
             'totale_positivi': 'int32',
             'dimessi_guariti': 'int32',
             'deceduti': 'int32',
             'suscettibili': 'int32',
             'nuovi_positivi': 'int32'})
-    
-        self._fdf = filtered_df
+
+        self._fdf = data_df
         self._realdf = self._get_real_data()
 
-        return filtered_df
+        return data_df
 
     @property
     def fitted_df(self):
@@ -322,7 +340,9 @@ class DeterministicSird():
             prov_df=self.prov_list_df
         )
 
-        real_df = self.data_df[self.data_df[self.group_column] == self.regione][[
+        real_df = self.data_df[
+            self.data_df[self.group_column] == self.regione
+        ][[
             'data',
             'totale_positivi',
             'dimessi_guariti',
@@ -332,7 +352,8 @@ class DeterministicSird():
         ]]
 
         query = (
-            pd.Timestamp(self.data_filter) + pd.DateOffset(self.days_to_predict)
+            pd.Timestamp(self.data_filter) +
+            pd.DateOffset(self.days_to_predict)
             ).strftime('%Y%m%d') + ' > ' + self.data_column
 
         real_df = real_df.query(query)
@@ -364,4 +385,5 @@ class DeterministicSird():
         return mean_squared_error(*self.extract_ys(y_true, y_pred, compart))
 
     def rmse(self, y_true=None, y_pred=None, compart=None):
-        return mean_squared_error(*self.extract_ys(y_true, y_pred, compart), squared=False)
+        return mean_squared_error(*self.extract_ys(y_true, y_pred, compart),
+                                  squared=False)
