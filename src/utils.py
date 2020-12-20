@@ -82,7 +82,7 @@ def load_csv(path):
 
     dpc_regioni_df = fix_trentino(dpc_regioni_df)
 
-    #covidpro_df.Region = covidpro_df.Region.str \
+    # covidpro_df.Region = covidpro_df.Region.str \
     #    .replace("P.A. Trento", "Trentino Alto Adige") \
     #    .replace("P.A. Bolzano", "Trentino Alto Adige")
 
@@ -140,6 +140,7 @@ def fix_trentino(df):
     df_res = pd.concat([df_filtered, res_df])
 
     return df_res
+
 
 def pre_process_csv(covidpro_df,
                     dpc_regioni_df,
