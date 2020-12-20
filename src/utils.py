@@ -82,9 +82,13 @@ def load_csv(path):
 
     dpc_regioni_df = fix_trentino(dpc_regioni_df)
 
-    # covidpro_df.Region = covidpro_df.Region.str \
-    #    .replace("P.A. Trento", "Trentino Alto Adige") \
-    #    .replace("P.A. Bolzano", "Trentino Alto Adige")
+    covidpro_df.Region = covidpro_df.Region.str \
+        .replace("P.A. Trento", "Trentino Alto Adige") \
+        .replace("P.A. Bolzano", "Trentino Alto Adige")
+
+    covidpro_df.Province = covidpro_df.Province.str \
+        .replace("Reggio nell Emilia", "Reggio nell'Emilia") \
+        .replace("L Aquila", "L'Aquila") \
 
     pop_prov_df.Territorio = pop_prov_df.Territorio.str \
         .replace("Valle d'Aosta", "Aosta") \
