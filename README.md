@@ -1,5 +1,5 @@
-# master-degree-thesis
-Thesis for the MSc in Data Science and Economics at Università degli Studi di Milano.
+# A comparison of predictive models for COVID-19 in Italy
+Master thesis for the MSc in [Data Science and Economics](https://dse.cdl.unimi.it/en) at Università degli Studi di Milano.
 
 ## Usage
 While the work is still in progress, you can run a pre-alpha version of the dashboard by executing:
