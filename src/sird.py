@@ -144,6 +144,28 @@ class DeterministicSird():
         self.days_to_predict = days_to_predict
 
     def get_region_pop(self, region, pop_df, prov_df):
+        """
+        Computes the total population for a region
+        starting from the provinces' popuplation
+
+        Parameters
+        ----------
+        region : str
+            The region whose population we need
+
+        pop_df : pandas DataFrame
+            Data for provinces population
+
+        prov_df : pandas DataFrame
+            Data that associates each province with
+            its region
+
+        Returns
+        -------
+        N : int
+            The population of the region
+        """
+
         prov_list = prov_df[prov_df.Region == region]['Province'].values
 
         N = 0
