@@ -1,4 +1,5 @@
 import itertools
+from numpy.core.fromnumeric import _all_dispatcher
 import pandas as pd
 import numpy as np
 
@@ -12,7 +13,10 @@ from sklearn.metrics import mean_absolute_error, mean_squared_error
 class ProphetModel():
     def __init__(self, data, area,
                  compart, group_column, date_column,
-                 prediction_size=14, query='20200701 > Date'):
+                 prediction_size=14, query='20200701 > Date',
+                 holidays=True,
+                 growth='linear',
+                 cap=None):
 
         self.data = data
         self.area = area
@@ -21,6 +25,9 @@ class ProphetModel():
         self.date_column = date_column
         self.query = query
         self.prediction_size = prediction_size
+        self.holidays = holidays
+        self.growth = growth
+        self.cap = cap
 
     @property
     def df(self):
@@ -40,7 +47,12 @@ class ProphetModel():
 
     @property
     def future_df(self):
-        return self.m.make_future_dataframe(periods=self.prediction_size)
+        fdf = self.m.make_future_dataframe(periods=self.prediction_size)
+        if self.growth is 'logistic':
+            if self.cap is None:
+                self.cap = self.df['y'].max() + 20000
+            fdf['cap'] = self.cap
+        return fdf
 
     def mae(self):
         return mean_absolute_error(self.y_true, self.y_pred)
@@ -56,10 +68,14 @@ class ProphetModel():
         print('MSE: %.3f' % self.mse())
         print('RMSE: %.3f' % self.rmse())
 
-    def fit(self, *args, **kwargs):
+    def fit(self, **kwargs):
         self.make_df()
 
-        self.m = Prophet(*args, **kwargs)
+        self.m = Prophet(growth=self.growth, **kwargs)
+
+        if self.holidays:
+            self.m.add_country_holidays(country_name='IT')
+
         _ = self.m.fit(self.train)
 
         self.forecast = self.m.predict(self.future_df)
@@ -71,6 +87,11 @@ class ProphetModel():
 
         df = df.loc[:, [self.date_column, self.compart]]
         df.columns = ['ds', 'y']
+
+        if self.growth is 'logistic':
+            if self.cap is None:
+                self.cap = df['y'].max() + 20000
+            df['cap'] = self.cap
 
         return df.reset_index(drop=True)
 
@@ -87,9 +108,23 @@ class ProphetModel():
         all_params = [dict(zip(param_grid.keys(), v))
                       for v in itertools.product(*param_grid.values())]
 
+        # We manually set this cap otherwise are not able
+        # to see the plots clearly. If we were to set the correct cap,
+        # we would have used the total pop:
+        # self.df['cap'] = get_region_pop(province, pop_prov_df, prov_list_df)
+        if self.growth is 'logistic':
+            if self.cap is None:
+                self.cap = self.df['y'].max() + 20000
+            self.df['cap'] = self.cap
+
         rmses = []
         for params in all_params:
-            m = Prophet(**params).fit(self.df)
+            m = Prophet(self.growth, **params)
+
+            if self.holidays:
+                m.add_country_holidays(country_name='IT')
+
+            m.fit(self.df)
 
             df_cv = cross_validation(m, initial=initial, horizon=horizon,
                                      period=period, parallel="processes")
@@ -107,7 +142,10 @@ class ProphetModel():
         self.fit(**self.best_params)
 
     def plot_data(self, figsize=(8, 5)):
-        self.df['y'].plot(figsize=figsize)
+        plt.figure(figsize=figsize)
+        plt.plot(self.df['ds'], self.df['y'])
+        plt.xlabel('Date')
+        plt.ylabel('Individuals')
         plt.title(self.compart)
         plt.show()
 
@@ -128,6 +166,9 @@ class ProphetModel():
 
         plt.axvline(self.train.iloc[-1]['ds'],
                     linestyle='dashed', color='grey', alpha=0.3)
+
+        if self.cap is not None:
+            plt.axhline(self.cap, linestyle='dashed', color='b')
 
         plt.legend()
         plt.show()
