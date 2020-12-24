@@ -97,12 +97,14 @@ def sird(province,
     init = N-1, 1, 0, 0
 
     # Solve the model
-    sirsol = odeint(sird_calc, init, times, args=(N, gamma,
-                                                  alpha,
-                                                  R_0_start, k,
-                                                  x0, R_0_end,
-                                                  beta
-                                                  ))
+    sirsol = odeint(
+        sird_calc,
+        init,
+        times,
+        args=(
+            N, gamma, alpha, R_0_start, k, x0, R_0_end, beta
+        )
+    )
 
     return sirsol.T
 
@@ -111,8 +113,14 @@ def Model(days, N, R_0_start, k, x0, R_0_end, alpha, gamma):
     y0 = N-1.0, 1.0, 0.0, 0.0,
     times = range(0, days)
 
-    sirsol = odeint(sird_calc, y0, times, args=(
-        N, gamma, alpha, R_0_start, k, x0, R_0_end, beta))
+    sirsol = odeint(
+        sird_calc,
+        y0,
+        times,
+        args=(
+            N, gamma, alpha, R_0_start, k, x0, R_0_end, beta
+        )
+    )
 
     S, I, R, D = sirsol.T
     R0_over_time = [beta(i, R_0_start, k, x0, R_0_end, gamma)/gamma
@@ -294,7 +302,8 @@ class DeterministicSird():
                 'totale_positivi',
                 'dimessi_guariti',
                 'deceduti',
-                'suscettibili'])
+                'suscettibili']
+        )
 
         tmp_df['data'] = dates
 
