@@ -1,5 +1,4 @@
 import itertools
-from numpy.core.fromnumeric import _all_dispatcher
 import pandas as pd
 import numpy as np
 
