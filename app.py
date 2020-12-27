@@ -1,4 +1,5 @@
 import streamlit as st
+import datetime
 
 from src.utils import *
 from src.plots import *
@@ -42,18 +43,39 @@ def main():
 
     st.header("Regional plots")
 
-    region_selectbox = st.selectbox(
+    col1, col2, col3 = st.beta_columns(3)
+
+    region_selectbox = col1.selectbox(
         "Region:",
         dpc_regioni_df.denominazione_regione.unique(),
         int((dpc_regioni_df.denominazione_regione == 'Lombardia').argmax())
     )
 
+    start_date_region = col2.date_input(
+        'Start date',
+        datetime.date(2020, 2, 24),
+        datetime.date(2020, 2, 24),
+        dpc_regioni_df.iloc[-1]['data']
+    )
+    end_date_region = col3.date_input(
+        'End date',
+        dpc_regioni_df.iloc[-1]['data'],
+        datetime.date(2020, 2, 24),
+        dpc_regioni_df.iloc[-1]['data']
+    )
+
+    dpc_reg_filtered = dpc_regioni_df.query(
+        end_date_region.strftime('%Y%m%d') +
+        ' >= data >= ' +
+        start_date_region.strftime('%Y%m%d')
+    )
+
     if show_raw_data:
-        dpc_regioni_df[dpc_regioni_df.denominazione_regione == region_selectbox]  # nopep8
+        dpc_reg_filtered[dpc_reg_filtered.denominazione_regione == region_selectbox]  # nopep8
 
     st.plotly_chart(
         custom_plot(
-            df=dpc_regioni_df,
+            df=dpc_reg_filtered,
             ydata=[
                 'totale_casi',
                 'totale_positivi',
@@ -83,7 +105,7 @@ def main():
 
     st.plotly_chart(
         custom_plot(
-            df=dpc_regioni_df,
+            df=dpc_reg_filtered,
             ydata=[
                 'IC_R', 'Hosp_R',
                 'NC_R', 'NP_R'],
@@ -103,18 +125,41 @@ def main():
 
     st.header("Provincial plots")
 
-    province_selectbox = st.selectbox(
+    col3, col4, col5 = st.beta_columns(3)
+
+    province_selectbox = col3.selectbox(
         "Region:",
         covidpro_df.Province.unique(),
         int((covidpro_df.Province == 'Piacenza').argmax())
     )
 
+    start_date_province = col4.date_input(
+        'Start date',
+        datetime.date(2020, 2, 24),
+        datetime.date(2020, 2, 24),
+        dpc_regioni_df.iloc[-1]['data'],
+        'start_date_province'
+    )
+    end_date_province = col5.date_input(
+        'End date',
+        dpc_regioni_df.iloc[-1]['data'],
+        datetime.date(2020, 2, 24),
+        dpc_regioni_df.iloc[-1]['data'],
+        'end_date_province'
+    )
+
+    covidpro_filtered = covidpro_df.query(
+        end_date_province.strftime('%Y%m%d') +
+        ' >= Date >= ' +
+        start_date_province.strftime('%Y%m%d')
+    )
+
     if show_raw_data:
-        covidpro_df[covidpro_df.Province == province_selectbox]
+        covidpro_filtered[covidpro_filtered.Province == province_selectbox]
 
     st.plotly_chart(
         custom_plot(
-            df=covidpro_df,
+            df=covidpro_filtered,
             xdata='Date',
             ydata=[
                 'Deaths', 'New_cases'],
@@ -131,7 +176,7 @@ def main():
 
     st.plotly_chart(
         custom_plot(
-            df=covidpro_df,
+            df=covidpro_filtered,
             xdata='Date',
             ydata=[
                 'Tot_deaths', 'Curr_pos_cases'],
@@ -148,7 +193,7 @@ def main():
 
     st.plotly_chart(
         custom_plot(
-            df=covidpro_df,
+            df=covidpro_filtered,
             xdata='Date',
             ydata=['NP_R', 'DR'],
             title='COVID-19 - ',
