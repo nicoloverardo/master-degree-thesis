@@ -130,8 +130,10 @@ def Model(days, N, R_0_start, k, x0, R_0_end, alpha, gamma):
 
 
 class DeterministicSird():
-    def __init__(self, data_df, pop_prov_df, prov_list_df, area,
-                 group_column, data_column, data_filter, lag, days_to_predict):
+    def __init__(self, data_df, pop_prov_df,
+                 prov_list_df, area, group_column,
+                 data_column, data_filter, lag,
+                 days_to_predict, is_regional=True, pcm_data=None):
 
         self.data_df = data_df
         self.pop_prov_df = pop_prov_df
@@ -142,6 +144,8 @@ class DeterministicSird():
         self.data_filter = data_filter
         self.lag = lag
         self.days_to_predict = days_to_predict
+        self.is_regional = is_regional
+        self.pcm_data = pcm_data
 
     def get_region_pop(self, region, pop_df, prov_df):
         """
@@ -198,7 +202,7 @@ class DeterministicSird():
         else:
             return X[:, 1:], X[:, 0]
 
-    def _prepare_data(self):
+    def _prepare_data_regional(self):
         data_df = self.data_df[
             self.data_df[self.group_column] == self.area
             ][[
@@ -226,6 +230,82 @@ class DeterministicSird():
 
         return data_df
 
+    def _prepare_data_provincial(self):
+        regione = self.data_df[
+            self.data_df[self.group_column] == self.area
+        ]['Region'].values[0]
+
+        pop = self.pop_prov_df.loc[
+            (self.pop_prov_df.Territorio == self.area) &
+            (self.pop_prov_df.Eta == "Total")
+        ]['Value'].values[0]
+
+        pcm_data = self.pcm_data[
+            self.pcm_data['denominazione_regione'] == regione
+            ][[
+                'data',
+                'totale_positivi',
+                'dimessi_guariti',
+                'deceduti', 'totale_casi',
+                'nuovi_positivi'
+            ]].reset_index(drop=True)
+
+        data_df = self.data_df[
+            self.data_df[self.group_column] == self.area
+            ][[
+                "Date",
+                "New_cases",
+                "Curr_pos_cases",
+                "Tot_deaths"
+            ]].reset_index(drop=True)
+
+        recov_rate = (
+            pcm_data['dimessi_guariti'] /
+            pcm_data['totale_casi'])[:data_df.shape[0]]
+
+        recov_rate = self.fix_arr(recov_rate)
+
+        recov = recov_rate * data_df['Curr_pos_cases'].values
+        data_df['dimessi_guariti'] = recov
+
+        infected = data_df['Curr_pos_cases'].values - \
+            data_df['Tot_deaths'].values - \
+            data_df['dimessi_guariti']
+
+        data_df['totale_positivi'] = infected
+        data_df['suscettibili'] = pop - data_df['Curr_pos_cases']
+
+        data_df.rename(
+            columns={
+                "New_cases": "nuovi_positivi",
+                "Curr_pos_cases": "totale_casi",
+                "Tot_deaths": "deceduti",
+                "Date": "data"
+            }, inplace=True)
+
+        data_df = data_df.astype({
+            'totale_positivi': 'int32',
+            'dimessi_guariti': 'int32',
+            'deceduti': 'int32',
+            'suscettibili': 'int32',
+            'nuovi_positivi': 'int32'
+        })
+
+        data_df = data_df.query(
+            self.data_filter + ' > ' + self.data_column
+        )
+
+        data_df = data_df[[
+            'data',
+            'totale_positivi',
+            'dimessi_guariti',
+            'deceduti',
+            'suscettibili',
+            'nuovi_positivi'
+        ]]
+
+        return data_df
+
     def fit(self):
         self.pop = self.get_region_pop(
             region=self.area,
@@ -233,7 +313,10 @@ class DeterministicSird():
             prov_df=self.prov_list_df
         )
 
-        data_df = self._prepare_data()
+        if self.is_regional:
+            data_df = self._prepare_data_regional()
+        else:
+            data_df = self._prepare_data_provincial()
 
         n = data_df.shape[0]
 
