@@ -222,6 +222,22 @@ def load_sird_page(covidpro_df, dpc_regioni_df, pop_prov_df, prov_list_df):
         )
     )
 
+    mae_tot_pos = model.mae(compart='totale_positivi')
+    mse_tot_pos = model.mse(compart='totale_positivi')
+    mae_deaths = model.mae(compart='deceduti')
+    mse_deaths = model.mse(compart='deceduti')
+    mae_rec = model.mae(compart='dimessi_guariti')
+    mse_rec = model.mse(compart='dimessi_guariti')
+
+    st.write(
+        "Average MAE: " +
+        str(np.round(np.mean([mae_tot_pos, mae_deaths, mae_rec]), 2))
+    )
+    st.write(
+        "Average MSE: " +
+        str(np.round(np.mean([mse_tot_pos, mse_deaths, mse_rec]), 2))
+    )
+
 
 def load_tf_page(covidpro_df, dpc_regioni_df):
     st.subheader("🚧 Page under construction")
