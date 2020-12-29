@@ -147,28 +147,62 @@ def load_sird_page(covidpro_df, dpc_regioni_df, pop_prov_df, prov_list_df):
     # Discrete SIRD
     st.header("Discrete SIRD")
 
+    area_radio = st.radio(
+        "Regional or provincial predictions:",
+        ['Regional', 'Provincial']
+    )
+
+    # Horizontal radio buttons.
+    # To remove in future update
+    st.write(
+        '<style>div.row-widget.stRadio > div{flex-direction:row;}</style>',
+        unsafe_allow_html=True
+    )
+
     col1, col2, col3 = st.beta_columns(3)
 
-    region_selectbox = col1.selectbox(
-        "Region:",
-        dpc_regioni_df.denominazione_regione.unique(),
-        int((dpc_regioni_df.denominazione_regione == 'Piemonte').argmax())
-    )
+    is_regional = True
+    pcm_data = None
+    group_column = 'denominazione_regione'
+    data_df = dpc_regioni_df
+    data_column = 'data'
+
+    if area_radio == "Regional":
+        area_selectbox = col1.selectbox(
+            "Region:",
+            dpc_regioni_df.denominazione_regione.unique(),
+            int((dpc_regioni_df.denominazione_regione == 'Piemonte').argmax()),
+            key="area_selectbox_reg"
+        )
+    else:
+        area_selectbox = col1.selectbox(
+            "Province:",
+            covidpro_df.Province.unique(),
+            int((covidpro_df.Province == 'Firenze').argmax()),
+            key="area_selectbox_prov"
+        )
+        is_regional = False
+        pcm_data = dpc_regioni_df
+        group_column = 'Province'
+        data_df = covidpro_df
+        data_column = 'Date'
 
     lags = col2.slider("Lags", 5, 15, 7)
     days_to_predict = col3.slider("Days to predict", 5, 30, 14)
     data_filter = '20200630'
 
     model = DeterministicSird(
-        data_df=dpc_regioni_df,
+        data_df=data_df,
         pop_prov_df=pop_prov_df,
         prov_list_df=prov_list_df,
-        area=region_selectbox,
-        group_column='denominazione_regione',
-        data_column='data',
+        area=area_selectbox,
+        group_column=group_column,
+        data_column=data_column,
         data_filter=data_filter,
         lag=lags,
-        days_to_predict=days_to_predict
+        days_to_predict=days_to_predict,
+        is_regional=is_regional,
+        pcm_data=pcm_data
     )
 
     res = model.fit()
@@ -177,7 +211,7 @@ def load_sird_page(covidpro_df, dpc_regioni_df, pop_prov_df, prov_list_df):
     st.plotly_chart(
         general_plot(
             t=real_df['data'],
-            title='Infected of ' + region_selectbox,
+            title='Infected of ' + area_selectbox,
             data=[
                 real_df['nuovi_positivi'].values,
                 res['nuovi_positivi'].values
@@ -193,7 +227,7 @@ def load_sird_page(covidpro_df, dpc_regioni_df, pop_prov_df, prov_list_df):
     st.plotly_chart(
         general_plot(
             t=real_df['data'],
-            title='Cumulative deaths of ' + region_selectbox,
+            title='Cumulative deaths of ' + area_selectbox,
             data=[
                 real_df['deceduti'].values,
                 res['deceduti'].values
@@ -209,7 +243,7 @@ def load_sird_page(covidpro_df, dpc_regioni_df, pop_prov_df, prov_list_df):
     st.plotly_chart(
         general_plot(
             t=real_df['data'],
-            title='Cumulative infected of ' + region_selectbox,
+            title='Cumulative infected of ' + area_selectbox,
             data=[
                 real_df['totale_positivi'].values,
                 res['totale_positivi'].values
