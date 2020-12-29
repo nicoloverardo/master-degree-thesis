@@ -26,15 +26,16 @@ def main():
     # Title
     st.title('Master Degree Thesis')
 
-    # Description
-    """
-    Welcome to the interactive dashboard of my thesis
-    for the MSc in Data Science and Economics at
-    Università degli Studi di Milano.
-    """
-
     # Sidebar title
-    st.sidebar.title('Welcome')
+    st.sidebar.title('Menu')
+    app_mode = st.sidebar.selectbox(
+        "Please select a page", [
+            "Homepage",
+            "Data Exploration",
+            "Time series",
+            "SIRD model",
+            "TensorFlow model"]
+    )
 
     # Loading state label
     data_load_state = st.text('Loading data...')
@@ -44,6 +45,57 @@ def main():
 
     data_load_state.empty()
 
+    if app_mode == 'Homepage':
+        load_homepage()
+    elif app_mode == 'Data Exploration':
+        load_eda(covidpro_df, dpc_regioni_df)
+    elif app_mode == 'Time series':
+        load_ts_page(covidpro_df, dpc_regioni_df)
+    elif app_mode == 'SIRD model':
+        load_ts_page(covidpro_df, dpc_regioni_df)
+    elif app_mode == 'TensorFlow model':
+        load_ts_page(covidpro_df, dpc_regioni_df)
+
+
+def load_homepage():
+    st.write(
+        "Welcome to the interactive dashboard of my thesis "
+        "for the MSc in Data Science and Economics at "
+        "Università degli Studi di Milano."
+    )
+    st.header("💻 The Application")
+    st.write("This application is a Streamlit dashboard that can be used "
+             "to explore the work of my master degree thesis.")
+    st.write("There are currently five pages available in the application:")
+    st.subheader("🧭 Data exploration")
+    st.markdown("* This gives a general overview of the data with interactive "
+                "plots.")
+    st.subheader("📈 Time series")
+    st.markdown("* This page allows you to see predictions made using time "
+                "series models and the Prophet library.")
+    st.subheader("👥 SIRD model")
+    st.markdown("* This page allows you to see predictions made using "
+                "stochastic and deterministic sird with time-dependent "
+                "parameters.")
+    st.subheader("🪄 TensorFlow model")
+    st.markdown("* This page serves to show predictions made using "
+                "neural networks (such as LSTM) implemented using "
+                "TensorFlow.")
+
+
+def load_ts_page(covidpro_df, dpc_regioni_df):
+    st.subheader("🚧 Page under construction")
+
+
+def load_sird_page(covidpro_df, dpc_regioni_df):
+    st.subheader("🚧 Page under construction")
+
+
+def load_tf_page(covidpro_df, dpc_regioni_df):
+    st.subheader("🚧 Page under construction")
+
+
+def load_eda(covidpro_df, dpc_regioni_df):
     # Raw data checkbox
     show_raw_data = st.sidebar.checkbox('Show raw data')
 
@@ -182,7 +234,8 @@ def main():
             df=covidpro_filtered,
             xdata='Date',
             ydata=[
-                'Deaths', 'New_cases'],
+                'Deaths',
+                'New_cases'],
             title='COVID-19 - ',
             xtitle='Date',
             ytitle='Individuals',
@@ -190,7 +243,8 @@ def main():
             area_name=province_selectbox,
             blend_legend=False,
             legend_titles=[
-                'Deceduti', 'Nuovi casi'],
+                'Deceduti',
+                'Nuovi casi'],
             template='simple_white'
         ), use_container_width=True)
 
@@ -199,7 +253,8 @@ def main():
             df=covidpro_filtered,
             xdata='Date',
             ydata=[
-                'Tot_deaths', 'Curr_pos_cases'],
+                'Tot_deaths',
+                'Curr_pos_cases'],
             title='COVID-19 - ',
             xtitle='Date',
             ytitle='Individuals',
@@ -207,7 +262,8 @@ def main():
             area_name=province_selectbox,
             blend_legend=False,
             legend_titles=[
-                'Totale deceduti', 'Totale positivi'],
+                'Totale deceduti',
+                'Totale positivi'],
             template='simple_white'
         ), use_container_width=True)
 
