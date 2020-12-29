@@ -41,7 +41,7 @@ def main():
     data_load_state = st.text('Loading data...')
 
     # Load data
-    covidpro_df, dpc_regioni_df, _, _, _ = load_df()
+    covidpro_df, dpc_regioni_df, _, pop_prov_df, prov_list_df = load_df()
 
     data_load_state.empty()
 
@@ -52,9 +52,9 @@ def main():
     elif app_mode == 'Time series':
         load_ts_page(covidpro_df, dpc_regioni_df)
     elif app_mode == 'SIRD model':
-        load_ts_page(covidpro_df, dpc_regioni_df)
+        load_sird_page(covidpro_df, dpc_regioni_df, pop_prov_df, prov_list_df)
     elif app_mode == 'TensorFlow model':
-        load_ts_page(covidpro_df, dpc_regioni_df)
+        load_tf_page(covidpro_df, dpc_regioni_df)
 
 
 def load_homepage():
@@ -63,7 +63,7 @@ def load_homepage():
         "for the MSc in Data Science and Economics at "
         "Università degli Studi di Milano."
     )
-    st.header("💻 The Application")
+    st.header("The Application")
     st.write("This application is a Streamlit dashboard that can be used "
              "to explore the work of my master degree thesis.")
     st.write("There are currently five pages available in the application:")
@@ -87,8 +87,52 @@ def load_ts_page(covidpro_df, dpc_regioni_df):
     st.subheader("🚧 Page under construction")
 
 
-def load_sird_page(covidpro_df, dpc_regioni_df):
-    st.subheader("🚧 Page under construction")
+def load_sird_page(covidpro_df, dpc_regioni_df, pop_prov_df, prov_list_df):
+    province_selectbox = st.selectbox(
+        "Province:",
+        covidpro_df.Province.unique(),
+        int((covidpro_df.Province == 'Firenze').argmax())
+    )
+
+    sirsol = sird(province_selectbox, pop_prov_df)
+    S, I, R, D = sirsol
+
+    times = list(range(sirsol.shape[1]))
+
+    st.plotly_chart(
+        general_plot(
+            t=times,
+            data=sirsol,
+            title='SIRD ' + province_selectbox,
+            traces_visibility=['legendonly'] + [True]*3,
+            output_image=False,
+            template='simple_white',
+            output_figure=True
+        )
+    )
+
+    names, title, data, modes = data_for_plot(
+        'Infected',
+        covidpro_df,
+        'New_cases',
+        I,
+        province_selectbox
+    )
+
+    st.plotly_chart(
+        general_plot(
+            t=times,
+            title=title,
+            data=data,
+            names=names,
+            modes=modes,
+            blend_legend=True,
+            output_image=False,
+            traces_visibility=['legendonly'] + [True]*2,
+            template='simple_white',
+            output_figure=True
+        )
+    )
 
 
 def load_tf_page(covidpro_df, dpc_regioni_df):
@@ -197,7 +241,7 @@ def load_eda(covidpro_df, dpc_regioni_df):
 
     # Combobox
     province_selectbox = col3.selectbox(
-        "Region:",
+        "Province:",
         covidpro_df.Province.unique(),
         int((covidpro_df.Province == 'Piacenza').argmax())
     )
