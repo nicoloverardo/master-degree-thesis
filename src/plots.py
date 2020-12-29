@@ -352,7 +352,8 @@ def data_for_plot(compart,
                   window=7,
                   names=None,
                   modes=None,
-                  query='20200604 > Date'):
+                  query='20200604 > Date',
+                  is_regional=False):
     """
     Utility function that returns data useful for plots.
     """
@@ -367,7 +368,12 @@ def data_for_plot(compart,
 
     title = 'SIRD ' + compart + ' of ' + province
 
-    d1_real = df[df.Province == province].query(query)[column]
+    if is_regional:
+        group_column = 'denominazione_regione'
+    else:
+        group_column = 'Province'
+
+    d1_real = df[df[group_column] == province].query(query)[column]
     d2_rolling = d1_real.rolling(window=window).mean().fillna(0)
     data = [d1_real.values, d2_rolling.values, comp_array]
 

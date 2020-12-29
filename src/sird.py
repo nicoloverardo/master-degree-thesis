@@ -141,6 +141,7 @@ def Model(days, N, R_0_start, k, x0, R_0_end, alpha, gamma):
 
     return times, S, I, R, D, R0_over_time
 
+
 class DeterministicSird():
     def __init__(self, data_df, pop_prov_df,
                  prov_list_df, area, group_column,
