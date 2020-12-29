@@ -149,7 +149,8 @@ def load_sird_page(covidpro_df, dpc_regioni_df, pop_prov_df, prov_list_df):
 
     area_radio = st.radio(
         "Regional or provincial predictions:",
-        ['Regional', 'Provincial']
+        ['Regional', 'Provincial'],
+        index=1
     )
 
     # Horizontal radio buttons.
