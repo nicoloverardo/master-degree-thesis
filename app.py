@@ -1,6 +1,8 @@
 import streamlit as st
 import datetime
 
+from sklearn.metrics import mean_absolute_error, mean_squared_error
+
 from src.utils import *
 from src.plots import *
 from src.sird import *
@@ -132,6 +134,13 @@ def load_sird_page(covidpro_df, dpc_regioni_df, pop_prov_df, prov_list_df):
             template='simple_white',
             output_figure=True
         )
+    )
+
+    st.write("MAE: " + str(np.round(mean_absolute_error(data[1], data[2]), 3)))
+    st.write("MSE: " + str(np.round(mean_squared_error(data[1], data[2]), 3)))
+    st.write(
+        "RMSE: " +
+        str(np.round(mean_squared_error(data[1], data[2], squared=False), 3))
     )
 
 
