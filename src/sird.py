@@ -43,7 +43,8 @@ def sird(province,
          R_0_start=2,
          k=0.2,
          x0=40,
-         R_0_end=0.3):
+         R_0_end=0.3,
+         prov_list_df=None):
     """
     Create and compute a SIRD model
 
@@ -86,10 +87,22 @@ def sird(province,
     """
 
     # Population
-    N = pop_prov_df.loc[
-        (pop_prov_df.Territorio == province) &
-        (pop_prov_df.Eta == "Total")
-        ]['Value'].values[0]
+    if prov_list_df is not None:
+        prov_list = prov_list_df[
+            prov_list_df.Region == province
+        ]['Province'].values
+
+        N = 0
+        for prov in prov_list:
+            N += pop_prov_df.loc[
+                (pop_prov_df.Territorio == prov) &
+                (pop_prov_df.Eta == "Total")
+                ]['Value'].values[0]
+    else:
+        N = pop_prov_df.loc[
+            (pop_prov_df.Territorio == province) &
+            (pop_prov_df.Eta == "Total")
+            ]['Value'].values[0]
 
     times = range(days)
 
@@ -127,7 +140,6 @@ def Model(days, N, R_0_start, k, x0, R_0_end, alpha, gamma):
                     for i in range(len(times))]
 
     return times, S, I, R, D, R0_over_time
-
 
 class DeterministicSird():
     def __init__(self, data_df, pop_prov_df,
