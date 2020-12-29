@@ -181,7 +181,8 @@ def general_plot(t,
                  scale=2,
                  xtitle='Time (days)',
                  ytitle='Number of individuals',
-                 template='simple_white'):
+                 template='simple_white',
+                 output_figure=False):
     """
     Plots a SIRD model output
 
@@ -282,7 +283,10 @@ def general_plot(t,
                                   height=height,
                                   scale=scale))
     else:
-        return fig.show()
+        if output_figure:
+            return fig
+        else:
+            return fig.show()
 
 
 # TODO: write docum. and improve
