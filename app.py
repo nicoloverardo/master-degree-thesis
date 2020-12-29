@@ -26,7 +26,7 @@ def main():
         layout='centered')
 
     # Title
-    st.title('Master Degree Thesis')
+    st.title('A comparison of predictive models for COVID-19 in Italy')
 
     # Sidebar title
     st.sidebar.title('Menu')
@@ -68,7 +68,7 @@ def load_homepage():
     st.header("The Application")
     st.write("This application is a Streamlit dashboard that can be used "
              "to explore the work of my master degree thesis.")
-    st.write("There are currently five pages available in the application:")
+    st.write("There are currently four pages available in the application:")
     st.subheader("🧭 Data exploration")
     st.markdown("* This gives a general overview of the data with interactive "
                 "plots.")
@@ -90,6 +90,7 @@ def load_ts_page(covidpro_df, dpc_regioni_df):
 
 
 def load_sird_page(covidpro_df, dpc_regioni_df, pop_prov_df, prov_list_df):
+    st.header("Continuous SIRD")
     province_selectbox = st.selectbox(
         "Province:",
         covidpro_df.Province.unique(),
@@ -141,6 +142,84 @@ def load_sird_page(covidpro_df, dpc_regioni_df, pop_prov_df, prov_list_df):
     st.write(
         "RMSE: " +
         str(np.round(mean_squared_error(data[1], data[2], squared=False), 3))
+    )
+
+    # Discrete SIRD
+    st.header("Discrete SIRD")
+
+    col1, col2, col3 = st.beta_columns(3)
+
+    region_selectbox = col1.selectbox(
+        "Region:",
+        dpc_regioni_df.denominazione_regione.unique(),
+        int((dpc_regioni_df.denominazione_regione == 'Piemonte').argmax())
+    )
+
+    lags = col2.slider("Lags", 5, 15, 7)
+    days_to_predict = col3.slider("Days to predict", 5, 30, 14)
+    data_filter = '20200630'
+
+    model = DeterministicSird(
+        data_df=dpc_regioni_df,
+        pop_prov_df=pop_prov_df,
+        prov_list_df=prov_list_df,
+        area=region_selectbox,
+        group_column='denominazione_regione',
+        data_column='data',
+        data_filter=data_filter,
+        lag=lags,
+        days_to_predict=days_to_predict
+    )
+
+    res = model.fit()
+    real_df = model.real_df
+
+    st.plotly_chart(
+        general_plot(
+            t=real_df['data'],
+            title='Infected of ' + region_selectbox,
+            data=[
+                real_df['nuovi_positivi'].values,
+                res['nuovi_positivi'].values
+            ],
+            names=['Real', 'Prediction'],
+            modes=['markers', 'lines'],
+            blend_legend=False,
+            output_image=False,
+            output_figure=True
+        )
+    )
+
+    st.plotly_chart(
+        general_plot(
+            t=real_df['data'],
+            title='Cumulative deaths of ' + region_selectbox,
+            data=[
+                real_df['deceduti'].values,
+                res['deceduti'].values
+            ],
+            names=['Real', 'Prediction'],
+            modes=['markers', 'lines'],
+            blend_legend=False,
+            output_image=False,
+            output_figure=True
+        )
+    )
+
+    st.plotly_chart(
+        general_plot(
+            t=real_df['data'],
+            title='Cumulative infected of ' + region_selectbox,
+            data=[
+                real_df['totale_positivi'].values,
+                res['totale_positivi'].values
+            ],
+            names=['Real', 'Prediction'],
+            modes=['markers', 'lines'],
+            blend_legend=False,
+            output_image=False,
+            output_figure=True
+        )
     )
 
 
