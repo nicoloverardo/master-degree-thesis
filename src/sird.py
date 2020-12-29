@@ -266,14 +266,44 @@ class DeterministicSird():
         recov_rate = self.fix_arr(recov_rate)
 
         recov = recov_rate * data_df['Curr_pos_cases'].values
-        data_df['dimessi_guariti'] = recov
+        data_df['dimessi_guariti'] = self.fix_arr(recov)
 
         infected = data_df['Curr_pos_cases'].values - \
             data_df['Tot_deaths'].values - \
             data_df['dimessi_guariti']
 
-        data_df['totale_positivi'] = infected
+        data_df['totale_positivi'] = self.fix_arr(infected)
         data_df['suscettibili'] = pop - data_df['Curr_pos_cases']
+
+        query = (
+            pd.Timestamp(self.data_filter) +
+            pd.DateOffset(self.days_to_predict)
+            ).strftime('%Y%m%d') + ' > ' + self.data_column
+
+        real_df = data_df.query(query)
+
+        real_df.rename(
+            columns={
+                "New_cases": "nuovi_positivi",
+                "Curr_pos_cases": "totale_casi",
+                "Tot_deaths": "deceduti",
+                "Date": "data"
+            }, inplace=True)
+
+        real_df = real_df[[
+            'data',
+            'totale_positivi',
+            'dimessi_guariti',
+            'deceduti',
+            'suscettibili',
+            'nuovi_positivi'
+        ]]
+
+        self._realdf = real_df
+
+        data_df = data_df.query(
+            self.data_filter + ' > ' + self.data_column
+        )
 
         data_df.rename(
             columns={
@@ -290,10 +320,6 @@ class DeterministicSird():
             'suscettibili': 'int32',
             'nuovi_positivi': 'int32'
         })
-
-        data_df = data_df.query(
-            self.data_filter + ' > ' + self.data_column
-        )
 
         data_df = data_df[[
             'data',
@@ -401,7 +427,13 @@ class DeterministicSird():
         )
 
         tmp_df = pd.DataFrame(
-            np.column_stack([np.zeros(self.days_to_predict + 1), I, R, D, S]),
+            np.column_stack([
+                np.zeros(self.days_to_predict + 1),
+                self.fix_arr(I),
+                self.fix_arr(R),
+                self.fix_arr(D),
+                self.fix_arr(S)
+            ]),
             columns=[
                 'data',
                 'totale_positivi',
@@ -453,21 +485,24 @@ class DeterministicSird():
         return self._realdf
 
     def _get_real_data(self):
+        if not self.is_regional:
+            return self._realdf
+
         real_df = self.data_df[
             self.data_df[self.group_column] == self.area
-        ][[
-            'data',
-            'totale_positivi',
-            'dimessi_guariti',
-            'deceduti',
-            'totale_casi',
-            'nuovi_positivi'
-        ]]
+            ][[
+                'data',
+                'totale_positivi',
+                'dimessi_guariti',
+                'deceduti',
+                'totale_casi',
+                'nuovi_positivi'
+            ]]
 
         query = (
             pd.Timestamp(self.data_filter) +
             pd.DateOffset(self.days_to_predict)
-            ).strftime('%Y%m%d') + ' > ' + self.data_column
+            ).strftime('%Y%m%d') + ' > data'
 
         real_df = real_df.query(query)
         real_df['suscettibili'] = self.pop - real_df['totale_casi']
