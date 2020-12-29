@@ -111,7 +111,7 @@ def load_sird_page(covidpro_df, dpc_regioni_df, pop_prov_df, prov_list_df):
             output_image=False,
             template='simple_white',
             output_figure=True
-        )
+        ), use_container_width=True
     )
 
     names, title, data, modes = data_for_plot(
@@ -129,12 +129,12 @@ def load_sird_page(covidpro_df, dpc_regioni_df, pop_prov_df, prov_list_df):
             data=data,
             names=names,
             modes=modes,
-            blend_legend=True,
+            blend_legend=False,
             output_image=False,
             traces_visibility=['legendonly'] + [True]*2,
             template='simple_white',
             output_figure=True
-        )
+        ), use_container_width=True
     )
 
     st.write("MAE: " + str(np.round(mean_absolute_error(data[1], data[2]), 3)))
@@ -187,7 +187,7 @@ def load_sird_page(covidpro_df, dpc_regioni_df, pop_prov_df, prov_list_df):
             blend_legend=False,
             output_image=False,
             output_figure=True
-        )
+        ), use_container_width=True
     )
 
     st.plotly_chart(
@@ -203,7 +203,7 @@ def load_sird_page(covidpro_df, dpc_regioni_df, pop_prov_df, prov_list_df):
             blend_legend=False,
             output_image=False,
             output_figure=True
-        )
+        ), use_container_width=True
     )
 
     st.plotly_chart(
@@ -219,7 +219,7 @@ def load_sird_page(covidpro_df, dpc_regioni_df, pop_prov_df, prov_list_df):
             blend_legend=False,
             output_image=False,
             output_figure=True
-        )
+        ), use_container_width=True
     )
 
     mae_tot_pos = model.mae(compart='totale_positivi')
