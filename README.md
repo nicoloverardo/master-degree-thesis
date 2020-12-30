@@ -9,6 +9,6 @@ While the work is still in progress, you can see a preview of the dashboard by c
 ```bash
 $ git clone https://github.com/nicoloverardo/master-degree-thesis.git
 $ cd master-degree-thesis
-$ pip install -r requirements.txt
+$ pip install -r requirements-dev.txt
 $ streamlit run app.py
 ```
