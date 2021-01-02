@@ -94,11 +94,20 @@ def load_tf_page(covidpro_df, dpc_regioni_df):
 
 
 @st.cache
-def compute_sird(prov, pop_prov_df, prov_list_df=None):
+def compute_sird(prov, pop_prov_df, prov_list_df=None,
+                 r0_start=3.5, r0_end=0.9, k=0.9,
+                 x0=20, alpha=0.1, gamma=1/7):
+
     return sird(
         province=prov,
         pop_prov_df=pop_prov_df,
-        prov_list_df=prov_list_df
+        prov_list_df=prov_list_df,
+        gamma=gamma,
+        alpha=alpha,
+        R_0_start=r0_start,
+        k=k,
+        x0=x0,
+        R_0_end=r0_end
     )
 
 
@@ -163,8 +172,20 @@ def load_sird_page(covidpro_df, dpc_regioni_df, pop_prov_df, prov_list_df):
     # ---------------
     st.header("Continuous SIRD")
 
+    col1, col2, col3 = st.beta_columns(3)
+
+    # Sird parameters
+    r0_start = col1.slider("R0 start", 1.0, 6.0, 2.0)
+    r0_end = col1.slider("R0 end", 0.01, 3.5, 0.3)
+    k_value = col2.slider("R0 decrease rate", 0.01, 1.0, 0.2)
+    x0_value = col2.slider("Lockdown day", 0, 100, 40)
+    alpha_value = col3.slider("Death rate", 0.001, 1.0, 0.01)
+    gamma_value = col3.slider("Recovery rate", 0.001, 1.0, 1/7)
+
     # Compute SIRD
-    sirsol = compute_sird(area_selectbox, pop_prov_df, prov_df)
+    sirsol = compute_sird(area_selectbox, pop_prov_df, prov_df,
+                          r0_start, r0_end, k_value,
+                          x0_value, alpha_value, gamma_value)
     S, I, R, D = sirsol
 
     times = list(range(sirsol.shape[1]))
@@ -214,10 +235,10 @@ def load_sird_page(covidpro_df, dpc_regioni_df, pop_prov_df, prov_list_df):
     # -------------
     st.header("Discrete SIRD")
 
-    col1, col2, = st.beta_columns(2)
+    col1_reg, col2_reg, = st.beta_columns(2)
 
-    lags = col1.slider("Lags", 5, 15, 7)
-    days_to_predict = col2.slider("Days to predict", 5, 30, 14)
+    lags = col1_reg.slider("Lags", 5, 15, 7)
+    days_to_predict = col2_reg.slider("Days to predict", 5, 30, 14)
     data_filter = '20200630'
 
     # Define and fit SIRD
