@@ -478,8 +478,8 @@ def load_eda(covidpro_df, dpc_regioni_df):
             area_name=province_selectbox,
             blend_legend=False,
             legend_titles=[
-                'Deceduti',
-                'Nuovi casi'],
+                'Deaths',
+                'New cases'],
             template='simple_white'
         ), use_container_width=True)
 
@@ -497,8 +497,8 @@ def load_eda(covidpro_df, dpc_regioni_df):
             area_name=province_selectbox,
             blend_legend=False,
             legend_titles=[
-                'Totale deceduti',
-                'Totale positivi'],
+                'Total deaths',
+                'Total cases'],
             template='simple_white'
         ), use_container_width=True)
 

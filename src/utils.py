@@ -195,28 +195,28 @@ def pre_process_csv(covidpro_df,
         covidpro_df,
         'Chieti',
         pd.Timestamp(2020, 6, 25),
-        ['New_cases', 'Cur_pos_cases']
+        ['New_cases']
     )
 
     covidpro_df = fix_outlier_province(
         covidpro_df,
         'Pistoia',
         pd.Timestamp(2020, 6, 24),
-        ['New_cases', 'Cur_pos_cases']
+        ['New_cases']
     )
 
     covidpro_df = fix_outlier_province(
         covidpro_df,
         'Rovigo',
         pd.Timestamp(2020, 4, 21),
-        ['New_cases', 'Cur_pos_cases']
+        ['New_cases']
     )
 
     covidpro_df = fix_outlier_province(
         covidpro_df,
         'Rovigo',
         pd.Timestamp(2020, 6, 26),
-        ['Deaths', 'Tot_deaths']
+        ['Deaths']
     )
 
     covidpro_df['New_cases'] = covidpro_df['New_cases'].apply(convert_nan)
@@ -250,6 +250,7 @@ def pre_process_csv(covidpro_df,
 
 
 def fix_outlier_province(df, area, date, columns):
+    # BUG: fix needed
     idx = df.loc[
         (df.Province == area) &
         (df.Date == date)
@@ -259,7 +260,8 @@ def fix_outlier_province(df, area, date, columns):
         df.loc[idx, col] = np.nan
 
         res = df[df.Province == area][col].interpolate()
-        df.loc[(df.Province == area), col] = res
+        df.loc[(df.Province == area), col] = res.round()
+        df = df.astype({col: 'int32'})
 
     return df
 
