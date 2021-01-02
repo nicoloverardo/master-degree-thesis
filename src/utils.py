@@ -191,6 +191,34 @@ def pre_process_csv(covidpro_df,
     dpc_regioni_df['DR'] = \
         dpc_regioni_df['deceduti']/dpc_regioni_df['totale_positivi']
 
+    covidpro_df = fix_outlier_province(
+        covidpro_df,
+        'Chieti',
+        pd.Timestamp(2020, 6, 25),
+        ['New_cases', 'Cur_pos_cases']
+    )
+
+    covidpro_df = fix_outlier_province(
+        covidpro_df,
+        'Pistoia',
+        pd.Timestamp(2020, 6, 24),
+        ['New_cases', 'Cur_pos_cases']
+    )
+
+    covidpro_df = fix_outlier_province(
+        covidpro_df,
+        'Rovigo',
+        pd.Timestamp(2020, 4, 21),
+        ['New_cases', 'Cur_pos_cases']
+    )
+
+    covidpro_df = fix_outlier_province(
+        covidpro_df,
+        'Rovigo',
+        pd.Timestamp(2020, 6, 26),
+        ['Deaths', 'Tot_deaths']
+    )
+
     covidpro_df['New_cases'] = covidpro_df['New_cases'].apply(convert_nan)
     covidpro_df['Deaths'] = covidpro_df['Deaths'].apply(convert_nan)
 
@@ -219,6 +247,21 @@ def pre_process_csv(covidpro_df,
     return (
         covidpro_df, dpc_regioni_df,
         dpc_province_df, pop_prov_df, prov_list_df)
+
+
+def fix_outlier_province(df, area, date, columns):
+    idx = df.loc[
+        (df.Province == area) &
+        (df.Date == date)
+    ].index.values[0]
+
+    for col in columns:
+        df.loc[idx, col] = np.nan
+
+        res = df[df.Province == area][col].interpolate()
+        df.loc[(df.Province == area), col] = res
+
+    return df
 
 
 def convert_nan(x):
