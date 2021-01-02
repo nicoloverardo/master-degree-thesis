@@ -69,13 +69,13 @@ def load_homepage():
     st.write("This application is a Streamlit dashboard that can be used "
              "to explore the work of my master degree thesis.")
     st.write("There are currently four pages available in the application:")
-    st.subheader("🧭 Data exploration")
+    st.subheader("🗺️ Data exploration")
     st.markdown("* This gives a general overview of the data with interactive "
                 "plots.")
     st.subheader("📈 Time series")
     st.markdown("* This page allows you to see predictions made using time "
                 "series models and the Prophet library.")
-    st.subheader("👥 SIRD model")
+    st.subheader("👓 SIRD model")
     st.markdown("* This page allows you to see predictions made using "
                 "stochastic and deterministic sird with time-dependent "
                 "parameters.")
@@ -86,7 +86,11 @@ def load_homepage():
 
 
 def load_ts_page(covidpro_df, dpc_regioni_df):
-    st.subheader("🚧 Page under construction")
+    st.subheader("🏗 Page under construction")
+
+
+def load_tf_page(covidpro_df, dpc_regioni_df):
+    st.subheader("🏗 Page under construction")
 
 
 @st.cache
@@ -99,20 +103,25 @@ def compute_sird(prov, pop_prov_df, prov_list_df=None):
 
 
 @st.cache
-def data_sird_plot(covidpro_df, column, I, province_selectbox, is_regional):
-    names, title, data, modes = data_for_plot(
+def data_sird_plot(covidpro_df,
+                   column,
+                   comp_array,
+                   province_selectbox,
+                   is_regional):
+
+    return data_for_plot(
         compart='Infected',
         df=covidpro_df,
         column=column,
-        comp_array=I,
+        comp_array=comp_array,
         province=province_selectbox,
         is_regional=is_regional
     )
 
-    return names, title, data, modes
-
 
 def load_sird_page(covidpro_df, dpc_regioni_df, pop_prov_df, prov_list_df):
+    # Page setup:
+    # Sidebar widgets
     area_radio = st.sidebar.radio(
         "Regional or provincial predictions:",
         ['Regional', 'Provincial'],
@@ -149,13 +158,18 @@ def load_sird_page(covidpro_df, dpc_regioni_df, pop_prov_df, prov_list_df):
         prov_df = None
         column = "New_cases"
 
+    # ---------------
+    # Continuous SIRD
+    # ---------------
     st.header("Continuous SIRD")
 
+    # Compute SIRD
     sirsol = compute_sird(area_selectbox, pop_prov_df, prov_df)
     S, I, R, D = sirsol
 
     times = list(range(sirsol.shape[1]))
 
+    # SIRD plot
     st.plotly_chart(
         general_plot(
             t=times,
@@ -171,6 +185,7 @@ def load_sird_page(covidpro_df, dpc_regioni_df, pop_prov_df, prov_list_df):
     names, title, data, modes = data_sird_plot(
         data_df, column, I, area_selectbox, is_regional)
 
+    # Comparison SIRD plot
     st.plotly_chart(
         general_plot(
             t=times,
@@ -186,6 +201,7 @@ def load_sird_page(covidpro_df, dpc_regioni_df, pop_prov_df, prov_list_df):
         ), use_container_width=True
     )
 
+    # Show metrics
     st.write("MAE: " + str(np.round(mean_absolute_error(data[1], data[2]), 3)))
     st.write("MSE: " + str(np.round(mean_squared_error(data[1], data[2]), 3)))
     st.write(
@@ -193,7 +209,9 @@ def load_sird_page(covidpro_df, dpc_regioni_df, pop_prov_df, prov_list_df):
         str(np.round(mean_squared_error(data[1], data[2], squared=False), 3))
     )
 
+    # -------------
     # Discrete SIRD
+    # -------------
     st.header("Discrete SIRD")
 
     col1, col2, = st.beta_columns(2)
@@ -202,6 +220,7 @@ def load_sird_page(covidpro_df, dpc_regioni_df, pop_prov_df, prov_list_df):
     days_to_predict = col2.slider("Days to predict", 5, 30, 14)
     data_filter = '20200630'
 
+    # Define and fit SIRD
     model = DeterministicSird(
         data_df=data_df,
         pop_prov_df=pop_prov_df,
@@ -219,6 +238,7 @@ def load_sird_page(covidpro_df, dpc_regioni_df, pop_prov_df, prov_list_df):
     res = model.fit()
     real_df = model.real_df
 
+    # Infected
     st.plotly_chart(
         general_plot(
             t=real_df['data'],
@@ -235,6 +255,7 @@ def load_sird_page(covidpro_df, dpc_regioni_df, pop_prov_df, prov_list_df):
         ), use_container_width=True
     )
 
+    # Deaths
     st.plotly_chart(
         general_plot(
             t=real_df['data'],
@@ -251,6 +272,7 @@ def load_sird_page(covidpro_df, dpc_regioni_df, pop_prov_df, prov_list_df):
         ), use_container_width=True
     )
 
+    # Cumulative infected
     st.plotly_chart(
         general_plot(
             t=real_df['data'],
@@ -267,6 +289,7 @@ def load_sird_page(covidpro_df, dpc_regioni_df, pop_prov_df, prov_list_df):
         ), use_container_width=True
     )
 
+    # Show metrics
     mae_tot_pos = model.mae(compart='totale_positivi')
     mse_tot_pos = model.mse(compart='totale_positivi')
     mae_deaths = model.mae(compart='deceduti')
@@ -283,9 +306,7 @@ def load_sird_page(covidpro_df, dpc_regioni_df, pop_prov_df, prov_list_df):
         str(np.round(np.mean([mse_tot_pos, mse_deaths, mse_rec]), 2))
     )
 
-
-def load_tf_page(covidpro_df, dpc_regioni_df):
-    st.subheader("🚧 Page under construction")
+    st.subheader("🏗 Page under construction")
 
 
 def load_eda(covidpro_df, dpc_regioni_df):
@@ -477,6 +498,8 @@ def load_eda(covidpro_df, dpc_regioni_df):
                 ],
             template='simple_white'
         ), use_container_width=True)
+
+    st.subheader("🏗 Page under construction")
 
 
 if __name__ == "__main__":
