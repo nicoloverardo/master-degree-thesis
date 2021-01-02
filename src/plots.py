@@ -352,7 +352,7 @@ def data_for_plot(compart,
                   window=7,
                   names=None,
                   modes=None,
-                  query='20200604 > Date',
+                  query='20200604',
                   is_regional=False):
     """
     Utility function that returns data useful for plots.
@@ -370,8 +370,10 @@ def data_for_plot(compart,
 
     if is_regional:
         group_column = 'denominazione_regione'
+        query = query + ' > data'
     else:
         group_column = 'Province'
+        query = query + ' > Date'
 
     d1_real = df[df[group_column] == province].query(query)[column]
     d2_rolling = d1_real.rolling(window=window).mean().fillna(0)

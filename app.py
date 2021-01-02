@@ -89,15 +89,69 @@ def load_ts_page(covidpro_df, dpc_regioni_df):
     st.subheader("🚧 Page under construction")
 
 
-def load_sird_page(covidpro_df, dpc_regioni_df, pop_prov_df, prov_list_df):
-    st.header("Continuous SIRD")
-    province_selectbox = st.selectbox(
-        "Province:",
-        covidpro_df.Province.unique(),
-        int((covidpro_df.Province == 'Firenze').argmax())
+@st.cache
+def compute_sird(prov, pop_prov_df, prov_list_df=None):
+    return sird(
+        province=prov,
+        pop_prov_df=pop_prov_df,
+        prov_list_df=prov_list_df
     )
 
-    sirsol = sird(province_selectbox, pop_prov_df)
+
+@st.cache
+def data_sird_plot(covidpro_df, column, I, province_selectbox, is_regional):
+    names, title, data, modes = data_for_plot(
+        compart='Infected',
+        df=covidpro_df,
+        column=column,
+        comp_array=I,
+        province=province_selectbox,
+        is_regional=is_regional
+    )
+
+    return names, title, data, modes
+
+
+def load_sird_page(covidpro_df, dpc_regioni_df, pop_prov_df, prov_list_df):
+    area_radio = st.sidebar.radio(
+        "Regional or provincial predictions:",
+        ['Regional', 'Provincial'],
+        index=1
+    )
+
+    is_regional = True
+    pcm_data = None
+    group_column = 'denominazione_regione'
+    data_df = dpc_regioni_df
+    data_column = 'data'
+    prov_df = prov_list_df
+    column = "totale_positivi"
+
+    if area_radio == "Regional":
+        area_selectbox = st.sidebar.selectbox(
+            "Region:",
+            dpc_regioni_df.denominazione_regione.unique(),
+            int((dpc_regioni_df.denominazione_regione == 'Piemonte').argmax()),
+            key="area_selectbox_reg"
+        )
+    else:
+        area_selectbox = st.sidebar.selectbox(
+            "Province:",
+            covidpro_df.Province.unique(),
+            int((covidpro_df.Province == 'Firenze').argmax()),
+            key="area_selectbox_prov"
+        )
+        is_regional = False
+        pcm_data = dpc_regioni_df
+        group_column = 'Province'
+        data_df = covidpro_df
+        data_column = 'Date'
+        prov_df = None
+        column = "New_cases"
+
+    st.header("Continuous SIRD")
+
+    sirsol = compute_sird(area_selectbox, pop_prov_df, prov_df)
     S, I, R, D = sirsol
 
     times = list(range(sirsol.shape[1]))
@@ -106,7 +160,7 @@ def load_sird_page(covidpro_df, dpc_regioni_df, pop_prov_df, prov_list_df):
         general_plot(
             t=times,
             data=sirsol,
-            title='SIRD ' + province_selectbox,
+            title='SIRD ' + area_selectbox,
             traces_visibility=['legendonly'] + [True]*3,
             output_image=False,
             template='simple_white',
@@ -114,13 +168,8 @@ def load_sird_page(covidpro_df, dpc_regioni_df, pop_prov_df, prov_list_df):
         ), use_container_width=True
     )
 
-    names, title, data, modes = data_for_plot(
-        'Infected',
-        covidpro_df,
-        'New_cases',
-        I,
-        province_selectbox
-    )
+    names, title, data, modes = data_sird_plot(
+        data_df, column, I, area_selectbox, is_regional)
 
     st.plotly_chart(
         general_plot(
@@ -147,49 +196,10 @@ def load_sird_page(covidpro_df, dpc_regioni_df, pop_prov_df, prov_list_df):
     # Discrete SIRD
     st.header("Discrete SIRD")
 
-    area_radio = st.radio(
-        "Regional or provincial predictions:",
-        ['Regional', 'Provincial'],
-        index=1
-    )
+    col1, col2, = st.beta_columns(2)
 
-    # Horizontal radio buttons.
-    # To remove in future update
-    st.write(
-        '<style>div.row-widget.stRadio > div{flex-direction:row;}</style>',
-        unsafe_allow_html=True
-    )
-
-    col1, col2, col3 = st.beta_columns(3)
-
-    is_regional = True
-    pcm_data = None
-    group_column = 'denominazione_regione'
-    data_df = dpc_regioni_df
-    data_column = 'data'
-
-    if area_radio == "Regional":
-        area_selectbox = col1.selectbox(
-            "Region:",
-            dpc_regioni_df.denominazione_regione.unique(),
-            int((dpc_regioni_df.denominazione_regione == 'Piemonte').argmax()),
-            key="area_selectbox_reg"
-        )
-    else:
-        area_selectbox = col1.selectbox(
-            "Province:",
-            covidpro_df.Province.unique(),
-            int((covidpro_df.Province == 'Firenze').argmax()),
-            key="area_selectbox_prov"
-        )
-        is_regional = False
-        pcm_data = dpc_regioni_df
-        group_column = 'Province'
-        data_df = covidpro_df
-        data_column = 'Date'
-
-    lags = col2.slider("Lags", 5, 15, 7)
-    days_to_predict = col3.slider("Days to predict", 5, 30, 14)
+    lags = col1.slider("Lags", 5, 15, 7)
+    days_to_predict = col2.slider("Days to predict", 5, 30, 14)
     data_filter = '20200630'
 
     model = DeterministicSird(
@@ -333,7 +343,7 @@ def load_eda(covidpro_df, dpc_regioni_df):
                 'ricoverati_con_sintomi',
                 'terapia_intensiva',
                 'deceduti'],
-            title='COVID-19 - ',
+            title='',
             xtitle='Date',
             ytitle='Individuals',
             group_column='denominazione_regione',
@@ -357,7 +367,7 @@ def load_eda(covidpro_df, dpc_regioni_df):
             ydata=[
                 'IC_R', 'Hosp_R',
                 'NC_R', 'NP_R'],
-            title='COVID-19 - ',
+            title='',
             xtitle='Date',
             ytitle='Fraction',
             group_column='denominazione_regione',
@@ -419,7 +429,7 @@ def load_eda(covidpro_df, dpc_regioni_df):
             ydata=[
                 'Deaths',
                 'New_cases'],
-            title='COVID-19 - ',
+            title='',
             xtitle='Date',
             ytitle='Individuals',
             group_column='Province',
@@ -438,7 +448,7 @@ def load_eda(covidpro_df, dpc_regioni_df):
             ydata=[
                 'Tot_deaths',
                 'Curr_pos_cases'],
-            title='COVID-19 - ',
+            title='',
             xtitle='Date',
             ytitle='Individuals',
             group_column='Province',
@@ -455,7 +465,7 @@ def load_eda(covidpro_df, dpc_regioni_df):
             df=covidpro_filtered,
             xdata='Date',
             ydata=['NP_R', 'DR'],
-            title='COVID-19 - ',
+            title='',
             xtitle='Date',
             ytitle='Fraction',
             group_column='Province',
