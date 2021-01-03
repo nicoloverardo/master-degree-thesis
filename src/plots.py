@@ -303,7 +303,8 @@ def custom_plot(df,
                 legend_titles=None,
                 blend_legend=False,
                 xanchor='right',
-                template='simple_white'):
+                template='simple_white',
+                show_title=True):
 
     if legend_titles is None:
         legend_titles = ydata
@@ -324,12 +325,15 @@ def custom_plot(df,
             visible=traces_visibility[i])
         )
 
-    fig.update_layout(title=title + area_name,
-                      xaxis_title=xtitle,
+    fig.update_layout(xaxis_title=xtitle,
                       yaxis_title=ytitle,
                       template=template,
-                      barmode='overlay',
-                      title_x=0.5)
+                      barmode='overlay')
+
+    if show_title:
+        fig.update_layout(
+            title=title + area_name,
+            title_x=0.5)
 
     if blend_legend:
         xpos = 0.99 if xanchor is 'right' else 0.08
