@@ -174,7 +174,8 @@ def pre_process_csv(covidpro_df,
                     dpc_province_df,
                     pop_prov_df,
                     prov_list_df,
-                    window=7):
+                    window=7,
+                    equalize_dates=True):
 
     dpc_regioni_df['NC_R'] = \
         dpc_regioni_df['nuovi_positivi']/dpc_regioni_df['tamponi']
@@ -239,6 +240,17 @@ def pre_process_csv(covidpro_df,
 
     covidpro_df['DR_Rolling'] = \
         covidpro_df['DR'].rolling(window=window).mean()
+
+    if equalize_dates:
+        prov_date = covidpro_df.iloc[-1]['Date']
+        reg_date = dpc_regioni_df.iloc[-1]['data']
+
+        if reg_date < prov_date:
+            last_date = reg_date.strftime('%Y%m%d')
+            covidpro_df = covidpro_df.query(f'{last_date} >= Date')
+        else:
+            last_date = prov_date.strftime('%Y%m%d')
+            dpc_regioni_df = dpc_regioni_df.query(f'{last_date} >= data')
 
     covidpro_df.fillna(0, inplace=True)
     dpc_regioni_df.fillna(0, inplace=True)
