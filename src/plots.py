@@ -182,7 +182,8 @@ def general_plot(t,
                  xtitle='Time (days)',
                  ytitle='Number of individuals',
                  template='simple_white',
-                 output_figure=False):
+                 output_figure=False,
+                 horiz_legend=False):
     """
     Plots a SIRD model output
 
@@ -275,6 +276,19 @@ def general_plot(t,
             y=0.99,
             xanchor=xanchor,
             x=xpos)
+        )
+
+    if horiz_legend:
+        ypos = -.2 if xtitle is '' else -.3
+
+        fig.update_layout(
+            legend=dict(
+                orientation="h",
+                yanchor="top",
+                xanchor="center",
+                x=.5,
+                y=ypos
+            )
         )
 
     if output_image:

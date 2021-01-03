@@ -195,11 +195,12 @@ def load_sird_page(covidpro_df, dpc_regioni_df, pop_prov_df, prov_list_df):
         general_plot(
             t=times,
             data=sirsol,
-            title='SIRD ' + area_selectbox,
+            title='SIRD model',
             traces_visibility=['legendonly'] + [True]*3,
             output_image=False,
             template='simple_white',
-            output_figure=True
+            output_figure=True,
+            horiz_legend=True
         ), use_container_width=True
     )
 
@@ -210,7 +211,7 @@ def load_sird_page(covidpro_df, dpc_regioni_df, pop_prov_df, prov_list_df):
     st.plotly_chart(
         general_plot(
             t=times,
-            title=title,
+            title='SIRD predictions comparison',
             data=data,
             names=names,
             modes=modes,
@@ -218,18 +219,23 @@ def load_sird_page(covidpro_df, dpc_regioni_df, pop_prov_df, prov_list_df):
             output_image=False,
             traces_visibility=['legendonly'] + [True]*2,
             template='simple_white',
-            output_figure=True
+            output_figure=True,
+            horiz_legend=True
         ), use_container_width=True
     )
 
     # Show metrics
-    st.write("MAE: " + str(np.round(mean_absolute_error(data[1], data[2]), 3)))
-    st.write("MSE: " + str(np.round(mean_squared_error(data[1], data[2]), 3)))
-    st.write(
-        "RMSE: " +
-        str(np.round(mean_squared_error(data[1], data[2], squared=False), 3))
-    )
+    with st.beta_expander('Show metrics'):
+        st.info("MAE: " + str(np.round(mean_absolute_error(data[1], data[2]), 3)))
+        st.info("MSE: " + str(np.round(mean_squared_error(data[1], data[2]), 3)))
+        st.info(
+            "RMSE: " +
+            str(np.round(mean_squared_error(data[1], data[2], squared=False), 3))
+        )
 
+    st.text("")
+    st.text("")
+    st.text("")
     # -------------
     # Discrete SIRD
     # -------------
@@ -272,7 +278,9 @@ def load_sird_page(covidpro_df, dpc_regioni_df, pop_prov_df, prov_list_df):
             modes=['markers', 'lines'],
             blend_legend=False,
             output_image=False,
-            output_figure=True
+            output_figure=True,
+            xtitle='',
+            horiz_legend=True
         ), use_container_width=True
     )
 
@@ -289,7 +297,9 @@ def load_sird_page(covidpro_df, dpc_regioni_df, pop_prov_df, prov_list_df):
             modes=['markers', 'lines'],
             blend_legend=False,
             output_image=False,
-            output_figure=True
+            output_figure=True,
+            xtitle='',
+            horiz_legend=True
         ), use_container_width=True
     )
 
@@ -306,7 +316,9 @@ def load_sird_page(covidpro_df, dpc_regioni_df, pop_prov_df, prov_list_df):
             modes=['markers', 'lines'],
             blend_legend=False,
             output_image=False,
-            output_figure=True
+            output_figure=True,
+            xtitle='',
+            horiz_legend=True
         ), use_container_width=True
     )
 
@@ -318,15 +330,18 @@ def load_sird_page(covidpro_df, dpc_regioni_df, pop_prov_df, prov_list_df):
     mae_rec = model.mae(compart='dimessi_guariti')
     mse_rec = model.mse(compart='dimessi_guariti')
 
-    st.write(
-        "Average MAE: " +
-        str(np.round(np.mean([mae_tot_pos, mae_deaths, mae_rec]), 2))
-    )
-    st.write(
-        "Average MSE: " +
-        str(np.round(np.mean([mse_tot_pos, mse_deaths, mse_rec]), 2))
-    )
+    with st.beta_expander('Show metrics'):
+        st.info(
+            "Average MAE: " +
+            str(np.round(np.mean([mae_tot_pos, mae_deaths, mae_rec]), 2))
+        )
+        st.info(
+            "Average MSE: " +
+            str(np.round(np.mean([mse_tot_pos, mse_deaths, mse_rec]), 2))
+        )
 
+    st.text("")
+    st.text("")
     st.subheader("🏗 Page under construction")
 
 
@@ -426,6 +441,9 @@ def load_eda(covidpro_df, dpc_regioni_df):
             show_title=False,
             horiz_legend=True
         ), use_container_width=True)
+
+    st.text("")
+    st.text("")
 
     # ----------------
     # Provincial plots
