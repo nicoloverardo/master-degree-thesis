@@ -463,7 +463,6 @@ def daily_main_indic_plot(area,
 
     fig.update_layout(
         height=height,
-        width=width,
         title_text=title,
         template=template,
         title_x=0.5
