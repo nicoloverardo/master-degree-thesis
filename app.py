@@ -386,7 +386,7 @@ def load_eda(covidpro_df, dpc_regioni_df):
                 'terapia_intensiva',
                 'deceduti'],
             title='',
-            xtitle='Date',
+            xtitle='',
             ytitle='Individuals',
             group_column='denominazione_regione',
             area_name=region_selectbox,
@@ -400,7 +400,8 @@ def load_eda(covidpro_df, dpc_regioni_df):
                 'Ricoverati con sintomi',
                 'Terapia Intensiva',
                 'Deceduti'],
-            template='simple_white'
+            template='simple_white',
+            show_title=False
         ), use_container_width=True)
 
     st.plotly_chart(
@@ -410,7 +411,7 @@ def load_eda(covidpro_df, dpc_regioni_df):
                 'IC_R', 'Hosp_R',
                 'NC_R', 'NP_R'],
             title='',
-            xtitle='Date',
+            xtitle='',
             ytitle='Fraction',
             group_column='denominazione_regione',
             area_name=region_selectbox,
@@ -420,7 +421,8 @@ def load_eda(covidpro_df, dpc_regioni_df):
                 'Hospitalized over tot. cases',
                 'Positives over tampons',
                 'Positives over tot. positives'],
-            template='simple_white'
+            template='simple_white',
+            show_title=False
         ), use_container_width=True)
 
     # ----------------
@@ -472,7 +474,7 @@ def load_eda(covidpro_df, dpc_regioni_df):
                 'Deaths',
                 'New_cases'],
             title='',
-            xtitle='Date',
+            xtitle='',
             ytitle='Individuals',
             group_column='Province',
             area_name=province_selectbox,
@@ -480,7 +482,8 @@ def load_eda(covidpro_df, dpc_regioni_df):
             legend_titles=[
                 'Deaths',
                 'New cases'],
-            template='simple_white'
+            template='simple_white',
+            show_title=False
         ), use_container_width=True)
 
     st.plotly_chart(
@@ -491,7 +494,7 @@ def load_eda(covidpro_df, dpc_regioni_df):
                 'Tot_deaths',
                 'Curr_pos_cases'],
             title='',
-            xtitle='Date',
+            xtitle='',
             ytitle='Individuals',
             group_column='Province',
             area_name=province_selectbox,
@@ -499,7 +502,8 @@ def load_eda(covidpro_df, dpc_regioni_df):
             legend_titles=[
                 'Total deaths',
                 'Total cases'],
-            template='simple_white'
+            template='simple_white',
+            show_title=False
         ), use_container_width=True)
 
     st.plotly_chart(
@@ -508,7 +512,7 @@ def load_eda(covidpro_df, dpc_regioni_df):
             xdata='Date',
             ydata=['NP_R', 'DR'],
             title='',
-            xtitle='Date',
+            xtitle='',
             ytitle='Fraction',
             group_column='Province',
             area_name=province_selectbox,
@@ -517,7 +521,8 @@ def load_eda(covidpro_df, dpc_regioni_df):
                 'Positives over total cases',
                 'Deaths over total cases'
                 ],
-            template='simple_white'
+            template='simple_white',
+            show_title=False
         ), use_container_width=True)
 
     st.subheader("🏗 Page under construction")
