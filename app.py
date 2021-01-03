@@ -131,6 +131,8 @@ def data_sird_plot(covidpro_df,
 def load_sird_page(covidpro_df, dpc_regioni_df, pop_prov_df, prov_list_df):
     # Page setup:
     # Sidebar widgets
+    st.sidebar.header('Options')
+
     area_radio = st.sidebar.radio(
         "Regional or provincial predictions:",
         ['Regional', 'Provincial'],
@@ -350,6 +352,22 @@ def load_sird_page(covidpro_df, dpc_regioni_df, pop_prov_df, prov_list_df):
 
 
 def load_eda(covidpro_df, dpc_regioni_df):
+    st.sidebar.header('Options')
+
+    # Date pickers
+    start_date_eda = st.sidebar.date_input(
+        'Start date',
+        datetime.date(2020, 2, 24),
+        datetime.date(2020, 2, 24),
+        dpc_regioni_df.iloc[-1]['data']
+    )
+    end_date_eda = st.sidebar.date_input(
+        'End date',
+        dpc_regioni_df.iloc[-1]['data'],
+        datetime.date(2020, 2, 24),
+        dpc_regioni_df.iloc[-1]['data']
+    )
+
     # Raw data checkbox
     show_raw_data = st.sidebar.checkbox('Show raw data')
 
@@ -358,34 +376,18 @@ def load_eda(covidpro_df, dpc_regioni_df):
     # --------------
     st.header("Regional plots")
 
-    col1, col2, col3 = st.beta_columns(3)
-
     # Combobox
-    region_selectbox = col1.selectbox(
+    region_selectbox = st.selectbox(
         "Region:",
         dpc_regioni_df.denominazione_regione.unique(),
         int((dpc_regioni_df.denominazione_regione == 'Lombardia').argmax())
     )
 
-    # Date pickers
-    start_date_region = col2.date_input(
-        'Start date',
-        datetime.date(2020, 2, 24),
-        datetime.date(2020, 2, 24),
-        dpc_regioni_df.iloc[-1]['data']
-    )
-    end_date_region = col3.date_input(
-        'End date',
-        dpc_regioni_df.iloc[-1]['data'],
-        datetime.date(2020, 2, 24),
-        dpc_regioni_df.iloc[-1]['data']
-    )
-
     # Filter data
     dpc_reg_filtered = dpc_regioni_df.query(
-        end_date_region.strftime('%Y%m%d') +
+        end_date_eda.strftime('%Y%m%d') +
         ' >= data >= ' +
-        start_date_region.strftime('%Y%m%d')
+        start_date_eda.strftime('%Y%m%d')
     )
 
     if show_raw_data:
@@ -454,36 +456,18 @@ def load_eda(covidpro_df, dpc_regioni_df):
     # ----------------
     st.header("Provincial plots")
 
-    col3, col4, col5 = st.beta_columns(3)
-
     # Combobox
-    province_selectbox = col3.selectbox(
+    province_selectbox = st.selectbox(
         "Province:",
         covidpro_df.Province.unique(),
         int((covidpro_df.Province == 'Piacenza').argmax())
     )
 
-    # Date pickers
-    start_date_province = col4.date_input(
-        'Start date',
-        datetime.date(2020, 2, 24),
-        datetime.date(2020, 2, 24),
-        covidpro_df.iloc[-1]['Date'],
-        'start_date_province'
-    )
-    end_date_province = col5.date_input(
-        'End date',
-        covidpro_df.iloc[-1]['Date'],
-        datetime.date(2020, 2, 24),
-        covidpro_df.iloc[-1]['Date'],
-        'end_date_province'
-    )
-
     # Filter data
     covidpro_filtered = covidpro_df.query(
-        end_date_province.strftime('%Y%m%d') +
+        end_date_eda.strftime('%Y%m%d') +
         ' >= Date >= ' +
-        start_date_province.strftime('%Y%m%d')
+        start_date_eda.strftime('%Y%m%d')
     )
 
     if show_raw_data:
