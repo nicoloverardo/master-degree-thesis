@@ -225,12 +225,16 @@ def load_sird_page(covidpro_df, dpc_regioni_df, pop_prov_df, prov_list_df):
     )
 
     # Show metrics
+    mae = mean_absolute_error(data[1], data[2])
+    mse = mean_squared_error(data[1], data[2])
+    rmse = mean_squared_error(data[1], data[2], squared=False)
+
     with st.beta_expander('Show metrics'):
-        st.info("MAE: " + str(np.round(mean_absolute_error(data[1], data[2]), 3)))
-        st.info("MSE: " + str(np.round(mean_squared_error(data[1], data[2]), 3)))
+        st.info("MAE: " + str(np.round(mae, 3)))
+        st.info("MSE: " + str(np.round(mse, 3)))
         st.info(
             "RMSE: " +
-            str(np.round(mean_squared_error(data[1], data[2], squared=False), 3))
+            str(np.round(rmse, 3))
         )
 
     st.text("")
