@@ -401,7 +401,8 @@ def load_eda(covidpro_df, dpc_regioni_df):
                 'Terapia Intensiva',
                 'Deceduti'],
             template='simple_white',
-            show_title=False
+            show_title=False,
+            horiz_legend=True
         ), use_container_width=True)
 
     st.plotly_chart(
@@ -422,7 +423,8 @@ def load_eda(covidpro_df, dpc_regioni_df):
                 'Positives over tampons',
                 'Positives over tot. positives'],
             template='simple_white',
-            show_title=False
+            show_title=False,
+            horiz_legend=True
         ), use_container_width=True)
 
     # ----------------
@@ -483,7 +485,8 @@ def load_eda(covidpro_df, dpc_regioni_df):
                 'Deaths',
                 'New cases'],
             template='simple_white',
-            show_title=False
+            show_title=False,
+            horiz_legend=True
         ), use_container_width=True)
 
     st.plotly_chart(
@@ -503,7 +506,8 @@ def load_eda(covidpro_df, dpc_regioni_df):
                 'Total deaths',
                 'Total cases'],
             template='simple_white',
-            show_title=False
+            show_title=False,
+            horiz_legend=True
         ), use_container_width=True)
 
     st.plotly_chart(
@@ -522,7 +526,8 @@ def load_eda(covidpro_df, dpc_regioni_df):
                 'Deaths over total cases'
                 ],
             template='simple_white',
-            show_title=False
+            show_title=False,
+            horiz_legend=True
         ), use_container_width=True)
 
     st.subheader("🏗 Page under construction")

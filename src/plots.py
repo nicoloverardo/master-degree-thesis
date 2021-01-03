@@ -289,7 +289,6 @@ def general_plot(t,
             return fig.show()
 
 
-# TODO: write docum. and improve
 def custom_plot(df,
                 ydata,
                 title,
@@ -304,7 +303,8 @@ def custom_plot(df,
                 blend_legend=False,
                 xanchor='right',
                 template='simple_white',
-                show_title=True):
+                show_title=True,
+                horiz_legend=False):
 
     if legend_titles is None:
         legend_titles = ydata
@@ -343,6 +343,17 @@ def custom_plot(df,
             y=0.99,
             xanchor=xanchor,
             x=xpos)
+        )
+
+    if horiz_legend:
+        fig.update_layout(
+            legend=dict(
+                orientation="h",
+                yanchor="top",
+                xanchor="center",
+                x=.5,
+                y=-.2
+            )
         )
 
     return fig
