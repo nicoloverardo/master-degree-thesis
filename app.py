@@ -468,14 +468,14 @@ def load_eda(covidpro_df, dpc_regioni_df):
         'Start date',
         datetime.date(2020, 2, 24),
         datetime.date(2020, 2, 24),
-        dpc_regioni_df.iloc[-1]['data'],
+        covidpro_df.iloc[-1]['Date'],
         'start_date_province'
     )
     end_date_province = col5.date_input(
         'End date',
-        dpc_regioni_df.iloc[-1]['data'],
+        covidpro_df.iloc[-1]['Date'],
         datetime.date(2020, 2, 24),
-        dpc_regioni_df.iloc[-1]['data'],
+        covidpro_df.iloc[-1]['Date'],
         'end_date_province'
     )
 
