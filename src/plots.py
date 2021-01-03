@@ -386,8 +386,6 @@ def daily_main_indic_plot(area,
                           output_figure=False,
                           title=None):
 
-    df = df[df[group_column] == area]
-
     fig = make_subplots(rows=4, cols=2)
 
     fig.add_trace(

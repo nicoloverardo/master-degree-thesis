@@ -241,34 +241,6 @@ def pre_process_csv(covidpro_df,
     covidpro_df['DR_Rolling'] = \
         covidpro_df['DR'].rolling(window=window).mean()
 
-    dpc_regioni_df['ricoverati_con_sintomi_giorno'] = \
-        dpc_regioni_df['ricoverati_con_sintomi'] - \
-        dpc_regioni_df['ricoverati_con_sintomi'].shift(1)
-
-    dpc_regioni_df['terapia_intensiva_giorno'] = \
-        dpc_regioni_df['terapia_intensiva'] - \
-        dpc_regioni_df['terapia_intensiva'].shift(1)
-
-    dpc_regioni_df['deceduti_giorno'] = \
-        dpc_regioni_df['deceduti'] - \
-        dpc_regioni_df['deceduti'].shift(1)
-
-    dpc_regioni_df['tamponi_giorno'] = \
-        dpc_regioni_df['tamponi'] - \
-        dpc_regioni_df['tamponi'].shift(1)
-
-    dpc_regioni_df['casi_testati_giorno'] = \
-        dpc_regioni_df['casi_testati'] - \
-        dpc_regioni_df['casi_testati'].shift(1)
-
-    dpc_regioni_df['dimessi_guariti_giorno'] = \
-        dpc_regioni_df['dimessi_guariti'] - \
-        dpc_regioni_df['dimessi_guariti'].shift(1)
-
-    dpc_regioni_df['isolamento_domiciliare_giorno'] = \
-        dpc_regioni_df['isolamento_domiciliare'] - \
-        dpc_regioni_df['isolamento_domiciliare'].shift(1)
-
     if equalize_dates:
         prov_date = covidpro_df.iloc[-1]['Date']
         reg_date = dpc_regioni_df.iloc[-1]['data']

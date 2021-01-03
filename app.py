@@ -352,6 +352,41 @@ def load_sird_page(covidpro_df, dpc_regioni_df, pop_prov_df, prov_list_df):
     st.subheader("🏗 Page under construction")
 
 
+@st.cache
+def compute_daily_changes(df, group_column, area):
+    df = df[df[group_column] == area]
+
+    df['ricoverati_con_sintomi_giorno'] = \
+        df['ricoverati_con_sintomi'] - \
+        df['ricoverati_con_sintomi'].shift(1)
+
+    df['terapia_intensiva_giorno'] = \
+        df['terapia_intensiva'] - \
+        df['terapia_intensiva'].shift(1)
+
+    df['deceduti_giorno'] = \
+        df['deceduti'] - \
+        df['deceduti'].shift(1)
+
+    df['tamponi_giorno'] = \
+        df['tamponi'] - \
+        df['tamponi'].shift(1)
+
+    df['casi_testati_giorno'] = \
+        df['casi_testati'] - \
+        df['casi_testati'].shift(1)
+
+    df['dimessi_guariti_giorno'] = \
+        df['dimessi_guariti'] - \
+        df['dimessi_guariti'].shift(1)
+
+    df['isolamento_domiciliare_giorno'] = \
+        df['isolamento_domiciliare'] - \
+        df['isolamento_domiciliare'].shift(1)
+
+    return df
+
+
 def load_eda(covidpro_df, dpc_regioni_df):
     st.sidebar.header('Options')
 
@@ -390,6 +425,11 @@ def load_eda(covidpro_df, dpc_regioni_df):
         ' >= data >= ' +
         start_date_eda.strftime('%Y%m%d')
     )
+
+    daily_df = compute_daily_changes(
+        dpc_reg_filtered,
+        'denominazione_regione',
+        region_selectbox)
 
     if show_raw_data:
         dpc_reg_filtered[dpc_reg_filtered.denominazione_regione == region_selectbox]  # nopep8
@@ -456,7 +496,7 @@ def load_eda(covidpro_df, dpc_regioni_df):
     st.plotly_chart(
         daily_main_indic_plot(
             area=region_selectbox,
-            df=dpc_reg_filtered,
+            df=daily_df,
             output_figure=True,
             title=''
         )
