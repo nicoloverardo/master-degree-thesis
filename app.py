@@ -242,6 +242,7 @@ def load_sird_page(covidpro_df, dpc_regioni_df, pop_prov_df, prov_list_df):
     st.text("")
     st.text("")
     st.text("")
+
     # -------------
     # Discrete SIRD
     # -------------
@@ -394,6 +395,8 @@ def load_eda(covidpro_df, dpc_regioni_df):
         dpc_reg_filtered[dpc_reg_filtered.denominazione_regione == region_selectbox]  # nopep8
 
     # Plots
+    st.subheader('Main trendlines')
+
     st.plotly_chart(
         custom_plot(
             df=dpc_reg_filtered,
@@ -447,6 +450,23 @@ def load_eda(covidpro_df, dpc_regioni_df):
             show_title=False,
             horiz_legend=True
         ), use_container_width=True)
+
+    st.subheader('Daily changes in the main indicators')
+
+    st.plotly_chart(
+        daily_main_indic_plot(
+            area=region_selectbox,
+            df=dpc_reg_filtered,
+            output_figure=True,
+            title=''
+        )
+    )
+
+    st.markdown(
+        """<font size='1'><span style='color:grey'>*Original idea for this plot is by
+        Alberto Danese and can be found
+        [here](https://github.com/albedan/covid-ts-ita).*</span></font>
+        """, unsafe_allow_html=True)
 
     st.text("")
     st.text("")

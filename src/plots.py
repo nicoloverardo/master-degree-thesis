@@ -1,4 +1,5 @@
 import plotly.graph_objects as go
+from plotly.subplots import make_subplots
 from ipywidgets import widgets
 from IPython.display import Image
 
@@ -371,6 +372,125 @@ def custom_plot(df,
         )
 
     return fig
+
+
+def daily_main_indic_plot(area,
+                          df,
+                          group_column='denominazione_regione',
+                          data_column='data',
+                          template='plotly_white',
+                          output_image=False,
+                          width=800,
+                          height=800,
+                          scale=2,
+                          output_figure=False,
+                          title=None):
+
+    df = df[df[group_column] == area]
+
+    fig = make_subplots(rows=4, cols=2)
+
+    fig.add_trace(
+        go.Bar(
+            name='Hosp. with symptoms',
+            x=df[data_column],
+            y=df['ricoverati_con_sintomi_giorno']
+        ),
+        row=1, col=1
+    )
+
+    fig.add_trace(
+        go.Bar(
+            name='Intensive care',
+            x=df[data_column],
+            y=df['terapia_intensiva_giorno']
+        ),
+        row=1, col=2
+    )
+
+    fig.add_trace(
+        go.Bar(
+            name='New positives',
+            x=df[data_column],
+            y=df['nuovi_positivi']
+        ),
+        row=2, col=1
+    )
+
+    fig.add_trace(
+        go.Bar(
+            name='Tampons',
+            x=df[data_column],
+            y=df['tamponi_giorno']
+        ),
+        row=2, col=2
+    )
+
+    fig.add_trace(
+        go.Bar(
+            name='Tested cases',
+            x=df[data_column],
+            y=df['casi_testati_giorno']
+        ),
+        row=3, col=1
+    )
+    fig.add_trace(
+        go.Bar(
+            name='Deaths',
+            x=df[data_column],
+            y=df['deceduti_giorno']
+        ),
+        row=3, col=2
+    )
+    fig.add_trace(
+        go.Bar(
+            name='Recovered',
+            x=df[data_column],
+            y=df['dimessi_guariti_giorno']
+        ),
+        row=4, col=1
+    )
+    fig.add_trace(
+        go.Bar(
+            name='Home quarantine',
+            x=df[data_column],
+            y=df['isolamento_domiciliare_giorno']
+        ),
+        row=4, col=2
+    )
+
+    if title is None:
+        title_desc = 'Daily changes in the main indicators'
+        title = title_desc + " - " + area if not output_figure else title_desc
+
+    fig.update_layout(
+        height=height,
+        width=width,
+        title_text=title,
+        template=template,
+        title_x=0.5
+    )
+
+    fig.update_layout(
+        legend=dict(
+            orientation="h",
+            yanchor="bottom",
+            y=-.2,
+            xanchor="center",
+            x=.5
+        )
+    )
+
+    if output_image:
+        return Image(fig.to_image(format="png",
+                                  width=width,
+                                  height=height,
+                                  scale=scale))
+    else:
+        if output_figure:
+            return fig
+        else:
+            return fig.show()
 
 
 def data_for_plot(compart,
