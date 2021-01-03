@@ -463,8 +463,8 @@ def load_eda(covidpro_df, dpc_regioni_df):
     )
 
     st.markdown(
-        """<font size='1'><span style='color:grey'>*Original idea for this plot is by
-        Alberto Danese and can be found
+        """<font size='1'><span style='color:grey'>*Original idea for
+        this plot is by Alberto Danese and can be found
         [here](https://github.com/albedan/covid-ts-ita).*</span></font>
         """, unsafe_allow_html=True)
 
