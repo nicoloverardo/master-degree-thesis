@@ -490,6 +490,73 @@ def daily_main_indic_plot(area,
             return fig.show()
 
 
+def autocorr_indicators_plot(df,
+                             x_col,
+                             y_cols,
+                             y_labels,
+                             template='plotly_white',
+                             title='Auto-correlations',
+                             output_image=False,
+                             width=950,
+                             height=500,
+                             scale=2,
+                             output_figure=False):
+
+    fig = go.Figure()
+
+    for i, col in enumerate(y_cols):
+        fig.add_trace(
+            go.Scatter(
+                x=df[x_col],
+                y=df[col],
+                name=y_labels[i],
+                line_shape='spline'
+            )
+        )
+
+    tot_weeks = int(df[x_col].values[-1]/7)
+
+    for w in range(1, tot_weeks + 1):
+        x = w*7
+
+        # n_weeks_str = num_to_words(w)
+        units = {
+            0: 'zero', 1: 'one', 2: 'two', 3: 'three', 4: 'four', 5: 'five',
+            6: 'six', 7: 'seven', 8: 'eight', 9: 'nine'
+        }
+
+        n_weeks_str = units[w]
+        weeks_str = '<br>week' if w == 1 else '<br>weeks'
+        ann_text = n_weeks_str + weeks_str
+
+        fig.add_vline(
+            x=x,
+            line_dash='dash',
+            line_color='green',
+            annotation_text=ann_text,
+            annotation_position='bottom right'
+        )
+
+    fig.update_yaxes(title_text='Auto-correlation')
+    fig.update_xaxes(title_text='Days')
+    fig.update_layout(
+        template=template,
+        title=title,
+        title_x=0.5
+    )
+
+    if output_image:
+        return Image(fig.to_image(format="png",
+                                  width=width,
+                                  height=height,
+                                  scale=scale))
+    else:
+        if output_figure:
+            return fig
+        else:
+            return fig.show()
+
+
 def data_for_plot(compart,
                   df,
                   column,
@@ -526,3 +593,61 @@ def data_for_plot(compart,
     data = [d1_real.values, d2_rolling.values, comp_array]
 
     return names, title, data, modes
+
+
+def num_to_words(num, join=True):
+    '''words = {} convert an integer number into words
+    Taken from: https://stackoverflow.com/a/19193721
+    '''
+
+    units = [
+        '', 'one', 'two', 'three', 'four', 'five',
+        'six', 'seven', 'eight', 'nine'
+    ]
+    teens = [
+        '', 'eleven', 'twelve', 'thirteen', 'fourteen',
+        'fifteen', 'sixteen', 'seventeen', 'eighteen', 'nineteen'
+    ]
+    tens = [
+        '', 'ten', 'twenty', 'thirty', 'forty', 'fifty', 'sixty',
+        'seventy', 'eighty', 'ninety'
+    ]
+    thousands = ['', 'thousand', 'million', 'billion', 'trillion']
+
+    words = []
+    if num == 0:
+        words.append('zero')
+    else:
+        numStr = '%d' % num
+        numStrLen = len(numStr)
+        groups = (numStrLen+2)/3
+        numStr = numStr.zfill(groups*3)
+
+        for i in range(0, groups*3, 3):
+            h, t, u = int(numStr[i]), int(numStr[i+1]), int(numStr[i+2])
+            g = groups-(i/3+1)
+
+            if h >= 1:
+                words.append(units[h])
+                words.append('hundred')
+
+            if t > 1:
+                words.append(tens[t])
+                if u >= 1:
+                    words.append(units[u])
+            elif t == 1:
+                if u >= 1:
+                    words.append(teens[u])
+                else:
+                    words.append(tens[t])
+            else:
+                if u >= 1:
+                    words.append(units[u])
+
+            if (g >= 1) and ((h+t+u) > 0):
+                words.append(thousands[g]+',')
+
+    if join:
+        return ' '.join(words)
+
+    return words

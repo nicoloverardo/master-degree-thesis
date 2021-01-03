@@ -353,9 +353,7 @@ def load_sird_page(covidpro_df, dpc_regioni_df, pop_prov_df, prov_list_df):
 
 
 @st.cache
-def compute_daily_changes(df, group_column, area):
-    df = df[df[group_column] == area]
-
+def compute_daily_changes(df):
     df['ricoverati_con_sintomi_giorno'] = \
         df['ricoverati_con_sintomi'] - \
         df['ricoverati_con_sintomi'].shift(1)
@@ -387,6 +385,37 @@ def compute_daily_changes(df, group_column, area):
     return df
 
 
+@st.cache
+def compute_autocorr_df(df, days):
+    return pd.DataFrame({
+        'giorni': range(days),
+        'autocor_tamponi_eseguiti': [
+            df['tamponi_giorno'].corr(
+                df['tamponi_giorno'].shift(i)
+            ) for i in range(days)],
+        'autocor_casi_testati': [
+            df['casi_testati_giorno'].corr(
+                df['casi_testati_giorno'].shift(i)
+            ) for i in range(days)],
+        'autocor_nuovi_positivi': [
+            df['nuovi_positivi'].corr(
+                df['nuovi_positivi'].shift(i)
+            ) for i in range(days)],
+        'autocor_nuovi_ricoverati': [
+            df['ricoverati_con_sintomi_giorno'].corr(
+                df['ricoverati_con_sintomi_giorno'].shift(i)
+            ) for i in range(days)],
+        'autocor_nuove_TI': [
+            df['terapia_intensiva_giorno'].corr(
+                df['terapia_intensiva_giorno'].shift(i)
+            ) for i in range(days)],
+        'autocor_nuovi_decessi': [
+            df['deceduti_giorno'].corr(
+                df['deceduti_giorno'].shift(i)
+            ) for i in range(days)]
+        })
+
+
 def load_eda(covidpro_df, dpc_regioni_df):
     st.sidebar.header('Options')
 
@@ -407,6 +436,14 @@ def load_eda(covidpro_df, dpc_regioni_df):
     # Raw data checkbox
     show_raw_data = st.sidebar.checkbox('Show raw data')
 
+    # Cite text
+    st.sidebar.markdown(
+        """<font size='1'><span style='color:grey'>*"Daily changes in the
+        main indicators" and "Correlations and auto-correlations" plots are
+        taken and adapted from Alberto Danese repo and can be found
+        [here](https://github.com/albedan/covid-ts-ita).*</span></font>
+        """, unsafe_allow_html=True)
+
     # --------------
     # Regional plots
     # --------------
@@ -426,13 +463,14 @@ def load_eda(covidpro_df, dpc_regioni_df):
         start_date_eda.strftime('%Y%m%d')
     )
 
-    daily_df = compute_daily_changes(
-        dpc_reg_filtered,
-        'denominazione_regione',
-        region_selectbox)
+    dpc_final = dpc_reg_filtered[
+        dpc_reg_filtered.denominazione_regione == region_selectbox]
+
+    daily_df = compute_daily_changes(dpc_final)
+    autocorr_df = compute_autocorr_df(daily_df, 30)
 
     if show_raw_data:
-        dpc_reg_filtered[dpc_reg_filtered.denominazione_regione == region_selectbox]  # nopep8
+        dpc_final
 
     # Plots
     st.subheader('Main trendlines')
@@ -502,11 +540,32 @@ def load_eda(covidpro_df, dpc_regioni_df):
         )
     )
 
-    st.markdown(
-        """<font size='1'><span style='color:grey'>*Original idea for
-        this plot is by Alberto Danese and can be found
-        [here](https://github.com/albedan/covid-ts-ita).*</span></font>
-        """, unsafe_allow_html=True)
+    st.subheader('Correlations and auto-correlations')
+
+    st.plotly_chart(
+        autocorr_indicators_plot(
+            df=autocorr_df,
+            x_col='giorni',
+            y_cols=[
+                'autocor_casi_testati',
+                'autocor_tamponi_eseguiti',
+                'autocor_nuovi_positivi',
+                'autocor_nuovi_ricoverati',
+                'autocor_nuove_TI',
+                'autocor_nuovi_decessi'
+            ],
+            y_labels=[
+                'Tested cases',
+                'Tampons',
+                'Positives',
+                'Recovered',
+                'Intensive care',
+                'Deaths'
+            ],
+            output_figure=True,
+            title=''
+        )
+    )
 
     st.text("")
     st.text("")
