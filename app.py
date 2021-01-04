@@ -424,14 +424,7 @@ def compute_autocorr_df(df, days):
         'autocor_nuovi_decessi': [
             df['deceduti_giorno'].corr(
                 df['deceduti_giorno'].shift(i)
-            ) for i in range(days)]
-        })
-
-
-@st.cache
-def compute_cases_corr_df(df, days):
-    return pd.DataFrame({
-        'giorni': range(days),
+            ) for i in range(days)],
 
         'crosscor_decessi_nuovi_positivi': [
             df['deceduti_giorno'].rolling(7, center=True).mean().corr(
@@ -449,7 +442,7 @@ def compute_cases_corr_df(df, days):
                 df['terapia_intensiva_giorno'].rolling(7, center=True)
                 .mean().shift(i)
             ) for i in range(days)]
-    })
+        })
 
 
 def load_eda(covidpro_df, dpc_regioni_df):
@@ -504,10 +497,14 @@ def load_eda(covidpro_df, dpc_regioni_df):
 
     daily_df = compute_daily_changes(dpc_final)
     autocorr_df = compute_autocorr_df(daily_df, 30)
-    cross_corr_cases_df = compute_cases_corr_df(daily_df, 30)
 
     if show_raw_data:
-        dpc_final
+        st.subheader("Raw data")
+        st.write("Regional data:")
+        daily_df
+
+        st.write("Corr. and auto-corr. data:")
+        autocorr_df
 
     # Plots
     st.subheader('Main trendlines')
@@ -628,17 +625,17 @@ def load_eda(covidpro_df, dpc_regioni_df):
 
     st.plotly_chart(
         cross_corr_cases_plot(
-            df=cross_corr_cases_df,
+            df=autocorr_df,
             template='plotly_white',
             title='Cross-correlation deaths - new cases (rolling avg. 7d)',
             output_figure=True
         ), use_container_width=True
     )
 
-    giorni_max_cor = cross_corr_cases_df[
+    giorni_max_cor = autocorr_df[
         'crosscor_decessi_nuovi_positivi'].idxmax()
     valore_max_cor = round(
-        cross_corr_cases_df['crosscor_decessi_nuovi_positivi'].max(), 4)
+        autocorr_df['crosscor_decessi_nuovi_positivi'].max(), 4)
 
     st.markdown(
         f'The highest correlation between deaths and '
@@ -679,8 +676,13 @@ def load_eda(covidpro_df, dpc_regioni_df):
         start_date_eda.strftime('%Y%m%d')
     )
 
+    covidpro_final = covidpro_filtered[
+        covidpro_filtered.Province == province_selectbox]
+
     if show_raw_data:
-        covidpro_filtered[covidpro_filtered.Province == province_selectbox]
+        st.subheader("Raw data")
+        st.write("Provincial data:")
+        covidpro_final
 
     # Plots
     st.plotly_chart(
@@ -745,6 +747,8 @@ def load_eda(covidpro_df, dpc_regioni_df):
             horiz_legend=True
         ), use_container_width=True)
 
+    st.write("")
+    st.write("")
     st.subheader("🏗 Page under construction")
 
 
