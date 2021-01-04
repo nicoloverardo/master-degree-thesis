@@ -137,8 +137,8 @@ def fix_trentino(df):
     ones in the original df.
     """
 
-    df_bolzano = df[df.denominazione_regione == 'P.A. Bolzano']
-    df_trento = df[df.denominazione_regione == 'P.A. Trento']
+    df_bolzano = df.loc[df.denominazione_regione == 'P.A. Bolzano']
+    df_trento = df.loc[df.denominazione_regione == 'P.A. Trento']
 
     cols_to_drop = ['data', 'stato', 'codice_regione',
                     'denominazione_regione', 'lat', 'long',
@@ -159,8 +159,8 @@ def fix_trentino(df):
         'variazione_totale_positivi', 'note_test',
         'note_casi', 'note']] = 0
 
-    df_filtered = df[df.denominazione_regione != 'P.A. Bolzano']
-    df_filtered = df_filtered[
+    df_filtered = df.loc[df.denominazione_regione != 'P.A. Bolzano']
+    df_filtered = df_filtered.loc[
         df_filtered.denominazione_regione != 'P.A. Trento']
 
     df_res = pd.concat([df_filtered, res_df])
@@ -191,34 +191,95 @@ def pre_process_csv(covidpro_df,
 
     dpc_regioni_df['DR'] = \
         dpc_regioni_df['deceduti']/dpc_regioni_df['totale_positivi']
+    
+    # ------------------------
+    # Fixing outliers manually
+    # ------------------------
+    #
+    # Fix Teramo & Chieti
+    covidpro_df.loc[
+        (covidpro_df.Province == 'Teramo') &
+        (covidpro_df.Date == pd.Timestamp(2020, 6, 24)),
+        'New_cases'] = 0
+    covidpro_df.loc[
+        (covidpro_df.Province == 'Teramo') &
+        (covidpro_df.Date == pd.Timestamp(2020, 6, 24)),
+        'Curr_pos_cases'] = 630
+    covidpro_df.loc[
+        (covidpro_df.Province == 'Teramo') &
+        (covidpro_df.Date == pd.Timestamp(2020, 6, 25)),
+        'New_cases'] = 1
+    covidpro_df.loc[
+        (covidpro_df.Province == 'Chieti') &
+        (covidpro_df.Date == pd.Timestamp(2020, 6, 24)),
+        'New_cases'] = 0
+    covidpro_df.loc[
+        (covidpro_df.Province == 'Chieti') &
+        (covidpro_df.Date == pd.Timestamp(2020, 6, 24)),
+        'Curr_pos_cases'] = 816
+    covidpro_df.loc[
+        (covidpro_df.Province == 'Chieti') &
+        (covidpro_df.Date == pd.Timestamp(2020, 6, 25)),
+        'New_cases'] = 0
 
-    covidpro_df = fix_outlier_province(
-        covidpro_df,
-        'Chieti',
-        pd.Timestamp(2020, 6, 25),
-        ['New_cases']
-    )
+    # Fix Bolzano
+    covidpro_df.loc[
+        (covidpro_df.Province == 'Bolzano') &
+        (covidpro_df.Date == pd.Timestamp(2020, 10, 7)),
+        'New_cases'] = 55
+    covidpro_df.loc[
+        (covidpro_df.Province == 'Bolzano') &
+        (covidpro_df.Date == pd.Timestamp(2020, 10, 7)),
+        'Curr_pos_cases'] = 3734
+    covidpro_df.loc[
+        (covidpro_df.Province == 'Bolzano') &
+        (covidpro_df.Date == pd.Timestamp(2020, 10, 8)),
+        'New_cases'] = 69
+    covidpro_df.loc[
+        (covidpro_df.Province == 'Bolzano') &
+        (covidpro_df.Date == pd.Timestamp(2020, 12, 26)),
+        'New_cases'] = 24
+    covidpro_df.loc[
+        (covidpro_df.Province == 'Bolzano') &
+        (covidpro_df.Date == pd.Timestamp(2020, 12, 26)),
+        'Curr_pos_cases'] = 28746
+    covidpro_df.loc[
+        (covidpro_df.Province == 'Bolzano') &
+        (covidpro_df.Date == pd.Timestamp(2020, 12, 26)),
+        'Deaths'] = 14
+    covidpro_df.loc[
+        (covidpro_df.Province == 'Bolzano') &
+        (covidpro_df.Date == pd.Timestamp(2020, 12, 26)),
+        'Tot_deaths'] = 718
+    covidpro_df.loc[
+        (covidpro_df.Province == 'Bolzano') &
+        (covidpro_df.Date == pd.Timestamp(2020, 12, 27)),
+        'New_cases'] = 57
+    covidpro_df.loc[
+        (covidpro_df.Province == 'Bolzano') &
+        (covidpro_df.Date == pd.Timestamp(2020, 12, 27)),
+        'Tot_deaths'] = 720
+    covidpro_df.loc[
+        (covidpro_df.Province == 'Bolzano') &
+        (covidpro_df.Date == pd.Timestamp(2020, 12, 28)),
+        'Tot_deaths'] = 722
+    covidpro_df.loc[
+        (covidpro_df.Province == 'Bolzano') &
+        (covidpro_df.Date == pd.Timestamp(2020, 12, 29)),
+        'Tot_deaths'] = 729
 
-    covidpro_df = fix_outlier_province(
-        covidpro_df,
-        'Pistoia',
-        pd.Timestamp(2020, 6, 24),
-        ['New_cases']
-    )
+    # Fix Rovigo
+    covidpro_df.loc[
+        (covidpro_df.Province == 'Rovigo') &
+        (covidpro_df.Date == pd.Timestamp(2020, 4, 21)),
+        'New_cases'] = 0
 
-    covidpro_df = fix_outlier_province(
-        covidpro_df,
-        'Rovigo',
-        pd.Timestamp(2020, 4, 21),
-        ['New_cases']
-    )
+    covidpro_df.loc[
+        (covidpro_df.Province == 'Rovigo') &
+        (covidpro_df.Date == pd.Timestamp(2020, 6, 26)),
+        'Deaths'] = 0
 
-    covidpro_df = fix_outlier_province(
-        covidpro_df,
-        'Rovigo',
-        pd.Timestamp(2020, 6, 26),
-        ['Deaths']
-    )
+    # ----------
 
     covidpro_df['New_cases'] = covidpro_df['New_cases'].apply(convert_nan)
     covidpro_df['Deaths'] = covidpro_df['Deaths'].apply(convert_nan)
@@ -259,23 +320,6 @@ def pre_process_csv(covidpro_df,
     return (
         covidpro_df, dpc_regioni_df,
         dpc_province_df, pop_prov_df, prov_list_df)
-
-
-def fix_outlier_province(df, area, date, columns):
-    # BUG: fix needed
-    idx = df.loc[
-        (df.Province == area) &
-        (df.Date == date)
-    ].index.values[0]
-
-    for col in columns:
-        df.loc[idx, col] = np.nan
-
-        res = df[df.Province == area][col].interpolate()
-        df.loc[(df.Province == area), col] = res.round()
-        df = df.astype({col: 'int32'})
-
-    return df
 
 
 def convert_nan(x):
