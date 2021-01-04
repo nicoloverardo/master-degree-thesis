@@ -1,3 +1,6 @@
+from pickle import TRUE
+from re import template
+from numpy.lib.function_base import diff
 import streamlit as st
 import datetime
 
@@ -200,7 +203,7 @@ def load_sird_page(covidpro_df, dpc_regioni_df, pop_prov_df, prov_list_df):
             title='SIRD model',
             traces_visibility=['legendonly'] + [True]*3,
             output_image=False,
-            template='simple_white',
+            template='plotly_white',
             output_figure=True,
             horiz_legend=True
         ), use_container_width=True
@@ -220,7 +223,7 @@ def load_sird_page(covidpro_df, dpc_regioni_df, pop_prov_df, prov_list_df):
             blend_legend=False,
             output_image=False,
             traces_visibility=['legendonly'] + [True]*2,
-            template='simple_white',
+            template='plotly_white',
             output_figure=True,
             horiz_legend=True
         ), use_container_width=True
@@ -287,7 +290,8 @@ def load_sird_page(covidpro_df, dpc_regioni_df, pop_prov_df, prov_list_df):
             output_image=False,
             output_figure=True,
             xtitle='',
-            horiz_legend=True
+            horiz_legend=True,
+            template='plotly_white'
         ), use_container_width=True
     )
 
@@ -306,7 +310,8 @@ def load_sird_page(covidpro_df, dpc_regioni_df, pop_prov_df, prov_list_df):
             output_image=False,
             output_figure=True,
             xtitle='',
-            horiz_legend=True
+            horiz_legend=True,
+            template='plotly_white'
         ), use_container_width=True
     )
 
@@ -325,7 +330,8 @@ def load_sird_page(covidpro_df, dpc_regioni_df, pop_prov_df, prov_list_df):
             output_image=False,
             output_figure=True,
             xtitle='',
-            horiz_legend=True
+            horiz_legend=True,
+            template='plotly_white'
         ), use_container_width=True
     )
 
@@ -389,31 +395,61 @@ def compute_daily_changes(df):
 def compute_autocorr_df(df, days):
     return pd.DataFrame({
         'giorni': range(days),
+
         'autocor_tamponi_eseguiti': [
             df['tamponi_giorno'].corr(
                 df['tamponi_giorno'].shift(i)
             ) for i in range(days)],
+
         'autocor_casi_testati': [
             df['casi_testati_giorno'].corr(
                 df['casi_testati_giorno'].shift(i)
             ) for i in range(days)],
+
         'autocor_nuovi_positivi': [
             df['nuovi_positivi'].corr(
                 df['nuovi_positivi'].shift(i)
             ) for i in range(days)],
+
         'autocor_nuovi_ricoverati': [
             df['ricoverati_con_sintomi_giorno'].corr(
                 df['ricoverati_con_sintomi_giorno'].shift(i)
             ) for i in range(days)],
+
         'autocor_nuove_TI': [
             df['terapia_intensiva_giorno'].corr(
                 df['terapia_intensiva_giorno'].shift(i)
             ) for i in range(days)],
+
         'autocor_nuovi_decessi': [
             df['deceduti_giorno'].corr(
                 df['deceduti_giorno'].shift(i)
             ) for i in range(days)]
         })
+
+
+@st.cache
+def compute_cases_corr_df(df, days):
+    return pd.DataFrame({
+        'giorni': range(days),
+
+        'crosscor_decessi_nuovi_positivi': [
+            df['deceduti_giorno'].rolling(7, center=True).mean().corr(
+                df['nuovi_positivi'].rolling(7, center=True).mean().shift(i)
+            ) for i in range(days)],
+
+        'crosscor_decessi_nuovi_ricoverati': [
+            df['deceduti_giorno'].rolling(7, center=True).mean().corr(
+                df['ricoverati_con_sintomi_giorno'].rolling(7, center=True)
+                .mean().shift(i)
+            ) for i in range(days)],
+
+        'crosscor_decessi_nuove_TI': [
+            df['deceduti_giorno'].rolling(7, center=True).mean().corr(
+                df['terapia_intensiva_giorno'].rolling(7, center=True)
+                .mean().shift(i)
+            ) for i in range(days)]
+    })
 
 
 def load_eda(covidpro_df, dpc_regioni_df):
@@ -468,6 +504,7 @@ def load_eda(covidpro_df, dpc_regioni_df):
 
     daily_df = compute_daily_changes(dpc_final)
     autocorr_df = compute_autocorr_df(daily_df, 30)
+    cross_corr_cases_df = compute_cases_corr_df(daily_df, 30)
 
     if show_raw_data:
         dpc_final
@@ -502,7 +539,7 @@ def load_eda(covidpro_df, dpc_regioni_df):
                 'Hospitalized with symptoms',
                 'Intensive care',
                 'Total deaths'],
-            template='simple_white',
+            template='plotly_white',
             show_title=False,
             horiz_legend=True
         ), use_container_width=True)
@@ -524,7 +561,7 @@ def load_eda(covidpro_df, dpc_regioni_df):
                 'Hospitalized over tot. cases',
                 'Positives over tampons',
                 'Positives over tot. positives'],
-            template='simple_white',
+            template='plotly_white',
             show_title=False,
             horiz_legend=True
         ), use_container_width=True)
@@ -535,8 +572,29 @@ def load_eda(covidpro_df, dpc_regioni_df):
         daily_main_indic_plot(
             area=region_selectbox,
             df=daily_df,
+            y_cols=[
+                'ricoverati_con_sintomi_giorno',
+                'terapia_intensiva_giorno',
+                'nuovi_positivi',
+                'tamponi_giorno',
+                'casi_testati_giorno',
+                'deceduti_giorno',
+                'dimessi_guariti_giorno',
+                'isolamento_domiciliare_giorno'
+            ],
+            y_labels=[
+                'Hosp. with symptoms',
+                'Intensive care',
+                'New positives',
+                'Tampons',
+                'Tested cases',
+                'Deaths',
+                'Recovered',
+                'Home quarantine'
+            ],
             output_figure=True,
-            title=''
+            title='',
+            template='plotly_white'
         ), use_container_width=True
     )
 
@@ -563,8 +621,40 @@ def load_eda(covidpro_df, dpc_regioni_df):
                 'Deaths'
             ],
             output_figure=True,
-            title=''
+            title='Auto-correlations',
+            template='plotly_white'
         ), use_container_width=True
+    )
+
+    st.plotly_chart(
+        cross_corr_cases_plot(
+            df=cross_corr_cases_df,
+            template='plotly_white',
+            title='Cross-correlation deaths - new cases (rolling avg. 7d)',
+            output_figure=True
+        )
+    )
+
+    giorni_max_cor = cross_corr_cases_df[
+        'crosscor_decessi_nuovi_positivi'].idxmax()
+    valore_max_cor = round(
+        cross_corr_cases_df['crosscor_decessi_nuovi_positivi'].max(), 4)
+
+    st.markdown(
+        f'The highest correlation between deaths and '
+        f'new positives is after *{giorni_max_cor} days* and '
+        f'it is equal to *{valore_max_cor}* (where perfect correlation = 1)'
+    )
+
+    st.plotly_chart(
+        trend_corr_plot(
+            df=daily_df,
+            days_max_corr=giorni_max_cor,
+            y_cols=['nuovi_positivi', 'deceduti_giorno'],
+            y_labels=['Positives', 'Deaths'],
+            data_column='data',
+            output_figure=True
+        )
     )
 
     st.text("")
@@ -609,7 +699,7 @@ def load_eda(covidpro_df, dpc_regioni_df):
             legend_titles=[
                 'Deaths',
                 'New cases'],
-            template='simple_white',
+            template='plotly_white',
             show_title=False,
             horiz_legend=True
         ), use_container_width=True)
@@ -630,7 +720,7 @@ def load_eda(covidpro_df, dpc_regioni_df):
             legend_titles=[
                 'Total deaths',
                 'Total cases'],
-            template='simple_white',
+            template='plotly_white',
             show_title=False,
             horiz_legend=True
         ), use_container_width=True)
@@ -650,7 +740,7 @@ def load_eda(covidpro_df, dpc_regioni_df):
                 'Positives over total cases',
                 'Deaths over total cases'
                 ],
-            template='simple_white',
+            template='plotly_white',
             show_title=False,
             horiz_legend=True
         ), use_container_width=True)

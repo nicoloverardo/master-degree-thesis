@@ -376,7 +376,9 @@ def custom_plot(df,
 
 def daily_main_indic_plot(area,
                           df,
-                          data_column='data',
+                          y_cols,
+                          y_labels,
+                          x_col='data',
                           template='plotly_white',
                           output_image=False,
                           width=800,
@@ -387,73 +389,28 @@ def daily_main_indic_plot(area,
 
     fig = make_subplots(rows=4, cols=2)
 
-    fig.add_trace(
-        go.Bar(
-            name='Hosp. with symptoms',
-            x=df[data_column],
-            y=df['ricoverati_con_sintomi_giorno']
-        ),
-        row=1, col=1
-    )
+    i = 0
+    for r in range(1, 5):
+        for c in range(1, 3):
+            fig.add_trace(
+                go.Bar(
+                    name=y_labels[i],
+                    x=df[x_col],
+                    y=df[y_cols[i]]
+                ),
+                row=r, col=c
+            )
 
-    fig.add_trace(
-        go.Bar(
-            name='Intensive care',
-            x=df[data_column],
-            y=df['terapia_intensiva_giorno']
-        ),
-        row=1, col=2
-    )
+            i += 1
 
-    fig.add_trace(
-        go.Bar(
-            name='New positives',
-            x=df[data_column],
-            y=df['nuovi_positivi']
-        ),
-        row=2, col=1
-    )
-
-    fig.add_trace(
-        go.Bar(
-            name='Tampons',
-            x=df[data_column],
-            y=df['tamponi_giorno']
-        ),
-        row=2, col=2
-    )
-
-    fig.add_trace(
-        go.Bar(
-            name='Tested cases',
-            x=df[data_column],
-            y=df['casi_testati_giorno']
-        ),
-        row=3, col=1
-    )
-    fig.add_trace(
-        go.Bar(
-            name='Deaths',
-            x=df[data_column],
-            y=df['deceduti_giorno']
-        ),
-        row=3, col=2
-    )
-    fig.add_trace(
-        go.Bar(
-            name='Recovered',
-            x=df[data_column],
-            y=df['dimessi_guariti_giorno']
-        ),
-        row=4, col=1
-    )
-    fig.add_trace(
-        go.Bar(
-            name='Home quarantine',
-            x=df[data_column],
-            y=df['isolamento_domiciliare_giorno']
-        ),
-        row=4, col=2
+    fig.add_shape(
+        type="line",
+        y0=0, y1=0,
+        x0=df.iloc[0][x_col],
+        x1=df.iloc[-1][x_col],
+        line=dict(width=1),
+        row="all", col="all",
+        opacity=0.5
     )
 
     if title is None:
@@ -544,6 +501,122 @@ def autocorr_indicators_plot(df,
         title=title,
         title_x=0.5
     )
+
+    if output_image:
+        return Image(fig.to_image(format="png",
+                                  width=width,
+                                  height=height,
+                                  scale=scale))
+    else:
+        if output_figure:
+            return fig
+        else:
+            return fig.show()
+
+
+def cross_corr_cases_plot(df,
+                          x_col='giorni',
+                          y_col='crosscor_decessi_nuovi_positivi',
+                          template='plotly_white',
+                          title='Cross-correlation',
+                          output_image=False,
+                          width=800,
+                          height=400,
+                          scale=2,
+                          output_figure=False):
+    fig = go.Figure()
+
+    fig.add_trace(
+        go.Scatter(
+            x=df[x_col],
+            y=df[y_col],
+            line_shape='spline'
+        )
+    )
+    fig.add_vline(
+        x=df[y_col].idxmax(),
+        line_dash='dash',
+        line_color='green',
+        annotation_text='max<br>corr.',
+        annotation_position='bottom right'
+    )
+
+    fig.update_yaxes(title_text='Cross-correlation')
+    fig.update_xaxes(title_text='Days')
+
+    fig.update_layout(
+        template=template,
+        title=title,
+        title_x=0.5
+    )
+
+    if output_image:
+        return Image(fig.to_image(format="png",
+                                  width=width,
+                                  height=height,
+                                  scale=scale))
+    else:
+        if output_figure:
+            return fig
+        else:
+            return fig.show()
+
+
+def trend_corr_plot(df,
+                    y_cols,
+                    y_labels,
+                    days_max_corr,
+                    data_column='data',
+                    template='plotly_white',
+                    title=None,
+                    output_image=False,
+                    width=800,
+                    height=400,
+                    scale=2,
+                    output_figure=False):
+
+    fig = make_subplots(specs=[[{'secondary_y': True}]])
+
+    fig.add_trace(
+        go.Scatter(
+            x=df[data_column],
+            y=df[y_cols[0]],
+            name=y_labels[0],
+            line_shape='spline'
+        ),
+        secondary_y=False,
+    )
+
+    fig.add_trace(
+        go.Scatter(
+            x=df[data_column],
+            y=df[y_cols[1]].shift(-days_max_corr),
+            name=y_labels[1] + ' of ' + str(days_max_corr) + 'd after',
+            line_shape='spline'
+        ),
+        secondary_y=True,
+    )
+
+    fig.update_yaxes(title_text=y_labels[0], secondary_y=False)
+    fig.update_yaxes(title_text=y_labels[1], secondary_y=True)
+
+    fig.update_layout(
+        legend=dict(
+            orientation="h",
+            yanchor="bottom",
+            y=-.3,
+            xanchor="center",
+            x=.5
+        ),
+        title_x=0.5,
+        template=template
+    )
+
+    if title is None:
+        fig.update_layout(
+            title_text='Trend ' + y_labels[0] + ' - ' + y_labels[1] +
+                       ' (shift of ' + str(days_max_corr) + 'd)'
+        )
 
     if output_image:
         return Image(fig.to_image(format="png",
