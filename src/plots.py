@@ -385,7 +385,8 @@ def daily_main_indic_plot(area,
                           height=800,
                           scale=2,
                           output_figure=False,
-                          title=None):
+                          title=None,
+                          horiz_legend=True):
 
     fig = make_subplots(rows=4, cols=2)
 
@@ -424,15 +425,18 @@ def daily_main_indic_plot(area,
         title_x=0.5
     )
 
-    fig.update_layout(
-        legend=dict(
-            orientation="h",
-            yanchor="bottom",
-            y=-.2,
-            xanchor="center",
-            x=.5
+    if horiz_legend:
+        ypos = -.2 if title is '' else -.3
+
+        fig.update_layout(
+            legend=dict(
+                orientation="h",
+                yanchor="top",
+                xanchor="center",
+                x=.5,
+                y=ypos
+            )
         )
-    )
 
     if output_image:
         return Image(fig.to_image(format="png",
@@ -456,7 +460,8 @@ def autocorr_indicators_plot(df,
                              width=950,
                              height=500,
                              scale=2,
-                             output_figure=False):
+                             output_figure=False,
+                             horiz_legend=True):
 
     fig = go.Figure()
 
@@ -501,6 +506,19 @@ def autocorr_indicators_plot(df,
         title=title,
         title_x=0.5
     )
+
+    if horiz_legend:
+        ypos = -.2 if title is '' else -.3
+
+        fig.update_layout(
+            legend=dict(
+                orientation="h",
+                yanchor="top",
+                xanchor="center",
+                x=.5,
+                y=ypos
+            )
+        )
 
     if output_image:
         return Image(fig.to_image(format="png",
@@ -573,7 +591,8 @@ def trend_corr_plot(df,
                     width=800,
                     height=400,
                     scale=2,
-                    output_figure=False):
+                    output_figure=False,
+                    horiz_legend=True):
 
     fig = make_subplots(specs=[[{'secondary_y': True}]])
 
@@ -611,6 +630,19 @@ def trend_corr_plot(df,
         title_x=0.5,
         template=template
     )
+
+    if horiz_legend:
+        ypos = -.2 if title is '' else -.3
+
+        fig.update_layout(
+            legend=dict(
+                orientation="h",
+                yanchor="top",
+                xanchor="center",
+                x=.5,
+                y=ypos
+            )
+        )
 
     if title is None:
         fig.update_layout(

@@ -429,18 +429,28 @@ def compute_autocorr_df(df, days):
         'crosscor_decessi_nuovi_positivi': [
             df['deceduti_giorno'].rolling(7, center=True).mean().corr(
                 df['nuovi_positivi'].rolling(7, center=True).mean().shift(i)
+            ) for i in range(days)]
+        })
+
+
+@st.cache
+def compute_autocorr_df_prov(df, days):
+    return pd.DataFrame({
+        'giorni': range(days),
+
+        'autocor_nuovi_positivi': [
+            df['New_cases'].corr(
+                df['New_cases'].shift(i)
             ) for i in range(days)],
 
-        'crosscor_decessi_nuovi_ricoverati': [
-            df['deceduti_giorno'].rolling(7, center=True).mean().corr(
-                df['ricoverati_con_sintomi_giorno'].rolling(7, center=True)
-                .mean().shift(i)
+        'autocor_nuovi_decessi': [
+            df['Deaths'].corr(
+                df['Deaths'].shift(i)
             ) for i in range(days)],
 
-        'crosscor_decessi_nuove_TI': [
-            df['deceduti_giorno'].rolling(7, center=True).mean().corr(
-                df['terapia_intensiva_giorno'].rolling(7, center=True)
-                .mean().shift(i)
+        'crosscor_decessi_nuovi_positivi': [
+            df['Deaths'].rolling(7, center=True).mean().corr(
+                df['New_cases'].rolling(7, center=True).mean().shift(i)
             ) for i in range(days)]
         })
 
@@ -627,7 +637,7 @@ def load_eda(covidpro_df, dpc_regioni_df):
         cross_corr_cases_plot(
             df=autocorr_df,
             template='plotly_white',
-            title='Cross-correlation deaths - new cases (rolling avg. 7d)',
+            title='Cross-correlation deaths -<br>new cases (rolling avg. 7d)',
             output_figure=True
         ), use_container_width=True
     )
@@ -679,12 +689,16 @@ def load_eda(covidpro_df, dpc_regioni_df):
     covidpro_final = covidpro_filtered[
         covidpro_filtered.Province == province_selectbox]
 
+    autocorr_df_prov = compute_autocorr_df_prov(covidpro_final, 30)
+
     if show_raw_data:
         st.subheader("Raw data")
         st.write("Provincial data:")
         covidpro_final
 
     # Plots
+    st.subheader('Main trendlines')
+
     st.plotly_chart(
         custom_plot(
             df=covidpro_filtered,
@@ -745,6 +759,56 @@ def load_eda(covidpro_df, dpc_regioni_df):
             template='plotly_white',
             show_title=False,
             horiz_legend=True
+        ), use_container_width=True)
+
+    st.subheader('Correlations and auto-correlations')
+
+    st.plotly_chart(
+        autocorr_indicators_plot(
+            df=autocorr_df_prov,
+            x_col='giorni',
+            y_cols=[
+                'autocor_nuovi_positivi',
+                'autocor_nuovi_decessi'
+            ],
+            y_labels=[
+                'Positives',
+                'Deaths'
+            ],
+            output_figure=True,
+            title='Auto-correlations',
+            template='plotly_white'
+        ), use_container_width=True
+    )
+
+    st.plotly_chart(
+        cross_corr_cases_plot(
+            df=autocorr_df_prov,
+            template='plotly_white',
+            title='Cross-correlation deaths -<br>new cases (rolling avg. 7d)',
+            output_figure=True
+        ), use_container_width=True
+    )
+
+    giorni_max_cor_prov = autocorr_df[
+        'crosscor_decessi_nuovi_positivi'].idxmax()
+    val_max_cor_prov = round(
+        autocorr_df_prov['crosscor_decessi_nuovi_positivi'].max(), 4)
+
+    st.markdown(
+        f'The highest correlation between deaths and '
+        f'new positives is after *{giorni_max_cor_prov} days* and '
+        f'it is equal to *{val_max_cor_prov}* (where perfect correlation = 1)'
+    )
+
+    st.plotly_chart(
+        trend_corr_plot(
+            df=covidpro_final,
+            days_max_corr=giorni_max_cor_prov,
+            y_cols=['New_cases', 'Deaths'],
+            y_labels=['Positives', 'Deaths'],
+            data_column='Date',
+            output_figure=True
         ), use_container_width=True)
 
     st.write("")
