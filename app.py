@@ -537,7 +537,7 @@ def load_eda(covidpro_df, dpc_regioni_df):
             df=daily_df,
             output_figure=True,
             title=''
-        )
+        ), use_container_width=True
     )
 
     st.subheader('Correlations and auto-correlations')
@@ -564,7 +564,7 @@ def load_eda(covidpro_df, dpc_regioni_df):
             ],
             output_figure=True,
             title=''
-        )
+        ), use_container_width=True
     )
 
     st.text("")
