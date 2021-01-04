@@ -632,7 +632,7 @@ def load_eda(covidpro_df, dpc_regioni_df):
             template='plotly_white',
             title='Cross-correlation deaths - new cases (rolling avg. 7d)',
             output_figure=True
-        )
+        ), use_container_width=True
     )
 
     giorni_max_cor = cross_corr_cases_df[
@@ -654,7 +654,7 @@ def load_eda(covidpro_df, dpc_regioni_df):
             y_labels=['Positives', 'Deaths'],
             data_column='data',
             output_figure=True
-        )
+        ), use_container_width=True
     )
 
     st.text("")
