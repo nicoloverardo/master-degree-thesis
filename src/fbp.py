@@ -80,9 +80,8 @@ class ProphetModel():
         self.forecast = self.m.predict(self.future_df)
 
     def make_df(self):
-        df = self.data[
-            self.data[self.group_column] == self.area
-            ].query(self.query)
+        df = self.data.loc[
+            (self.data[self.group_column] == self.area), :].query(self.query)
 
         df = df.loc[:, [self.date_column, self.compart]]
         df.columns = ['ds', 'y']
