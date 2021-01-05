@@ -399,6 +399,14 @@ def load_sird_page(covidpro_df, dpc_regioni_df, pop_prov_df, prov_list_df):
     mse_rec = model.mse(compart='dimessi_guariti')
 
     with st.beta_expander('Show metrics'):
+        st.write("""
+        The metrics MAE and MSE that you see below are 'averaged'
+        because we first compute them for each of the three
+        series in the plots above individually, and then we take
+        the average of the three, since the model should be able to
+        predict the number of positives and deaths at the same time.
+        """)
+
         st.info(
             "Average MAE: " +
             str(np.round(np.mean([mae_tot_pos, mae_deaths, mae_rec]), 2))
