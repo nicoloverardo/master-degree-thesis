@@ -3,6 +3,10 @@ import datetime
 
 from sklearn.metrics import mean_absolute_error, mean_squared_error
 
+from statsmodels.tsa.holtwinters import ExponentialSmoothing
+from statsmodels.tsa.ar_model import AutoReg
+from statsmodels.tsa.arima.model import ARIMA
+
 from src.utils import *
 from src.plots import *
 from src.sird import *
@@ -199,7 +203,7 @@ def load_ts_page(covidpro_df, dpc_regioni_df):
     group_column = 'denominazione_regione'
     data_df = dpc_regioni_df
     data_column = 'data'
-    column = "totale_positivi"
+    column = "nuovi_positivi"
 
     if area_radio == "Regional":
         area_selectbox = st.sidebar.selectbox(
@@ -222,19 +226,23 @@ def load_ts_page(covidpro_df, dpc_regioni_df):
         data_column = 'Date'
         column = "New_cases"
 
+    last_avail_date = data_df.iloc[-1][data_column]
+
     # Date pickers
     start_date_ts = st.sidebar.date_input(
         'Start date',
         datetime.date(2020, 2, 24),
         datetime.date(2020, 2, 24),
-        data_df.iloc[-1][data_column]
+        last_avail_date
     )
     end_date_ts = st.sidebar.date_input(
         'End date',
-        data_df.iloc[-1][data_column],
+        last_avail_date,
         datetime.date(2020, 2, 24),
-        data_df.iloc[-1][data_column]
+        last_avail_date
     )
+
+    days_to_pred = st.sidebar.slider("Days to predict", 1, 30, 14)
 
     # Filter data
     df_filtered = data_df.query(
@@ -285,15 +293,18 @@ def load_ts_page(covidpro_df, dpc_regioni_df):
     # TODO: MUST SWITCH TO PLOTLY
 
     st.header("Auto-correlation")
+
     fig, ax = plt.subplots(figsize=(12, 4))
     autocorrelation_plot(df_date_idx[column].tolist(), ax=ax)
     p_value = adfuller(df_date_idx[column])[1]
     ax.set_title('Dickey-Fuller: p={0:.5f}'.format(p_value))
     st.pyplot(fig)
 
+    lags = int(df_date_idx.shape[0]/2)-1
+
     fig, axes = plt.subplots(1, 2, figsize=(12, 4))
-    plot_acf(df_date_idx[column].tolist(), lags=50, ax=axes[0])
-    plot_pacf(df_date_idx[column].tolist(), lags=50, ax=axes[1])
+    plot_acf(df_date_idx[column].tolist(), lags=lags, ax=axes[0])
+    plot_pacf(df_date_idx[column].tolist(), lags=lags, ax=axes[1])
     st.pyplot(fig)
 
     st.write("")
@@ -306,10 +317,142 @@ def load_ts_page(covidpro_df, dpc_regioni_df):
         legend_position='upper right', output_figure=True)
     st.pyplot(fig)
 
+    # Forecasting
+    st.header("Forecasting")
+
+    test_date = pd.to_datetime(end_date_ts) - pd.Timedelta(days=days_to_pred)
+
+    train = df_date_idx.query(
+        test_date.strftime('%Y%m%d') +
+        ' > ' + data_column)
+    test = df_date_idx.query(
+        test_date.strftime('%Y%m%d') +
+        ' <= ' + data_column)
+
+    st.subheader("Exponential Smoothing")
+
+    with st.spinner("Training model"):
+        model = ExponentialSmoothing(train[column].values)
+        model_fit = model.fit()
+
+        yhat = model_fit.predict(start=0, end=len(test) - 1)
+
+        st.plotly_chart(
+            plot_tstat_models(
+                df=df_date_idx,
+                train=train,
+                test=test,
+                fitted_vals=model_fit.fittedvalues,
+                yhat=yhat,
+                column=column,
+                output_figure=True
+            ), use_container_width=True)
+
+        mae = mean_absolute_error(test[column], yhat)
+        mse = mean_squared_error(test[column], yhat)
+        rmse = mean_squared_error(test[column], yhat, squared=False)
+
+        with st.beta_expander("Show training results"):
+            st.text("AIC: " + str(model_fit.aic))
+            st.text("AICC: " + str(model_fit.aicc))
+            st.text("BIC: " + str(model_fit.bic))
+            st.text("k: " + str(model_fit.k))
+            st.text("")
+            st.text("MAE: " + str(np.round(mae, 3)))
+            st.text("MSE: " + str(np.round(mse, 3)))
+            st.text(
+                "RMSE: " +
+                str(np.round(rmse, 3))
+            )
+            st.text("SSE: " + str(model_fit.sse))
+            st.text("")
+            st.text("")
+            st.text(model_fit.mle_retvals)
+
+    st.write("")
+    st.write("")
+    st.write("")
+    st.subheader("AR(1)")
+
+    with st.spinner("Training model"):
+        model = AutoReg(train[column], lags=1)
+        model_fit = model.fit()
+
+        # make prediction
+        yhat = model_fit.predict(test.index[0], test.index[-1])
+
+        st.plotly_chart(
+            plot_tstat_models(
+                df=df_date_idx,
+                train=train,
+                test=test,
+                fitted_vals=model_fit.fittedvalues,
+                yhat=yhat,
+                column=column,
+                output_figure=True
+            ), use_container_width=True)
+
+        mae = mean_absolute_error(test[column], yhat)
+        mse = mean_squared_error(test[column], yhat)
+        rmse = mean_squared_error(test[column], yhat, squared=False)
+
+        with st.beta_expander("Show training results"):
+            st.text("MAE: " + str(np.round(mae, 3)))
+            st.text("MSE: " + str(np.round(mse, 3)))
+            st.text(
+                "RMSE: " +
+                str(np.round(rmse, 3))
+            )
+            st.text("")
+            st.text("")
+            st.text(model_fit.summary())
+
+    st.write("")
+    st.write("")
+    st.write("")
+    st.subheader("ARIMA(1, 1, 1)")
+
+    with st.spinner("Training model"):
+        model = ARIMA(train[column], order=(1, 1, 1))
+        model_fit = model.fit()
+
+        # make prediction
+        yhat = model_fit.predict(test.index[0], test.index[-1])
+
+        st.plotly_chart(
+            plot_tstat_models(
+                df=df_date_idx,
+                train=train,
+                test=test,
+                fitted_vals=model_fit.fittedvalues,
+                yhat=yhat,
+                column=column,
+                output_figure=True
+            ), use_container_width=True)
+
+        mae = mean_absolute_error(test[column], yhat)
+        mse = mean_squared_error(test[column], yhat)
+        rmse = mean_squared_error(test[column], yhat, squared=False)
+
+        with st.beta_expander("Show training results"):
+            st.text("MAE: " + str(np.round(mae, 3)))
+            st.text("MSE: " + str(np.round(mse, 3)))
+            st.text(
+                "RMSE: " +
+                str(np.round(rmse, 3))
+            )
+            st.text("")
+            st.text("")
+            st.text(model_fit.summary())
+
     st.write("")
     st.write("")
     st.write("")
     st.subheader("🏗 Page under construction")
+    st.warning(
+        """
+        We are currently working to unify the styles of the plots
+        """)
 
 
 def load_tf_page(covidpro_df, dpc_regioni_df):

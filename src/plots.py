@@ -1,3 +1,5 @@
+import numpy as np
+
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 from ipywidgets import widgets
@@ -721,6 +723,90 @@ def plot_ts_decomp(x_dates,
         title_x=0.5,
         showlegend=False
     )
+
+    if output_image:
+        return Image(fig.to_image(format="png",
+                                  width=width,
+                                  height=height,
+                                  scale=scale))
+    else:
+        if output_figure:
+            return fig
+        else:
+            return fig.show()
+
+
+def plot_tstat_models(df,
+                      train,
+                      test,
+                      fitted_vals,
+                      yhat,
+                      column,
+                      template='plotly_white',
+                      title=None,
+                      output_image=False,
+                      width=800,
+                      height=400,
+                      scale=2,
+                      output_figure=False,
+                      horiz_legend=True):
+
+    fig = go.Figure()
+    fig.add_trace(
+        go.Scatter(
+            x=df.index,
+            y=df[column].values,
+            name='Real',
+            mode='markers'
+        )
+    )
+    fig.add_trace(
+        go.Scatter(
+            x=df.index,
+            y=np.concatenate((fitted_vals, yhat)),
+            name='Fitted',
+            mode='lines'
+        )
+    )
+    fig.add_trace(
+        go.Scatter(
+            x=[test.first_valid_index()],
+            y=[train[column].max() - 1],
+            text='prediction<br>start',
+            mode='text',
+            name='',
+            showlegend=False
+        )
+    )
+    fig.add_shape(
+        type="line",
+        y0=train[column].min(), y1=train[column].max(),
+        x0=test.first_valid_index(),
+        x1=test.first_valid_index(),
+        line=dict(width=1.5, dash='dash'),
+        opacity=0.4
+    )
+
+    if title is not None:
+        fig.update_layout(
+            title=title,
+            title_x=0.5
+        )
+
+    fig.update_layout(template=template)
+
+    if horiz_legend:
+        ypos = -.2 if title is '' else -.3
+
+        fig.update_layout(
+            legend=dict(
+                orientation="h",
+                yanchor="top",
+                xanchor="center",
+                x=.5,
+                y=ypos
+            )
+        )
 
     if output_image:
         return Image(fig.to_image(format="png",
