@@ -191,7 +191,7 @@ def pre_process_csv(covidpro_df,
 
     dpc_regioni_df['DR'] = \
         dpc_regioni_df['deceduti']/dpc_regioni_df['totale_positivi']
-    
+
     # ------------------------
     # Fixing outliers manually
     # ------------------------

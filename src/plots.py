@@ -693,7 +693,8 @@ def data_for_plot(compart,
         group_column = 'Province'
         query = query + ' > Date'
 
-    d1_real = df[df[group_column] == province].query(query)[column]
+    d1_real = df.loc[(df[group_column] == province), :].query(query) \
+        .loc[:, column]
     d2_rolling = d1_real.rolling(window=window).mean().fillna(0)
     data = [d1_real.values, d2_rolling.values, comp_array]
 

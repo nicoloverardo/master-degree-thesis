@@ -222,15 +222,26 @@ class DeterministicSird():
             return X[:, 1:], X[:, 0]
 
     def _prepare_data_regional(self):
-        data_df = self.data_df[
-            self.data_df[self.group_column] == self.area
-            ][[
+        # data_df = self.data_df[
+        #     self.data_df[self.group_column] == self.area
+        #     ][[
+        #         'data',
+        #         'totale_positivi',
+        #         'dimessi_guariti',
+        #         'deceduti', 'totale_casi',
+        #         'nuovi_positivi'
+        #     ]]
+
+        data_df = self.data_df.loc[
+            (self.data_df[self.group_column] == self.area),
+            [
                 'data',
                 'totale_positivi',
                 'dimessi_guariti',
                 'deceduti', 'totale_casi',
                 'nuovi_positivi'
-            ]]
+            ]
+        ]
 
         data_df = data_df.query(
             self.data_filter + ' > ' + self.data_column
@@ -238,7 +249,15 @@ class DeterministicSird():
 
         data_df['suscettibili'] = self.pop - data_df['totale_casi']
 
-        data_df = data_df[[
+        # data_df = data_df[[
+        #     'data',
+        #     'totale_positivi',
+        #     'dimessi_guariti',
+        #     'deceduti',
+        #     'suscettibili',
+        #     'nuovi_positivi'
+        # ]]
+        data_df = data_df.loc[:, [
             'data',
             'totale_positivi',
             'dimessi_guariti',

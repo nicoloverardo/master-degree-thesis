@@ -1,6 +1,3 @@
-from pickle import TRUE
-from re import template
-from numpy.lib.function_base import diff
 import streamlit as st
 import datetime
 
@@ -21,48 +18,140 @@ def load_df():
     return load_data(DATA_PATH)
 
 
-def main():
-    """Main routine of the app"""
-    st.set_page_config(
-        page_title='Master Degree Thesis - Verardo',
-        page_icon='🎓',
-        layout='centered')
+@st.cache
+def compute_sird(prov, pop_prov_df, prov_list_df=None,
+                 r0_start=3.5, r0_end=0.9, k=0.9,
+                 x0=20, alpha=0.1, gamma=1/7):
 
-    # Title
-    st.title('A comparison of predictive models for COVID-19 in Italy')
+    """Compute the continuous SIRD model version."""
 
-    # Sidebar title
-    st.sidebar.title('Menu')
-    app_mode = st.sidebar.selectbox(
-        "Please select a page", [
-            "Homepage",
-            "Data Exploration",
-            "Time series",
-            "SIRD model",
-            "TensorFlow model"]
+    return sird(
+        province=prov,
+        pop_prov_df=pop_prov_df,
+        prov_list_df=prov_list_df,
+        gamma=gamma,
+        alpha=alpha,
+        R_0_start=r0_start,
+        k=k,
+        x0=x0,
+        R_0_end=r0_end
     )
 
-    # Loading state label
-    data_load_state = st.text('Loading data...')
 
-    # Load data
-    covidpro_df, dpc_regioni_df, _, pop_prov_df, prov_list_df = load_df()
+@st.cache
+def data_sird_plot(covidpro_df,
+                   column,
+                   comp_array,
+                   province_selectbox,
+                   is_regional):
 
-    data_load_state.empty()
+    """Utility function that returns data useful for plots."""
 
-    if app_mode == 'Homepage':
-        load_homepage()
-    elif app_mode == 'Data Exploration':
-        load_eda(covidpro_df, dpc_regioni_df)
-    elif app_mode == 'Time series':
-        load_ts_page(covidpro_df, dpc_regioni_df)
-    elif app_mode == 'SIRD model':
-        load_sird_page(covidpro_df, dpc_regioni_df, pop_prov_df, prov_list_df)
-    elif app_mode == 'TensorFlow model':
-        load_tf_page(covidpro_df, dpc_regioni_df)
+    return data_for_plot(
+        compart='Infected',
+        df=covidpro_df,
+        column=column,
+        comp_array=comp_array,
+        province=province_selectbox,
+        is_regional=is_regional
+    )
+
+
+@st.cache
+def compute_daily_changes(df):
+    """Gets daily variation of the regional indicators"""
+
+    df['ricoverati_con_sintomi_giorno'] = \
+        df['ricoverati_con_sintomi'] - \
+        df['ricoverati_con_sintomi'].shift(1)
+
+    df['terapia_intensiva_giorno'] = \
+        df['terapia_intensiva'] - \
+        df['terapia_intensiva'].shift(1)
+
+    df['deceduti_giorno'] = \
+        df['deceduti'] - \
+        df['deceduti'].shift(1)
+
+    df['tamponi_giorno'] = \
+        df['tamponi'] - \
+        df['tamponi'].shift(1)
+
+    df['casi_testati_giorno'] = \
+        df['casi_testati'] - \
+        df['casi_testati'].shift(1)
+
+    df['dimessi_guariti_giorno'] = \
+        df['dimessi_guariti'] - \
+        df['dimessi_guariti'].shift(1)
+
+    df['isolamento_domiciliare_giorno'] = \
+        df['isolamento_domiciliare'] - \
+        df['isolamento_domiciliare'].shift(1)
+
+    return df
+
+
+@st.cache
+def compute_autocorr_df(df, days, is_regional=True):
+    """
+    Compute autocorrelations and cross-correlations
+    of the main indicators
+    """
+
+    if not is_regional:
+        pos_col = 'New_cases'
+        deaths_col = 'Deaths'
+    else:
+        pos_col = 'nuovi_positivi'
+        deaths_col = 'deceduti_giorno'
+
+    data = pd.DataFrame({
+        'giorni': range(days),
+
+        'autocor_nuovi_positivi': [
+            df[pos_col].corr(
+                df[pos_col].shift(i)
+            ) for i in range(days)],
+
+        'autocor_nuovi_decessi': [
+            df[deaths_col].corr(
+                df[deaths_col].shift(i)
+            ) for i in range(days)],
+
+        'crosscor_decessi_nuovi_positivi': [
+            df[deaths_col].rolling(7, center=True).mean().corr(
+                df[pos_col].rolling(7, center=True).mean().shift(i)
+            ) for i in range(days)]
+        })
+
+    if is_regional:
+        data['autocor_tamponi_eseguiti'] = [
+            df['tamponi_giorno'].corr(
+                df['tamponi_giorno'].shift(i)
+            ) for i in range(days)]
+
+        data['autocor_casi_testati'] = [
+            df['casi_testati_giorno'].corr(
+                df['casi_testati_giorno'].shift(i)
+            ) for i in range(days)]
+
+        data['autocor_nuovi_ricoverati'] = [
+            df['ricoverati_con_sintomi_giorno'].corr(
+                df['ricoverati_con_sintomi_giorno'].shift(i)
+            ) for i in range(days)]
+
+        data['autocor_nuove_TI'] = [
+            df['terapia_intensiva_giorno'].corr(
+                df['terapia_intensiva_giorno'].shift(i)
+            ) for i in range(days)]
+
+    return data
 
 
 def load_homepage():
+    """Homepage"""
+
     st.write(
         "Welcome to the interactive dashboard of my thesis "
         "for the MSc in Data Science and Economics at "
@@ -96,46 +185,11 @@ def load_tf_page(covidpro_df, dpc_regioni_df):
     st.subheader("🏗 Page under construction")
 
 
-@st.cache
-def compute_sird(prov, pop_prov_df, prov_list_df=None,
-                 r0_start=3.5, r0_end=0.9, k=0.9,
-                 x0=20, alpha=0.1, gamma=1/7):
-
-    return sird(
-        province=prov,
-        pop_prov_df=pop_prov_df,
-        prov_list_df=prov_list_df,
-        gamma=gamma,
-        alpha=alpha,
-        R_0_start=r0_start,
-        k=k,
-        x0=x0,
-        R_0_end=r0_end
-    )
-
-
-@st.cache
-def data_sird_plot(covidpro_df,
-                   column,
-                   comp_array,
-                   province_selectbox,
-                   is_regional):
-
-    return data_for_plot(
-        compart='Infected',
-        df=covidpro_df,
-        column=column,
-        comp_array=comp_array,
-        province=province_selectbox,
-        is_regional=is_regional
-    )
-
-
 def load_sird_page(covidpro_df, dpc_regioni_df, pop_prov_df, prov_list_df):
-    # Page setup:
-    # Sidebar widgets
-    st.sidebar.header('Options')
+    """Page of the SIRD model"""
 
+    # Sidebar setup
+    st.sidebar.header('Options')
     area_radio = st.sidebar.radio(
         "Regional or provincial predictions:",
         ['Regional', 'Provincial'],
@@ -175,11 +229,12 @@ def load_sird_page(covidpro_df, dpc_regioni_df, pop_prov_df, prov_list_df):
     # ---------------
     # Continuous SIRD
     # ---------------
+
     st.header("Continuous SIRD")
 
+    # Sird parameters
     col1, col2, col3 = st.beta_columns(3)
 
-    # Sird parameters
     r0_start = col1.slider("R0 start", 1.0, 6.0, 2.0)
     r0_end = col1.slider("R0 end", 0.01, 3.5, 0.3)
     k_value = col2.slider("R0 decrease rate", 0.01, 1.0, 0.2)
@@ -358,104 +413,9 @@ def load_sird_page(covidpro_df, dpc_regioni_df, pop_prov_df, prov_list_df):
     st.subheader("🏗 Page under construction")
 
 
-@st.cache
-def compute_daily_changes(df):
-    df['ricoverati_con_sintomi_giorno'] = \
-        df['ricoverati_con_sintomi'] - \
-        df['ricoverati_con_sintomi'].shift(1)
-
-    df['terapia_intensiva_giorno'] = \
-        df['terapia_intensiva'] - \
-        df['terapia_intensiva'].shift(1)
-
-    df['deceduti_giorno'] = \
-        df['deceduti'] - \
-        df['deceduti'].shift(1)
-
-    df['tamponi_giorno'] = \
-        df['tamponi'] - \
-        df['tamponi'].shift(1)
-
-    df['casi_testati_giorno'] = \
-        df['casi_testati'] - \
-        df['casi_testati'].shift(1)
-
-    df['dimessi_guariti_giorno'] = \
-        df['dimessi_guariti'] - \
-        df['dimessi_guariti'].shift(1)
-
-    df['isolamento_domiciliare_giorno'] = \
-        df['isolamento_domiciliare'] - \
-        df['isolamento_domiciliare'].shift(1)
-
-    return df
-
-
-@st.cache
-def compute_autocorr_df(df, days):
-    return pd.DataFrame({
-        'giorni': range(days),
-
-        'autocor_tamponi_eseguiti': [
-            df['tamponi_giorno'].corr(
-                df['tamponi_giorno'].shift(i)
-            ) for i in range(days)],
-
-        'autocor_casi_testati': [
-            df['casi_testati_giorno'].corr(
-                df['casi_testati_giorno'].shift(i)
-            ) for i in range(days)],
-
-        'autocor_nuovi_positivi': [
-            df['nuovi_positivi'].corr(
-                df['nuovi_positivi'].shift(i)
-            ) for i in range(days)],
-
-        'autocor_nuovi_ricoverati': [
-            df['ricoverati_con_sintomi_giorno'].corr(
-                df['ricoverati_con_sintomi_giorno'].shift(i)
-            ) for i in range(days)],
-
-        'autocor_nuove_TI': [
-            df['terapia_intensiva_giorno'].corr(
-                df['terapia_intensiva_giorno'].shift(i)
-            ) for i in range(days)],
-
-        'autocor_nuovi_decessi': [
-            df['deceduti_giorno'].corr(
-                df['deceduti_giorno'].shift(i)
-            ) for i in range(days)],
-
-        'crosscor_decessi_nuovi_positivi': [
-            df['deceduti_giorno'].rolling(7, center=True).mean().corr(
-                df['nuovi_positivi'].rolling(7, center=True).mean().shift(i)
-            ) for i in range(days)]
-        })
-
-
-@st.cache
-def compute_autocorr_df_prov(df, days):
-    return pd.DataFrame({
-        'giorni': range(days),
-
-        'autocor_nuovi_positivi': [
-            df['New_cases'].corr(
-                df['New_cases'].shift(i)
-            ) for i in range(days)],
-
-        'autocor_nuovi_decessi': [
-            df['Deaths'].corr(
-                df['Deaths'].shift(i)
-            ) for i in range(days)],
-
-        'crosscor_decessi_nuovi_positivi': [
-            df['Deaths'].rolling(7, center=True).mean().corr(
-                df['New_cases'].rolling(7, center=True).mean().shift(i)
-            ) for i in range(days)]
-        })
-
-
 def load_eda(covidpro_df, dpc_regioni_df):
+    """Explorative Data Analysis page"""
+
     st.sidebar.header('Options')
 
     # Date pickers
@@ -486,6 +446,7 @@ def load_eda(covidpro_df, dpc_regioni_df):
     # --------------
     # Regional plots
     # --------------
+
     st.header("Regional plots")
 
     # Combobox
@@ -519,6 +480,7 @@ def load_eda(covidpro_df, dpc_regioni_df):
     # Plots
     st.subheader('Main trendlines')
 
+    # Absolute values
     st.plotly_chart(
         custom_plot(
             df=dpc_reg_filtered,
@@ -551,6 +513,7 @@ def load_eda(covidpro_df, dpc_regioni_df):
             horiz_legend=True
         ), use_container_width=True)
 
+    # % values
     st.plotly_chart(
         custom_plot(
             df=dpc_reg_filtered,
@@ -573,6 +536,7 @@ def load_eda(covidpro_df, dpc_regioni_df):
             horiz_legend=True
         ), use_container_width=True)
 
+    # Daily changes in the main indicators
     st.subheader('Daily changes in the main indicators')
 
     st.plotly_chart(
@@ -607,6 +571,7 @@ def load_eda(covidpro_df, dpc_regioni_df):
 
     st.subheader('Correlations and auto-correlations')
 
+    # Auto-correlations
     st.plotly_chart(
         autocorr_indicators_plot(
             df=autocorr_df,
@@ -633,6 +598,7 @@ def load_eda(covidpro_df, dpc_regioni_df):
         ), use_container_width=True
     )
 
+    # Cross-correlation
     st.plotly_chart(
         cross_corr_cases_plot(
             df=autocorr_df,
@@ -653,6 +619,7 @@ def load_eda(covidpro_df, dpc_regioni_df):
         f'it is equal to *{valore_max_cor}* (where perfect correlation = 1)'
     )
 
+    # Cross-correlation trend
     st.plotly_chart(
         trend_corr_plot(
             df=daily_df,
@@ -689,7 +656,8 @@ def load_eda(covidpro_df, dpc_regioni_df):
     covidpro_final = covidpro_filtered[
         covidpro_filtered.Province == province_selectbox]
 
-    autocorr_df_prov = compute_autocorr_df_prov(covidpro_final, 30)
+    autocorr_df_prov = compute_autocorr_df(
+        covidpro_final, 30, is_regional=False)
 
     if show_raw_data:
         st.subheader("Raw data")
@@ -699,6 +667,7 @@ def load_eda(covidpro_df, dpc_regioni_df):
     # Plots
     st.subheader('Main trendlines')
 
+    # Absolute values
     st.plotly_chart(
         custom_plot(
             df=covidpro_filtered,
@@ -720,6 +689,7 @@ def load_eda(covidpro_df, dpc_regioni_df):
             horiz_legend=True
         ), use_container_width=True)
 
+    # Cumulative values
     st.plotly_chart(
         custom_plot(
             df=covidpro_filtered,
@@ -741,6 +711,7 @@ def load_eda(covidpro_df, dpc_regioni_df):
             horiz_legend=True
         ), use_container_width=True)
 
+    # % values
     st.plotly_chart(
         custom_plot(
             df=covidpro_filtered,
@@ -763,6 +734,7 @@ def load_eda(covidpro_df, dpc_regioni_df):
 
     st.subheader('Correlations and auto-correlations')
 
+    # Auto-correlations
     st.plotly_chart(
         autocorr_indicators_plot(
             df=autocorr_df_prov,
@@ -781,6 +753,7 @@ def load_eda(covidpro_df, dpc_regioni_df):
         ), use_container_width=True
     )
 
+    # Cross-correlations
     st.plotly_chart(
         cross_corr_cases_plot(
             df=autocorr_df_prov,
@@ -801,6 +774,7 @@ def load_eda(covidpro_df, dpc_regioni_df):
         f'it is equal to *{val_max_cor_prov}* (where perfect correlation = 1)'
     )
 
+    # Cross-correlation trend
     st.plotly_chart(
         trend_corr_plot(
             df=covidpro_final,
@@ -814,6 +788,43 @@ def load_eda(covidpro_df, dpc_regioni_df):
     st.write("")
     st.write("")
     st.subheader("🏗 Page under construction")
+
+
+def main():
+    """Main routine of the app"""
+
+    st.set_page_config(
+        page_title='Master Degree Thesis - Verardo',
+        page_icon='🎓',
+        layout='centered')
+
+    st.title('A comparison of predictive models for COVID-19 in Italy')
+
+    st.sidebar.title('Menu')
+    app_mode = st.sidebar.selectbox(
+        "Please select a page",
+        [
+            "Homepage",
+            "Data Exploration",
+            "Time series",
+            "SIRD model",
+            "TensorFlow model"
+        ]
+    )
+
+    with st.spinner("Loading data"):
+        covidpro_df, dpc_regioni_df, _, pop_prov_df, prov_list_df = load_df()
+
+    if app_mode == 'Homepage':
+        load_homepage()
+    elif app_mode == 'Data Exploration':
+        load_eda(covidpro_df, dpc_regioni_df)
+    elif app_mode == 'Time series':
+        load_ts_page(covidpro_df, dpc_regioni_df)
+    elif app_mode == 'SIRD model':
+        load_sird_page(covidpro_df, dpc_regioni_df, pop_prov_df, prov_list_df)
+    elif app_mode == 'TensorFlow model':
+        load_tf_page(covidpro_df, dpc_regioni_df)
 
 
 if __name__ == "__main__":
