@@ -57,8 +57,16 @@ def adf_test(data):
     print(f'ADF Statistic: {result[0]}')
     print(f'p-value: {result[1]}')
     for key, value in result[4].items():
-        print('Critial Values:')
+        print('Critical Values:')
         print(f'   {key}, {value}')
+
+
+def adf_test_result(data):
+    return adfuller(data, autolag='AIC')
+
+
+def kpss_test_result(data):
+    return kpss(data, regression='c')
 
 
 def kpss_test(data):
@@ -70,7 +78,7 @@ def kpss_test(data):
     print('\nKPSS Statistic: %f' % result[0])
     print('p-value: %f' % result[1])
     for key, value in result[3].items():
-        print('Critial Values:')
+        print('Critical Values:')
         print(f'   {key}, {value}')
 
 

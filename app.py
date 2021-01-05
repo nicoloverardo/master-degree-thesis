@@ -1,3 +1,5 @@
+from re import template
+from matplotlib.dates import DateFormatter
 import streamlit as st
 import datetime
 
@@ -6,6 +8,7 @@ from sklearn.metrics import mean_absolute_error, mean_squared_error
 from src.utils import *
 from src.plots import *
 from src.sird import *
+from src.ts import *
 
 import os
 os.chdir(os.path.dirname(os.path.realpath(__file__)))
@@ -149,6 +152,11 @@ def compute_autocorr_df(df, days, is_regional=True):
     return data
 
 
+@st.cache
+def decompose_series(df, column):
+    return decompose_ts(df, column)
+
+
 def load_homepage():
     """Homepage"""
 
@@ -178,6 +186,104 @@ def load_homepage():
 
 
 def load_ts_page(covidpro_df, dpc_regioni_df):
+    """Time series analysis and forecast page"""
+
+    # Sidebar setup
+    st.sidebar.header('Options')
+    area_radio = st.sidebar.radio(
+        "Regional or provincial predictions:",
+        ['Regional', 'Provincial'],
+        index=1
+    )
+
+    is_regional = True
+    pcm_data = None
+    group_column = 'denominazione_regione'
+    data_df = dpc_regioni_df
+    data_column = 'data'
+    column = "totale_positivi"
+
+    if area_radio == "Regional":
+        area_selectbox = st.sidebar.selectbox(
+            "Region:",
+            dpc_regioni_df.denominazione_regione.unique(),
+            int((dpc_regioni_df.denominazione_regione == 'Piemonte').argmax()),
+            key="area_selectbox_reg"
+        )
+    else:
+        area_selectbox = st.sidebar.selectbox(
+            "Province:",
+            covidpro_df.Province.unique(),
+            int((covidpro_df.Province == 'Firenze').argmax()),
+            key="area_selectbox_prov"
+        )
+        is_regional = False
+        pcm_data = dpc_regioni_df
+        group_column = 'Province'
+        data_df = covidpro_df
+        data_column = 'Date'
+        column = "New_cases"
+
+    # Date pickers
+    start_date_ts = st.sidebar.date_input(
+        'Start date',
+        datetime.date(2020, 2, 24),
+        datetime.date(2020, 2, 24),
+        data_df.iloc[-1][data_column]
+    )
+    end_date_ts = st.sidebar.date_input(
+        'End date',
+        data_df.iloc[-1][data_column],
+        datetime.date(2020, 2, 24),
+        data_df.iloc[-1][data_column]
+    )
+
+    # Filter data
+    df_filtered = data_df.query(
+        end_date_ts.strftime('%Y%m%d') +
+        ' >= ' + data_column + ' >= ' +
+        start_date_ts.strftime('%Y%m%d')
+    )
+    df_final = df_filtered.loc[
+        (df_filtered[group_column] == area_selectbox), :]
+
+    df_date_idx = df_final.set_index(data_column)
+
+    # Decomposition
+    st.header("Series decomposition")
+
+    decomp_res = decompose_series(df_date_idx, column)
+
+    st.plotly_chart(
+        plot_ts_decomp(
+            x_dates=df_date_idx.index,
+            ts_true=df_date_idx[column],
+            decomp_res=decomp_res,
+            output_figure=True
+        )
+    )
+
+    with st.beta_expander("Stationarity tests"):
+        adf_res = adf_test_result(df_date_idx[column])
+        kpss_res = kpss_test_result(df_date_idx[column])
+
+        st.info(f"""
+        ADF statistic: {adf_res[0]}
+
+        p-value: {adf_res[1]}
+        """)
+
+        st.write("")
+
+        st.info(f"""
+        KPSS statistic: {kpss_res[0]}
+
+        p-value: {kpss_res[1]}
+        """)
+
+    st.write("")
+    st.write("")
+    st.write("")
     st.subheader("🏗 Page under construction")
 
 
@@ -792,10 +898,6 @@ def load_eda(covidpro_df, dpc_regioni_df):
             data_column='Date',
             output_figure=True
         ), use_container_width=True)
-
-    st.write("")
-    st.write("")
-    st.subheader("🏗 Page under construction")
 
 
 def main():

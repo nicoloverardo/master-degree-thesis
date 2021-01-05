@@ -662,6 +662,78 @@ def trend_corr_plot(df,
             return fig.show()
 
 
+def plot_ts_decomp(x_dates,
+                   ts_true,
+                   decomp_res,
+                   output_image=False,
+                   width=800,
+                   height=1000,
+                   scale=2,
+                   output_figure=False,
+                   title=None,
+                   template='plotly_white'):
+
+    fig = make_subplots(
+        rows=4,
+        cols=1,
+        subplot_titles=("Original", "Trend", "Seasonal", "Residuals")
+    )
+    fig.add_trace(
+        go.Scatter(
+            name='<i>Original</i>',
+            x=x_dates,
+            y=ts_true
+            ),
+        row=1, col=1
+    )
+    fig.add_trace(
+        go.Scatter(
+            name='Trend',
+            x=x_dates,
+            y=decomp_res.trend
+            ),
+        row=2, col=1
+    )
+    fig.add_trace(
+        go.Scatter(
+            name='Seasonal',
+            x=x_dates,
+            y=decomp_res.seasonal
+            ),
+        row=3, col=1
+    )
+    fig.add_trace(
+        go.Scatter(
+            name='Residuals',
+            x=x_dates,
+            y=decomp_res.resid,
+            mode='markers'
+            ),
+        row=4, col=1
+    )
+
+    if title is not None:
+        fig.update_layout(title=title)
+
+    fig.update_layout(
+        height=height,
+        template=template,
+        title_x=0.5,
+        showlegend=False
+    )
+
+    if output_image:
+        return Image(fig.to_image(format="png",
+                                  width=width,
+                                  height=height,
+                                  scale=scale))
+    else:
+        if output_figure:
+            return fig
+        else:
+            return fig.show()
+
+
 def data_for_plot(compart,
                   df,
                   column,
