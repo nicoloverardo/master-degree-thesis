@@ -222,16 +222,6 @@ class DeterministicSird():
             return X[:, 1:], X[:, 0]
 
     def _prepare_data_regional(self):
-        # data_df = self.data_df[
-        #     self.data_df[self.group_column] == self.area
-        #     ][[
-        #         'data',
-        #         'totale_positivi',
-        #         'dimessi_guariti',
-        #         'deceduti', 'totale_casi',
-        #         'nuovi_positivi'
-        #     ]]
-
         data_df = self.data_df.loc[
             (self.data_df[self.group_column] == self.area),
             [
@@ -249,14 +239,6 @@ class DeterministicSird():
 
         data_df['suscettibili'] = self.pop - data_df['totale_casi']
 
-        # data_df = data_df[[
-        #     'data',
-        #     'totale_positivi',
-        #     'dimessi_guariti',
-        #     'deceduti',
-        #     'suscettibili',
-        #     'nuovi_positivi'
-        # ]]
         data_df = data_df.loc[:, [
             'data',
             'totale_positivi',
@@ -275,9 +257,9 @@ class DeterministicSird():
 
         pop = self.get_prov_pop()
 
-        pcm_data = self.pcm_data[
-            self.pcm_data['denominazione_regione'] == regione
-            ][[
+        pcm_data = self.pcm_data.loc[
+            (self.pcm_data['denominazione_regione'] == regione),
+            [
                 'data',
                 'totale_positivi',
                 'dimessi_guariti',
@@ -285,9 +267,9 @@ class DeterministicSird():
                 'nuovi_positivi'
             ]].reset_index(drop=True)
 
-        data_df = self.data_df[
-            self.data_df[self.group_column] == self.area
-            ][[
+        data_df = self.data_df.loc[
+            (self.data_df[self.group_column] == self.area),
+            [
                 "Date",
                 "New_cases",
                 "Curr_pos_cases",
@@ -326,7 +308,7 @@ class DeterministicSird():
                 "Date": "data"
             }, inplace=True)
 
-        real_df = real_df[[
+        real_df = real_df.loc[:, [
             'data',
             'totale_positivi',
             'dimessi_guariti',
@@ -357,7 +339,7 @@ class DeterministicSird():
             'nuovi_positivi': 'int32'
         })
 
-        data_df = data_df[[
+        data_df = data_df.loc[:, [
             'data',
             'totale_positivi',
             'dimessi_guariti',
