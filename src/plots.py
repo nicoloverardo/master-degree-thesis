@@ -849,6 +849,35 @@ def plot_fbp_comp(df,
     )
     fig.add_trace(
         go.Scatter(
+            name='Upper Bound',
+            x=df.ds,
+            y=df.trend_upper,
+            mode='lines',
+            marker=dict(color="#444"),
+            line=dict(width=0),
+            hoverinfo='skip',
+            showlegend=False
+        ),
+        row=1, col=1
+    )
+    fig.add_trace(
+        go.Scatter(
+            name='Lower Bound',
+            x=df.ds,
+            y=df.trend_lower,
+            marker=dict(color="#444"),
+            line=dict(width=0),
+            mode='lines',
+            fillcolor='rgba(68, 68, 68, 0.3)',
+            fill='tonexty',
+            hoverinfo='skip',
+            showlegend=False
+        ),
+        row=1, col=1
+    )
+
+    fig.add_trace(
+        go.Scatter(
             x=df.ds,
             y=df.holidays.values,
             name='Holidays',
@@ -858,10 +887,67 @@ def plot_fbp_comp(df,
     )
     fig.add_trace(
         go.Scatter(
+            name='Upper Bound',
+            x=df.ds,
+            y=df.holidays_upper,
+            mode='lines',
+            marker=dict(color="#444"),
+            line=dict(width=0),
+            hoverinfo='skip',
+            showlegend=False
+        ),
+        row=2, col=1
+    )
+    fig.add_trace(
+        go.Scatter(
+            name='Lower Bound',
+            x=df.ds,
+            y=df.holidays_lower,
+            marker=dict(color="#444"),
+            line=dict(width=0),
+            mode='lines',
+            fillcolor='rgba(68, 68, 68, 0.3)',
+            fill='tonexty',
+            hoverinfo='skip',
+            showlegend=False
+        ),
+        row=2, col=1
+    )
+
+    fig.add_trace(
+        go.Scatter(
             x=df.ds,
             y=df.weekly.values,
             name='Weekly',
             mode='lines'
+        ),
+        row=3, col=1
+    )
+    fig.add_trace(
+        go.Scatter(
+            name='Upper Bound',
+            x=df.ds,
+            y=df.weekly_upper,
+            mode='lines',
+            marker=dict(color="#444"),
+            line=dict(width=0),
+            hoverinfo='skip',
+            showlegend=False
+        ),
+        row=3, col=1
+    )
+    fig.add_trace(
+        go.Scatter(
+            name='Lower Bound',
+            x=df.ds,
+            y=df.weekly_lower,
+            marker=dict(color="#444"),
+            line=dict(width=0),
+            mode='lines',
+            fillcolor='rgba(68, 68, 68, 0.3)',
+            fill='tonexty',
+            hoverinfo='skip',
+            showlegend=False
         ),
         row=3, col=1
     )
@@ -875,7 +961,7 @@ def plot_fbp_comp(df,
     fig.update_layout(
         template=template,
         height=height,
-        showlegend=False
+        showlegend=False,
     )
 
     if output_image:

@@ -511,6 +511,8 @@ def load_ts_page(covidpro_df, dpc_regioni_df):
                 str(np.round(rmse, 3))
             )
 
+            st.dataframe(forecast)
+
     st.write("")
     st.write("")
     st.write("")
