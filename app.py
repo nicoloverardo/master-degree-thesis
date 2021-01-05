@@ -11,6 +11,10 @@ from src.utils import *
 from src.plots import *
 from src.sird import *
 from src.ts import *
+from src.fbp import ProphetModel
+from fbprophet import Prophet
+from fbprophet.plot import plot_plotly
+
 
 import os
 os.chdir(os.path.dirname(os.path.realpath(__file__)))
@@ -163,7 +167,7 @@ def decompose_series(df, column):
 def get_train_df(df, date, column):
     return df.query(
         date.strftime('%Y%m%d') +
-        ' > ' + column
+        ' >= ' + column
     )
 
 
@@ -171,7 +175,7 @@ def get_train_df(df, date, column):
 def get_test_df(df, date, column):
     return df.query(
         date.strftime('%Y%m%d') +
-        ' <= ' + column
+        ' < ' + column
     )
 
 
@@ -456,6 +460,56 @@ def load_ts_page(covidpro_df, dpc_regioni_df):
             st.text("")
             st.text("")
             st.text(model_fit.summary())
+
+    st.write("")
+    st.write("")
+    st.write("")
+
+    st.subheader("Facebook Prophet")
+
+    with st.spinner("Training model"):
+        train_df = train.reset_index()
+        train_df = train_df.loc[:, [data_column, column]]
+        train_df.columns = ['ds', 'y']
+
+        m = Prophet()
+        m.add_country_holidays(country_name='IT')
+        m.fit(train_df)
+
+        future_df = m.make_future_dataframe(periods=days_to_pred)
+
+        forecast = m.predict(future_df)
+
+        fig1 = plot_plotly(m, forecast)
+        fig1.update_layout(
+            title='Forecast',
+            yaxis_title='Number of individuals',
+            template='plotly_white',
+            title_x=0.5
+        )
+        st.plotly_chart(fig1, use_container_width=True)
+
+        st.plotly_chart(
+            plot_fbp_comp(
+                df=forecast,
+                title='Forecast components',
+                output_figure=True
+            ), use_container_width=True
+        )
+
+        test_df = test.reset_index()
+        yhat_df = forecast.iloc[-days_to_pred:]
+        mae = mean_absolute_error(test_df[column], yhat_df.yhat)
+        mse = mean_squared_error(test_df[column], yhat_df.yhat)
+        rmse = mean_squared_error(test_df[column], yhat_df.yhat, squared=False)
+
+        with st.beta_expander("Show training results"):
+            st.text("MAE: " + str(np.round(mae, 3)))
+            st.text("MSE: " + str(np.round(mse, 3)))
+            st.text(
+                "RMSE: " +
+                str(np.round(rmse, 3))
+            )
 
     st.write("")
     st.write("")

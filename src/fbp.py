@@ -15,7 +15,8 @@ class ProphetModel():
                  prediction_size=14, query='20200701 > Date',
                  holidays=True,
                  growth='linear',
-                 cap=None):
+                 cap=None,
+                 filter_df=True):
 
         self.data = data
         self.area = area
@@ -27,6 +28,7 @@ class ProphetModel():
         self.holidays = holidays
         self.growth = growth
         self.cap = cap
+        self.filter_df = filter_df
 
     @property
     def df(self):
@@ -80,8 +82,12 @@ class ProphetModel():
         self.forecast = self.m.predict(self.future_df)
 
     def make_df(self):
-        df = self.data.loc[
-            (self.data[self.group_column] == self.area), :].query(self.query)
+        if self.filter_df:
+            df = self.data.loc[
+                (self.data[self.group_column] == self.area),
+                :].query(self.query)
+        else:
+            df = self.data
 
         df = df.loc[:, [self.date_column, self.compart]]
         df.columns = ['ds', 'y']
@@ -147,9 +153,13 @@ class ProphetModel():
         plt.title(self.compart)
         plt.show()
 
-    def plot_comp(self):
-        self.m.plot_components(self.forecast)
-        plt.show()
+    def plot_comp(self, output_figure=False):
+        fig = self.m.plot_components(self.forecast)
+
+        if not output_figure:
+            plt.show()
+        else:
+            return fig
 
     def plot(self, figsize=(8, 5)):
         plt.figure(figsize=figsize)

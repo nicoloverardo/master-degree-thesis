@@ -682,10 +682,10 @@ def plot_ts_decomp(x_dates,
     )
     fig.add_trace(
         go.Scatter(
-            name='<i>Original</i>',
+            name='Original',
             x=x_dates,
             y=ts_true
-            ),
+        ),
         row=1, col=1
     )
     fig.add_trace(
@@ -693,7 +693,7 @@ def plot_ts_decomp(x_dates,
             name='Trend',
             x=x_dates,
             y=decomp_res.trend
-            ),
+        ),
         row=2, col=1
     )
     fig.add_trace(
@@ -701,7 +701,7 @@ def plot_ts_decomp(x_dates,
             name='Seasonal',
             x=x_dates,
             y=decomp_res.seasonal
-            ),
+        ),
         row=3, col=1
     )
     fig.add_trace(
@@ -749,7 +749,8 @@ def plot_tstat_models(df,
                       height=400,
                       scale=2,
                       output_figure=False,
-                      horiz_legend=True):
+                      horiz_legend=True,
+                      ylabel='Number of individuals'):
 
     fig = go.Figure()
     fig.add_trace(
@@ -793,7 +794,10 @@ def plot_tstat_models(df,
             title_x=0.5
         )
 
-    fig.update_layout(template=template)
+    fig.update_layout(
+        template=template,
+        yaxis_title=ylabel
+    )
 
     if horiz_legend:
         ypos = -.2 if title is '' else -.3
@@ -807,6 +811,72 @@ def plot_tstat_models(df,
                 y=ypos
             )
         )
+
+    if output_image:
+        return Image(fig.to_image(format="png",
+                                  width=width,
+                                  height=height,
+                                  scale=scale))
+    else:
+        if output_figure:
+            return fig
+        else:
+            return fig.show()
+
+
+def plot_fbp_comp(df,
+                  template='plotly_white',
+                  title=None,
+                  output_image=False,
+                  width=800,
+                  height=800,
+                  scale=2,
+                  output_figure=False):
+
+    fig = make_subplots(
+        rows=3,
+        cols=1,
+        subplot_titles=("Trend", "Holidays", "Weekly")
+    )
+    fig.add_trace(
+        go.Scatter(
+            x=df.ds,
+            y=df.trend.values,
+            name='Trend',
+            mode='lines'
+        ),
+        row=1, col=1
+    )
+    fig.add_trace(
+        go.Scatter(
+            x=df.ds,
+            y=df.holidays.values,
+            name='Holidays',
+            mode='lines'
+        ),
+        row=2, col=1
+    )
+    fig.add_trace(
+        go.Scatter(
+            x=df.ds,
+            y=df.weekly.values,
+            name='Weekly',
+            mode='lines'
+        ),
+        row=3, col=1
+    )
+
+    if title is not None:
+        fig.update_layout(
+            title=title,
+            title_x=0.5
+        )
+
+    fig.update_layout(
+        template=template,
+        height=height,
+        showlegend=False
+    )
 
     if output_image:
         return Image(fig.to_image(format="png",
