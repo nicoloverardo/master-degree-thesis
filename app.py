@@ -159,6 +159,22 @@ def decompose_series(df, column):
     return decompose_ts(df, column)
 
 
+@st.cache
+def get_train_df(df, date, column):
+    return df.query(
+        date.strftime('%Y%m%d') +
+        ' > ' + column
+    )
+
+
+@st.cache
+def get_test_df(df, date, column):
+    return df.query(
+        date.strftime('%Y%m%d') +
+        ' <= ' + column
+    )
+
+
 def load_homepage():
     """Homepage"""
 
@@ -322,12 +338,8 @@ def load_ts_page(covidpro_df, dpc_regioni_df):
 
     test_date = pd.to_datetime(end_date_ts) - pd.Timedelta(days=days_to_pred)
 
-    train = df_date_idx.query(
-        test_date.strftime('%Y%m%d') +
-        ' > ' + data_column)
-    test = df_date_idx.query(
-        test_date.strftime('%Y%m%d') +
-        ' <= ' + data_column)
+    train = get_train_df(df_date_idx, test_date, data_column)
+    test = get_test_df(df_date_idx, test_date, data_column)
 
     st.subheader("Exponential Smoothing")
 
