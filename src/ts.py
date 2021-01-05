@@ -1,13 +1,17 @@
+from altair.vegalite.v4.schema.channels import Opacity
 import pandas as pd
 import numpy as np
 
 import matplotlib.pyplot as plt
+import matplotlib.dates as mdates
 
 from pandas.plotting import lag_plot, autocorrelation_plot
 from statsmodels.graphics.tsaplots import plot_acf, plot_pacf
 from statsmodels.nonparametric.smoothers_lowess import lowess
 from statsmodels.tsa.seasonal import seasonal_decompose
 from statsmodels.tsa.stattools import adfuller, kpss
+
+from sklearn.metrics import mean_absolute_error
 
 
 def visualize_ts(df, date, column, province):
@@ -216,3 +220,78 @@ def SampEn(U, m, r):
 
     N = len(U)
     return -np.log(_phi(m+1) / _phi(m))
+
+
+def anom_plot(df, compart, window, plot_intervals=False, scale=1.96,
+              plot_anomalies=False, show_anomalies_label=False,
+              legend_position='upper left',
+              output_figure=False):
+
+    rolling_mean = df[[compart]].rolling(window=window).mean()
+
+    fig, ax = plt.subplots(figsize=(12, 5))
+    locator = mdates.AutoDateLocator(minticks=3)
+    formatter = mdates.ConciseDateFormatter(locator)
+    ax.xaxis.set_major_locator(locator)
+    ax.xaxis.set_major_formatter(formatter)
+
+    ax.plot(rolling_mean, "g", label="Rolling mean trend")
+
+    if plot_intervals:
+        mae = mean_absolute_error(
+            df[[compart]][window:], rolling_mean[window:]
+        )
+
+        deviation = np.std(df[[compart]][window:] - rolling_mean[window:])
+
+        lower_bound = rolling_mean - (mae + scale * deviation)
+        upper_bound = rolling_mean + (mae + scale * deviation)
+
+        ax.plot(upper_bound, "r--", label="Upper Bound / Lower Bound")
+        ax.plot(lower_bound, "r--")
+
+        if plot_anomalies:
+            anomalies = pd.DataFrame(
+                index=df[[compart]].index,
+                columns=df[[compart]].columns
+            )
+
+            anomalies[df[[compart]] < lower_bound] = \
+                df[[compart]][df[[compart]] < lower_bound]
+
+            anomalies[df[[compart]] > upper_bound] = \
+                df[[compart]][df[[compart]] > upper_bound]
+
+            ax.plot(anomalies, "ro", markersize=10)
+
+            xmin, xmax = plt.xlim()
+            ax.hlines(
+                y=0,
+                xmin=xmin, xmax=xmax,
+                linestyles='dashed', colors='grey', alpha=0.3)
+
+            if show_anomalies_label:
+                ymin, ymax = plt.ylim()
+
+                ax.vlines(
+                    anomalies.dropna().index,
+                    ymin=ymin, ymax=ymax,
+                    linestyles='dashed', colors='grey'
+                )
+
+                for x in anomalies.dropna().index:
+                    ax.text(
+                        x,
+                        ymin + 20,
+                        x.strftime('%m-%d'),
+                        rotation=90,
+                        verticalalignment='center'
+                    )
+
+    ax.plot(df[[compart]][window:], label="Actual values")
+    ax.legend(loc=legend_position)
+
+    if output_figure:
+        return fig
+    else:
+        plt.show()

@@ -1,5 +1,3 @@
-from re import template
-from matplotlib.dates import DateFormatter
 import streamlit as st
 import datetime
 
@@ -172,16 +170,16 @@ def load_homepage():
     st.subheader("🗺️ Data exploration")
     st.markdown("* This gives a general overview of the data with interactive "
                 "plots.")
-    st.subheader("📈 Time series")
+    st.subheader("📈 Time Series")
     st.markdown("* This page allows you to see predictions made using time "
                 "series models and the Prophet library.")
-    st.subheader("👓 SIRD model")
+    st.subheader("👓 SIRD")
     st.markdown("* This page allows you to see predictions made using "
-                "stochastic and deterministic sird with time-dependent "
+                "stochastic and deterministic SIRD models with time-dependent "
                 "parameters.")
-    st.subheader("🪄 TensorFlow model")
+    st.subheader("🪄 TensorFlow")
     st.markdown("* This page serves to show predictions made using "
-                "neural networks (such as LSTM) implemented using "
+                "neural networks (such as LSTM) implemented through "
                 "TensorFlow.")
 
 
@@ -260,7 +258,7 @@ def load_ts_page(covidpro_df, dpc_regioni_df):
             ts_true=df_date_idx[column],
             decomp_res=decomp_res,
             output_figure=True
-        )
+        ), use_container_width=True
     )
 
     with st.beta_expander("Stationarity tests"):
@@ -280,6 +278,33 @@ def load_ts_page(covidpro_df, dpc_regioni_df):
 
         p-value: {kpss_res[1]}
         """)
+
+    st.write("")
+    st.write("")
+
+    # TODO: MUST SWITCH TO PLOTLY
+
+    st.header("Auto-correlation")
+    fig, ax = plt.subplots(figsize=(12, 4))
+    autocorrelation_plot(df_date_idx[column].tolist(), ax=ax)
+    p_value = adfuller(df_date_idx[column])[1]
+    ax.set_title('Dickey-Fuller: p={0:.5f}'.format(p_value))
+    st.pyplot(fig)
+
+    fig, axes = plt.subplots(1, 2, figsize=(12, 4))
+    plot_acf(df_date_idx[column].tolist(), lags=50, ax=axes[0])
+    plot_pacf(df_date_idx[column].tolist(), lags=50, ax=axes[1])
+    st.pyplot(fig)
+
+    st.write("")
+    st.write("")
+
+    st.header("Anomalies")
+    fig = anom_plot(
+        df_date_idx, column, 7, plot_intervals=True,
+        plot_anomalies=True, show_anomalies_label=True,
+        legend_position='upper right', output_figure=True)
+    st.pyplot(fig)
 
     st.write("")
     st.write("")
@@ -916,9 +941,9 @@ def main():
         [
             "Homepage",
             "Data Exploration",
-            "Time series",
-            "SIRD model",
-            "TensorFlow model"
+            "Time Series",
+            "SIRD",
+            "TensorFlow"
         ]
     )
 
@@ -929,11 +954,11 @@ def main():
         load_homepage()
     elif app_mode == 'Data Exploration':
         load_eda(covidpro_df, dpc_regioni_df)
-    elif app_mode == 'Time series':
+    elif app_mode == 'Time Series':
         load_ts_page(covidpro_df, dpc_regioni_df)
-    elif app_mode == 'SIRD model':
+    elif app_mode == 'SIRD':
         load_sird_page(covidpro_df, dpc_regioni_df, pop_prov_df, prov_list_df)
-    elif app_mode == 'TensorFlow model':
+    elif app_mode == 'TensorFlow':
         load_tf_page(covidpro_df, dpc_regioni_df)
 
 
