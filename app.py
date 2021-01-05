@@ -334,7 +334,7 @@ def load_sird_page(covidpro_df, dpc_regioni_df, pop_prov_df, prov_list_df):
     st.plotly_chart(
         general_plot(
             t=real_df['data'],
-            title='Infected of ' + area_selectbox,
+            title='Daily infected of ' + area_selectbox,
             data=[
                 real_df['nuovi_positivi'].values,
                 res['nuovi_positivi'].values
@@ -374,7 +374,7 @@ def load_sird_page(covidpro_df, dpc_regioni_df, pop_prov_df, prov_list_df):
     st.plotly_chart(
         general_plot(
             t=real_df['data'],
-            title='Cumulative infected of ' + area_selectbox,
+            title='Total positives of ' + area_selectbox,
             data=[
                 real_df['totale_positivi'].values,
                 res['totale_positivi'].values
