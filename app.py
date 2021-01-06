@@ -188,9 +188,14 @@ def load_homepage():
         "Università degli Studi di Milano."
     )
     st.header("The Application")
-    st.write("This application is a Streamlit dashboard that can be used "
-             "to explore the work of my master degree thesis.")
-    st.write("There are currently four pages available in the application:")
+    st.write(
+        "This application is a Streamlit dashboard that can be used "
+        "to explore the work of my master degree thesis.")
+    st.write(
+        "There are currently four pages available in the application "
+        "and they are described below. To navigate between pages, "
+        "use the dropdown menu in the sidebar. To reveal the sidebar, "
+        "click on the arrow ＞ at top-left corner.")
     st.subheader("🗺️ Data exploration")
     st.markdown("* This gives a general overview of the data with interactive "
                 "plots.")
@@ -205,6 +210,15 @@ def load_homepage():
     st.markdown("* This page serves to show predictions made using "
                 "neural networks (such as LSTM) implemented through "
                 "TensorFlow.")
+
+    st.write("")
+    st.write("")
+
+    st.write(
+        "If you are on a wide screen, you can make the app fit the entire "
+        "width of the page. In order to do this, click on the top-right "
+        'hamburger menu icon ☰, then click on "Settings", '
+        'check "Show app in wide mode" and finally click on "Save".')
 
 
 def load_ts_page(covidpro_df, dpc_regioni_df):
