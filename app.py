@@ -257,7 +257,7 @@ def load_ts_page(covidpro_df, dpc_regioni_df):
     )
     end_date_ts = st.sidebar.date_input(
         'End date',
-        last_avail_date,
+        datetime.date(2020, 7, 1),
         datetime.date(2020, 2, 24),
         last_avail_date
     )
@@ -321,6 +321,7 @@ def load_ts_page(covidpro_df, dpc_regioni_df):
     st.pyplot(fig)
 
     lags = int(df_date_idx.shape[0]/2)-1
+    lags = lags if lags < 60 else 60
 
     fig, axes = plt.subplots(1, 2, figsize=(12, 4))
     plot_acf(df_date_idx[column].tolist(), lags=lags, ax=axes[0])
@@ -777,7 +778,7 @@ def load_eda(covidpro_df, dpc_regioni_df):
     )
     end_date_eda = st.sidebar.date_input(
         'End date',
-        dpc_regioni_df.iloc[-1]['data'],
+        datetime.date(2020, 7, 1),
         datetime.date(2020, 2, 24),
         dpc_regioni_df.iloc[-1]['data']
     )
