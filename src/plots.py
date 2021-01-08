@@ -1119,6 +1119,85 @@ def anomalies_plot(df,
             return fig.show()
 
 
+def ac_plot(data,
+            ci,
+            template='plotly_white',
+            title=None,
+            output_image=False,
+            width=800,
+            height=400,
+            scale=2,
+            output_figure=False):
+
+    fig = go.Figure()
+    fig.add_trace(
+        go.Bar(
+            x=list(range(data.shape[0])),
+            y=data,
+            hoverinfo='skip',
+            showlegend=False,
+            width=0.3,
+            marker_color='black'
+        )
+    )
+
+    fig.add_trace(
+        go.Scatter(
+            x=list(range(data.shape[0])),
+            y=data,
+            mode='markers',
+            name='Autocorrelation',
+            showlegend=False,
+            marker=dict(color="rgb(31, 119, 180)", size=8)
+        )
+    )
+
+    fig.add_trace(
+        go.Scatter(
+            x=list(range(data.shape[0])),
+            y=ci[:, 0],
+            mode='lines',
+            line=dict(width=0),
+            hoverinfo='skip',
+            showlegend=False
+        )
+    )
+    fig.add_trace(
+        go.Scatter(
+            x=list(range(data.shape[0])),
+            y=ci[:, 1],
+            line=dict(width=0),
+            mode='lines',
+            fillcolor='rgba(80, 148, 197, 0.3)',
+            fill='tonexty',
+            hoverinfo='skip',
+            showlegend=False
+        )
+    )
+
+    if title is not None:
+        fig.update_layout(
+            title=title,
+            title_x=0.5
+        )
+
+    fig.update_layout(
+        template=template,
+        xaxis_title='Lags'
+    )
+
+    if output_image:
+        return Image(fig.to_image(format="png",
+                                  width=width,
+                                  height=height,
+                                  scale=scale))
+    else:
+        if output_figure:
+            return fig
+        else:
+            return fig.show()
+
+
 def data_for_plot(compart,
                   df,
                   column,

@@ -6,12 +6,12 @@ from sklearn.metrics import mean_absolute_error, mean_squared_error
 from statsmodels.tsa.holtwinters import ExponentialSmoothing
 from statsmodels.tsa.ar_model import AutoReg
 from statsmodels.tsa.arima.model import ARIMA
+from statsmodels.tsa.stattools import acf, pacf
 
 from src.utils import *
 from src.plots import *
 from src.sird import *
 from src.ts import *
-from src.fbp import ProphetModel
 from fbprophet import Prophet
 from fbprophet.plot import plot_plotly
 
@@ -326,20 +326,36 @@ def load_ts_page(covidpro_df, dpc_regioni_df):
 
     # TODO: MUST SWITCH TO PLOTLY
     st.header("Auto-correlation")
+    with st.spinner("Plotting ACF and PACF"):
+        lags = int(df_date_idx.shape[0]/2)-1
+        lags = lags if lags < 60 else 60
 
-    fig, ax = plt.subplots(figsize=(12, 4))
-    autocorrelation_plot(df_date_idx[column].tolist(), ax=ax)
-    p_value = adfuller(df_date_idx[column])[1]
-    ax.set_title('Dickey-Fuller: p={0:.5f}'.format(p_value))
-    st.pyplot(fig)
+        acf_val, ci = acf(df_date_idx[column], nlags=lags, alpha=.05)
+        st.plotly_chart(
+            ac_plot(
+                acf_val,
+                ci,
+                output_figure=True,
+                title='Auto-correlation'
+            ), use_container_width=True
+        )
+        pacf_val, ci = pacf(df_date_idx[column], nlags=lags, alpha=.05)
+        st.plotly_chart(
+            ac_plot(
+                pacf_val,
+                ci,
+                output_figure=True,
+                title='Partial auto-correlation'
+            ), use_container_width=True
+        )
 
-    lags = int(df_date_idx.shape[0]/2)-1
-    lags = lags if lags < 60 else 60
+        # fig, axes = plt.subplots(1, 2, figsize=(12, 4))
+        # plot_acf(df_date_idx[column].tolist(), lags=lags, ax=axes[0])
+        # plot_pacf(df_date_idx[column].tolist(), lags=lags, ax=axes[1])
+        # st.pyplot(fig)
 
-    fig, axes = plt.subplots(1, 2, figsize=(12, 4))
-    plot_acf(df_date_idx[column].tolist(), lags=lags, ax=axes[0])
-    plot_pacf(df_date_idx[column].tolist(), lags=lags, ax=axes[1])
-    st.pyplot(fig)
+        p_value = adf_test_result(df_date_idx[column])[0]
+        st.write('Dickey-Fuller: p={0:.5f}'.format(p_value))
 
     st.write("")
     st.write("")
