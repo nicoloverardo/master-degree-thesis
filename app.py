@@ -324,7 +324,6 @@ def load_ts_page(covidpro_df, dpc_regioni_df):
     st.write("")
     st.write("")
 
-    # TODO: MUST SWITCH TO PLOTLY
     st.header("Auto-correlation")
     with st.spinner("Plotting ACF and PACF"):
         lags = int(df_date_idx.shape[0]/2)-1
@@ -348,11 +347,6 @@ def load_ts_page(covidpro_df, dpc_regioni_df):
                 title='Partial auto-correlation'
             ), use_container_width=True
         )
-
-        # fig, axes = plt.subplots(1, 2, figsize=(12, 4))
-        # plot_acf(df_date_idx[column].tolist(), lags=lags, ax=axes[0])
-        # plot_pacf(df_date_idx[column].tolist(), lags=lags, ax=axes[1])
-        # st.pyplot(fig)
 
         p_value = adf_test_result(df_date_idx[column])[0]
         st.write('Dickey-Fuller: p={0:.5f}'.format(p_value))

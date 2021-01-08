@@ -1155,7 +1155,7 @@ def ac_plot(data,
     fig.add_trace(
         go.Scatter(
             x=list(range(data.shape[0])),
-            y=ci[:, 0],
+            y=ci[1:, 0] - data[1:],
             mode='lines',
             line=dict(width=0),
             hoverinfo='skip',
@@ -1165,10 +1165,10 @@ def ac_plot(data,
     fig.add_trace(
         go.Scatter(
             x=list(range(data.shape[0])),
-            y=ci[:, 1],
+            y=ci[1:, 1] - data[1:],
             line=dict(width=0),
             mode='lines',
-            fillcolor='rgba(80, 148, 197, 0.3)',
+            fillcolor='rgba(80, 148, 197, 0.25)',
             fill='tonexty',
             hoverinfo='skip',
             showlegend=False
