@@ -1159,7 +1159,9 @@ def main():
         page_icon='🎓',
         layout='centered')
 
-    st.title('A comparison of predictive models for COVID-19 in Italy')
+    st.title(
+        'A dashboard for COVID-19 prediction in Italy '
+        'at regional and provincial level')
 
     st.sidebar.title('Menu')
     app_mode = st.sidebar.selectbox(

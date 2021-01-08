@@ -1,6 +1,6 @@
 [![Open in Streamlit](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://dse-thesis-verardo.herokuapp.com/)
 
-# A comparison of predictive models for COVID-19 in Italy
+# A dashboard for COVID-19 prediction in Italy at regional and provincial level
 Master thesis for the MSc in [Data Science and Economics](https://dse.cdl.unimi.it/en) at [Università degli Studi di Milano](https://www.unimi.it/en).
 
 ## Usage
