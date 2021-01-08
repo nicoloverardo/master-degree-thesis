@@ -1,4 +1,3 @@
-from altair.vegalite.v4.schema.channels import Opacity
 import pandas as pd
 import numpy as np
 

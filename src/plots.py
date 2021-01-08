@@ -1,4 +1,7 @@
+import pandas as pd
 import numpy as np
+
+from sklearn.metrics import mean_absolute_error
 
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
@@ -963,6 +966,146 @@ def plot_fbp_comp(df,
         height=height,
         showlegend=False,
     )
+
+    if output_image:
+        return Image(fig.to_image(format="png",
+                                  width=width,
+                                  height=height,
+                                  scale=scale))
+    else:
+        if output_figure:
+            return fig
+        else:
+            return fig.show()
+
+
+def anomalies_plot(df,
+                   compart,
+                   window,
+                   template='plotly_white',
+                   title=None,
+                   output_image=False,
+                   width=800,
+                   height=400,
+                   scale=1.96,
+                   output_figure=False,
+                   horiz_legend=True,
+                   ylabel='Number of individuals'):
+
+    rolling_mean = df.loc[:, [compart]][compart].rolling(
+        window=window).mean().dropna()
+    df_filt = df.loc[:, [compart]].iloc[window-1:]
+
+    fig = go.Figure()
+    fig.add_trace(
+        go.Scatter(
+            x=rolling_mean.index,
+            y=rolling_mean,
+            name='Rolling mean trend',
+            mode='lines'
+        )
+    )
+    fig.add_trace(
+        go.Scatter(
+            x=rolling_mean.index,
+            y=df_filt[compart],
+            name='Real values',
+            mode='lines'
+        )
+    )
+
+    mae = mean_absolute_error(
+        df_filt[compart], rolling_mean
+    )
+
+    deviation = np.std(df_filt[compart] - rolling_mean)
+
+    lower_bound = rolling_mean - (mae + scale * deviation)
+    upper_bound = rolling_mean + (mae + scale * deviation)
+
+    fig.add_trace(
+        go.Scatter(
+            x=rolling_mean.index,
+            y=upper_bound,
+            name='Upper/lower bound',
+            mode='lines',
+            line=dict(
+                dash='dash',
+                width=1.5,
+                color='green'
+            ),
+            showlegend=False
+        )
+    )
+    fig.add_trace(
+        go.Scatter(
+            x=rolling_mean.index,
+            y=lower_bound,
+            name='Upper/lower bound',
+            mode='lines',
+            line=dict(
+                dash='dash',
+                width=1.5,
+                color='green'
+            ),
+            showlegend=False
+        )
+    )
+
+    anomalies = pd.DataFrame(
+        index=rolling_mean.index,
+        columns=df_filt.columns
+    )
+
+    anomalies[df_filt[compart] < lower_bound] = \
+        df_filt[df_filt[compart] < lower_bound]
+
+    anomalies[df_filt[compart] > upper_bound] = \
+        df_filt[df_filt[compart] > upper_bound]
+
+    fig.add_trace(
+        go.Scatter(
+            x=rolling_mean.index,
+            y=anomalies[compart],
+            mode='markers',
+            name='Anomaly',
+            showlegend=False,
+            marker=dict(color="red", size=10)
+        )
+    )
+
+    fig.add_shape(
+        type="line",
+        y0=0, y1=0,
+        x0=df_filt.index[0],
+        x1=df_filt.index[-1],
+        line=dict(width=1.5, dash='dash'),
+        opacity=0.5
+    )
+
+    if title is not None:
+        fig.update_layout(
+            title=title,
+            title_x=0.5
+        )
+
+    fig.update_layout(
+        template=template,
+        yaxis_title=ylabel
+    )
+
+    if horiz_legend:
+        ypos = -.2 if title is '' else -.3
+
+        fig.update_layout(
+            legend=dict(
+                orientation="h",
+                yanchor="top",
+                xanchor="center",
+                x=.5,
+                y=ypos
+            )
+        )
 
     if output_image:
         return Image(fig.to_image(format="png",

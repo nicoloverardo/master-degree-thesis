@@ -325,7 +325,6 @@ def load_ts_page(covidpro_df, dpc_regioni_df):
     st.write("")
 
     # TODO: MUST SWITCH TO PLOTLY
-
     st.header("Auto-correlation")
 
     fig, ax = plt.subplots(figsize=(12, 4))
@@ -346,11 +345,14 @@ def load_ts_page(covidpro_df, dpc_regioni_df):
     st.write("")
 
     st.header("Anomalies")
-    fig = anom_plot(
-        df_date_idx, column, 7, plot_intervals=True,
-        plot_anomalies=True, show_anomalies_label=True,
-        legend_position='upper right', output_figure=True)
-    st.pyplot(fig)
+    st.plotly_chart(
+        anomalies_plot(
+            df_date_idx,
+            column,
+            7,
+            output_figure=True
+        ), use_container_width=True
+    )
 
     # Forecasting
     st.header("Forecasting")
