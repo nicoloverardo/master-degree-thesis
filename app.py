@@ -22,12 +22,12 @@ os.chdir(os.path.dirname(os.path.realpath(__file__)))
 DATA_PATH = "data"
 
 
-@st.cache
+@st.cache(show_spinner=False)
 def load_df():
     return load_data(DATA_PATH)
 
 
-@st.cache
+@st.cache(show_spinner=False)
 def compute_sird(prov, pop_prov_df, prov_list_df=None,
                  r0_start=3.5, r0_end=0.9, k=0.9,
                  x0=20, alpha=0.1, gamma=1/7):
@@ -47,7 +47,7 @@ def compute_sird(prov, pop_prov_df, prov_list_df=None,
     )
 
 
-@st.cache
+@st.cache(show_spinner=False)
 def data_sird_plot(covidpro_df,
                    column,
                    comp_array,
@@ -673,18 +673,18 @@ def load_sird_page(covidpro_df, dpc_regioni_df, pop_prov_df, prov_list_df):
             ), use_container_width=True
         )
 
-    # Show metrics
-    mae = mean_absolute_error(data[1], data[2])
-    mse = mean_squared_error(data[1], data[2])
-    rmse = mean_squared_error(data[1], data[2], squared=False)
+        # Show metrics
+        mae = mean_absolute_error(data[1], data[2])
+        mse = mean_squared_error(data[1], data[2])
+        rmse = mean_squared_error(data[1], data[2], squared=False)
 
-    with st.beta_expander('Show metrics'):
-        st.info("MAE: " + str(np.round(mae, 3)))
-        st.info("MSE: " + str(np.round(mse, 3)))
-        st.info(
-            "RMSE: " +
-            str(np.round(rmse, 3))
-        )
+        with st.beta_expander('Show metrics'):
+            st.info("MAE: " + str(np.round(mae, 3)))
+            st.info("MSE: " + str(np.round(mse, 3)))
+            st.info(
+                "RMSE: " +
+                str(np.round(rmse, 3))
+            )
 
     st.text("")
     st.text("")
@@ -780,31 +780,31 @@ def load_sird_page(covidpro_df, dpc_regioni_df, pop_prov_df, prov_list_df):
             ), use_container_width=True
         )
 
-    # Show metrics
-    mae_tot_pos = model.mae(compart='totale_positivi')
-    mse_tot_pos = model.mse(compart='totale_positivi')
-    mae_deaths = model.mae(compart='deceduti')
-    mse_deaths = model.mse(compart='deceduti')
-    mae_rec = model.mae(compart='dimessi_guariti')
-    mse_rec = model.mse(compart='dimessi_guariti')
+        # Show metrics
+        mae_tot_pos = model.mae(compart='totale_positivi')
+        mse_tot_pos = model.mse(compart='totale_positivi')
+        mae_deaths = model.mae(compart='deceduti')
+        mse_deaths = model.mse(compart='deceduti')
+        mae_rec = model.mae(compart='dimessi_guariti')
+        mse_rec = model.mse(compart='dimessi_guariti')
 
-    with st.beta_expander('Show metrics'):
-        st.write("""
-        The metrics MAE and MSE that you see below are 'averaged'
-        because we first compute them for each of the three
-        series in the plots above individually, and then we take
-        the average of the three, since the model should be able to
-        predict the number of positives and deaths at the same time.
-        """)
+        with st.beta_expander('Show metrics'):
+            st.write("""
+            The metrics MAE and MSE that you see below are 'averaged'
+            because we first compute them for each of the three
+            series in the plots above individually, and then we take
+            the average of the three, since the model should be able to
+            predict the number of positives and deaths at the same time.
+            """)
 
-        st.info(
-            "Average MAE: " +
-            str(np.round(np.mean([mae_tot_pos, mae_deaths, mae_rec]), 2))
-        )
-        st.info(
-            "Average MSE: " +
-            str(np.round(np.mean([mse_tot_pos, mse_deaths, mse_rec]), 2))
-        )
+            st.info(
+                "Average MAE: " +
+                str(np.round(np.mean([mae_tot_pos, mae_deaths, mae_rec]), 2))
+            )
+            st.info(
+                "Average MSE: " +
+                str(np.round(np.mean([mse_tot_pos, mse_deaths, mse_rec]), 2))
+            )
 
     st.text("")
     st.text("")
