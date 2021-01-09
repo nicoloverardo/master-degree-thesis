@@ -764,12 +764,42 @@ def plot_tstat_models(df,
             mode='markers'
         )
     )
+
+    if isinstance(yhat, pd.DataFrame):
+        fig.add_trace(
+            go.Scatter(
+                x=yhat.index,
+                y=yhat['mean_ci_lower'] - yhat['mean'],
+                mode='lines',
+                line=dict(width=0),
+                hoverinfo='skip',
+                showlegend=False
+                )
+        )
+        fig.add_trace(
+            go.Scatter(
+                x=yhat.index,
+                y=yhat['mean_ci_upper'] - yhat['mean'],
+                line=dict(width=0),
+                mode='lines',
+                fillcolor='rgba(80, 148, 197, 0.25)',
+                fill='tonexty',
+                hoverinfo='skip',
+                showlegend=False
+            )
+        )
+
+        fitted_pred = np.concatenate((fitted_vals, yhat['mean']))
+    else:
+        fitted_pred = np.concatenate((fitted_vals, yhat))
+
     fig.add_trace(
         go.Scatter(
             x=df.index,
-            y=np.concatenate((fitted_vals, yhat)),
+            y=fitted_pred,
             name='Fitted',
-            mode='lines'
+            mode='lines',
+            line=dict(color='#ef553b')
         )
     )
     fig.add_trace(

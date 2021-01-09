@@ -4,8 +4,7 @@ import datetime
 from sklearn.metrics import mean_absolute_error, mean_squared_error
 
 from statsmodels.tsa.holtwinters import ExponentialSmoothing
-from statsmodels.tsa.ar_model import AutoReg
-from statsmodels.tsa.arima.model import ARIMA
+from statsmodels.tsa.statespace.sarimax import SARIMAX
 from statsmodels.tsa.stattools import acf, pacf
 
 from src.utils import *
@@ -206,6 +205,20 @@ def run_fbp(train, data_column, column, days_to_pred):
     return m, forecast
 
 
+@st.cache(show_spinner=False)
+def run_sarimax(train, test, order):
+    model = SARIMAX(
+        train,
+        order=order
+    )
+
+    sarimax_res = model.fit()
+    yhat = sarimax_res.get_forecast(steps=len(test))
+    sarimax_sf = yhat.summary_frame()
+
+    return sarimax_res.fittedvalues, sarimax_res.summary(), sarimax_sf
+
+
 def load_homepage():
     """Homepage"""
 
@@ -349,15 +362,14 @@ def load_ts_page(covidpro_df, dpc_regioni_df):
     st.write("")
     st.write("")
 
+    max_lags = int(df_date_idx.shape[0]/2)-1
+
     st.header("Auto-correlation")
     with st.spinner("Plotting ACF and PACF"):
-        max_lags = int(df_date_idx.shape[0]/2)-1
         lags_start = max_lags if max_lags < 60 else 60
 
-        lags = st.slider("Lags", 0, max_lags, lags_start)
-
-        acf_val, ci_acf = compute_acf(df_date_idx[column], lags)
-        pacf_val, ci_pacf = compute_pacf(df_date_idx[column], lags)
+        acf_val, ci_acf = compute_acf(df_date_idx[column], lags_start)
+        pacf_val, ci_pacf = compute_pacf(df_date_idx[column], lags_start)
 
         st.plotly_chart(
             ac_plot(
@@ -401,34 +413,40 @@ def load_ts_page(covidpro_df, dpc_regioni_df):
     train = get_train_df(df_date_idx, test_date, data_column)
     test = get_test_df(df_date_idx, test_date, data_column)
 
+    # Exponential Smoothing
     st.subheader("Exponential Smoothing")
 
     with st.spinner("Training model"):
-        model = ExponentialSmoothing(train[column].values)
-        model_fit = model.fit()
+        es_model = ExponentialSmoothing(
+            train[column].values,
+            seasonal_periods=7,
+            trend='add',
+            seasonal='add'
+        )
 
-        yhat = model_fit.predict(start=0, end=len(test) - 1)
+        es_res = es_model.fit()
+        es_yhat = es_res.predict(start=0, end=len(test) - 1)
 
         st.plotly_chart(
             plot_tstat_models(
                 df=df_date_idx,
                 train=train,
                 test=test,
-                fitted_vals=model_fit.fittedvalues,
-                yhat=yhat,
+                fitted_vals=es_res.fittedvalues,
+                yhat=es_yhat,
                 column=column,
                 output_figure=True
             ), use_container_width=True)
 
-        mae = mean_absolute_error(test[column], yhat)
-        mse = mean_squared_error(test[column], yhat)
-        rmse = mean_squared_error(test[column], yhat, squared=False)
+        mae = mean_absolute_error(test[column], es_yhat)
+        mse = mean_squared_error(test[column], es_yhat)
+        rmse = mean_squared_error(test[column], es_yhat, squared=False)
 
         with st.beta_expander("Show training results"):
-            st.text("AIC: " + str(model_fit.aic))
-            st.text("AICC: " + str(model_fit.aicc))
-            st.text("BIC: " + str(model_fit.bic))
-            st.text("k: " + str(model_fit.k))
+            st.text("AIC: " + str(es_res.aic))
+            st.text("AICC: " + str(es_res.aicc))
+            st.text("BIC: " + str(es_res.bic))
+            st.text("k: " + str(es_res.k))
             st.text("")
             st.text("MAE: " + str(np.round(mae, 3)))
             st.text("MSE: " + str(np.round(mse, 3)))
@@ -436,37 +454,46 @@ def load_ts_page(covidpro_df, dpc_regioni_df):
                 "RMSE: " +
                 str(np.round(rmse, 3))
             )
-            st.text("SSE: " + str(model_fit.sse))
+            st.text("SSE: " + str(es_res.sse))
             st.text("")
             st.text("")
-            st.text(model_fit.mle_retvals)
+            st.text(es_res.mle_retvals)
+            st.text(es_res.summary())
 
     st.write("")
     st.write("")
     st.write("")
-    st.subheader("AR(1)")
+
+    # ARIMA
+    st.subheader("ARIMA")
+
+    col1_arima, col2_arima, col3_arima = st.beta_columns(3)
+    lags_arima = col1_arima.slider("Lags (p)", 0, 15, 1)
+    dod_arima = col2_arima.slider("Degree of differencing (d)", 0, 15, 1)
+    window_arima = col3_arima.slider("Window (q)", 0, 30, 1)
 
     with st.spinner("Training model"):
-        model = AutoReg(train[column], lags=1)
-        model_fit = model.fit()
-
-        # make prediction
-        yhat = model_fit.predict(test.index[0], test.index[-1])
+        sarimax_fv, sarimax_summary, sarimax_sf = run_sarimax(
+            train[column],
+            test,
+            (lags_arima, dod_arima, window_arima)
+        )
 
         st.plotly_chart(
             plot_tstat_models(
                 df=df_date_idx,
                 train=train,
                 test=test,
-                fitted_vals=model_fit.fittedvalues,
-                yhat=yhat,
+                fitted_vals=sarimax_fv,
+                yhat=sarimax_sf,
                 column=column,
                 output_figure=True
             ), use_container_width=True)
 
-        mae = mean_absolute_error(test[column], yhat)
-        mse = mean_squared_error(test[column], yhat)
-        rmse = mean_squared_error(test[column], yhat, squared=False)
+        mae = mean_absolute_error(test[column], sarimax_sf['mean'])
+        mse = mean_squared_error(test[column], sarimax_sf['mean'])
+        rmse = mean_squared_error(
+            test[column], sarimax_sf['mean'], squared=False)
 
         with st.beta_expander("Show training results"):
             st.text("MAE: " + str(np.round(mae, 3)))
@@ -477,45 +504,7 @@ def load_ts_page(covidpro_df, dpc_regioni_df):
             )
             st.text("")
             st.text("")
-            st.text(model_fit.summary())
-
-    st.write("")
-    st.write("")
-    st.write("")
-    st.subheader("ARIMA(1, 1, 1)")
-
-    with st.spinner("Training model"):
-        model = ARIMA(train[column], order=(1, 1, 1))
-        model_fit = model.fit()
-
-        # make prediction
-        yhat = model_fit.predict(test.index[0], test.index[-1])
-
-        st.plotly_chart(
-            plot_tstat_models(
-                df=df_date_idx,
-                train=train,
-                test=test,
-                fitted_vals=model_fit.fittedvalues,
-                yhat=yhat,
-                column=column,
-                output_figure=True
-            ), use_container_width=True)
-
-        mae = mean_absolute_error(test[column], yhat)
-        mse = mean_squared_error(test[column], yhat)
-        rmse = mean_squared_error(test[column], yhat, squared=False)
-
-        with st.beta_expander("Show training results"):
-            st.text("MAE: " + str(np.round(mae, 3)))
-            st.text("MSE: " + str(np.round(mse, 3)))
-            st.text(
-                "RMSE: " +
-                str(np.round(rmse, 3))
-            )
-            st.text("")
-            st.text("")
-            st.text(model_fit.summary())
+            st.text(sarimax_summary)
 
     st.write("")
     st.write("")
