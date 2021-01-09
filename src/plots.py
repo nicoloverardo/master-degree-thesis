@@ -1136,7 +1136,7 @@ def ac_plot(data,
             y=data,
             hoverinfo='skip',
             showlegend=False,
-            width=0.3,
+            width=0.2,
             marker_color='black'
         )
     )

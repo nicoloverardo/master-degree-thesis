@@ -66,7 +66,7 @@ def data_sird_plot(covidpro_df,
     )
 
 
-@st.cache
+@st.cache(show_spinner=False)
 def compute_daily_changes(df):
     """Gets daily variation of the regional indicators"""
 
@@ -101,7 +101,7 @@ def compute_daily_changes(df):
     return df
 
 
-@st.cache
+@st.cache(show_spinner=False)
 def compute_autocorr_df(df, days, is_regional=True):
     """
     Compute autocorrelations and cross-correlations
@@ -158,7 +158,7 @@ def compute_autocorr_df(df, days, is_regional=True):
     return data
 
 
-@st.cache
+@st.cache(show_spinner=False)
 def decompose_series(df, column):
     return decompose_ts(df, column)
 
@@ -177,6 +177,33 @@ def get_test_df(df, date, column):
         date.strftime('%Y%m%d') +
         ' < ' + column
     )
+
+
+@st.cache(show_spinner=False)
+def compute_acf(data, lags):
+    return acf(data, nlags=lags, alpha=.05)
+
+
+@st.cache(show_spinner=False)
+def compute_pacf(data, lags):
+    return pacf(data, nlags=lags, alpha=.05)
+
+
+@st.cache(show_spinner=False)
+def run_fbp(train, data_column, column, days_to_pred):
+    train_df = train.reset_index()
+    train_df = train_df.loc[:, [data_column, column]]
+    train_df.columns = ['ds', 'y']
+
+    m = Prophet()
+    m.add_country_holidays(country_name='IT')
+    m.fit(train_df)
+
+    future_df = m.make_future_dataframe(periods=days_to_pred)
+
+    forecast = m.predict(future_df)
+
+    return m, forecast
 
 
 def load_homepage():
@@ -232,8 +259,6 @@ def load_ts_page(covidpro_df, dpc_regioni_df):
         index=1
     )
 
-    is_regional = True
-    pcm_data = None
     group_column = 'denominazione_regione'
     data_df = dpc_regioni_df
     data_column = 'data'
@@ -253,8 +278,7 @@ def load_ts_page(covidpro_df, dpc_regioni_df):
             int((covidpro_df.Province == 'Firenze').argmax()),
             key="area_selectbox_prov"
         )
-        is_regional = False
-        pcm_data = dpc_regioni_df
+
         group_column = 'Province'
         data_df = covidpro_df
         data_column = 'Date'
@@ -292,16 +316,17 @@ def load_ts_page(covidpro_df, dpc_regioni_df):
     # Decomposition
     st.header("Series decomposition")
 
-    decomp_res = decompose_series(df_date_idx, column)
+    with st.spinner("Decomposing series"):
+        decomp_res = decompose_series(df_date_idx, column)
 
-    st.plotly_chart(
-        plot_ts_decomp(
-            x_dates=df_date_idx.index,
-            ts_true=df_date_idx[column],
-            decomp_res=decomp_res,
-            output_figure=True
-        ), use_container_width=True
-    )
+        st.plotly_chart(
+            plot_ts_decomp(
+                x_dates=df_date_idx.index,
+                ts_true=df_date_idx[column],
+                decomp_res=decomp_res,
+                output_figure=True
+            ), use_container_width=True
+        )
 
     with st.beta_expander("Stationarity tests"):
         adf_res = adf_test_result(df_date_idx[column])
@@ -326,23 +351,27 @@ def load_ts_page(covidpro_df, dpc_regioni_df):
 
     st.header("Auto-correlation")
     with st.spinner("Plotting ACF and PACF"):
-        lags = int(df_date_idx.shape[0]/2)-1
-        lags = lags if lags < 60 else 60
+        max_lags = int(df_date_idx.shape[0]/2)-1
+        lags_start = max_lags if max_lags < 60 else 60
 
-        acf_val, ci = acf(df_date_idx[column], nlags=lags, alpha=.05)
+        lags = st.slider("Lags", 0, max_lags, lags_start)
+
+        acf_val, ci_acf = compute_acf(df_date_idx[column], lags)
+        pacf_val, ci_pacf = compute_pacf(df_date_idx[column], lags)
+
         st.plotly_chart(
             ac_plot(
                 acf_val,
-                ci,
+                ci_acf,
                 output_figure=True,
                 title='Auto-correlation'
             ), use_container_width=True
         )
-        pacf_val, ci = pacf(df_date_idx[column], nlags=lags, alpha=.05)
+
         st.plotly_chart(
             ac_plot(
                 pacf_val,
-                ci,
+                ci_pacf,
                 output_figure=True,
                 title='Partial auto-correlation'
             ), use_container_width=True
@@ -495,17 +524,9 @@ def load_ts_page(covidpro_df, dpc_regioni_df):
     st.subheader("Facebook Prophet")
 
     with st.spinner("Training model"):
-        train_df = train.reset_index()
-        train_df = train_df.loc[:, [data_column, column]]
-        train_df.columns = ['ds', 'y']
-
-        m = Prophet()
-        m.add_country_holidays(country_name='IT')
-        m.fit(train_df)
-
-        future_df = m.make_future_dataframe(periods=days_to_pred)
-
-        forecast = m.predict(future_df)
+        m, forecast = run_fbp(
+            train, data_column, column, days_to_pred
+        )
 
         fig1 = plot_plotly(m, forecast)
         fig1.update_layout(
@@ -544,10 +565,6 @@ def load_ts_page(covidpro_df, dpc_regioni_df):
     st.write("")
     st.write("")
     st.subheader("🏗 Page under construction")
-    st.warning(
-        """
-        We are currently working to unify the styles of the plots
-        """)
 
 
 def load_tf_page(covidpro_df, dpc_regioni_df):
@@ -612,46 +629,49 @@ def load_sird_page(covidpro_df, dpc_regioni_df, pop_prov_df, prov_list_df):
     gamma_value = col3.slider("Recovery rate", 0.001, 1.0, 1/7)
 
     # Compute SIRD
-    sirsol = compute_sird(area_selectbox, pop_prov_df, prov_df,
-                          r0_start, r0_end, k_value,
-                          x0_value, alpha_value, gamma_value)
-    S, I, R, D = sirsol
+    with st.spinner("Training continuous SIRD"):
+        sirsol = compute_sird(
+            area_selectbox, pop_prov_df, prov_df,
+            r0_start, r0_end, k_value,
+            x0_value, alpha_value, gamma_value)
 
-    times = list(range(sirsol.shape[1]))
+        S, I, R, D = sirsol
 
-    # SIRD plot
-    st.plotly_chart(
-        general_plot(
-            t=times,
-            data=sirsol,
-            title='SIRD model',
-            traces_visibility=['legendonly'] + [True]*3,
-            output_image=False,
-            template='plotly_white',
-            output_figure=True,
-            horiz_legend=True
-        ), use_container_width=True
-    )
+        times = list(range(sirsol.shape[1]))
 
-    names, title, data, modes = data_sird_plot(
-        data_df, column, I, area_selectbox, is_regional)
+        # SIRD plot
+        st.plotly_chart(
+            general_plot(
+                t=times,
+                data=sirsol,
+                title='SIRD model',
+                traces_visibility=['legendonly'] + [True]*3,
+                output_image=False,
+                template='plotly_white',
+                output_figure=True,
+                horiz_legend=True
+            ), use_container_width=True
+        )
 
-    # Comparison SIRD plot
-    st.plotly_chart(
-        general_plot(
-            t=times,
-            title='SIRD predictions comparison',
-            data=data,
-            names=names,
-            modes=modes,
-            blend_legend=False,
-            output_image=False,
-            traces_visibility=['legendonly'] + [True]*2,
-            template='plotly_white',
-            output_figure=True,
-            horiz_legend=True
-        ), use_container_width=True
-    )
+        names, title, data, modes = data_sird_plot(
+            data_df, column, I, area_selectbox, is_regional)
+
+        # Comparison SIRD plot
+        st.plotly_chart(
+            general_plot(
+                t=times,
+                title='SIRD predictions comparison',
+                data=data,
+                names=names,
+                modes=modes,
+                blend_legend=False,
+                output_image=False,
+                traces_visibility=['legendonly'] + [True]*2,
+                template='plotly_white',
+                output_figure=True,
+                horiz_legend=True
+            ), use_container_width=True
+        )
 
     # Show metrics
     mae = mean_absolute_error(data[1], data[2])
@@ -682,82 +702,83 @@ def load_sird_page(covidpro_df, dpc_regioni_df, pop_prov_df, prov_list_df):
     data_filter = '20200630'
 
     # Define and fit SIRD
-    model = DeterministicSird(
-        data_df=data_df,
-        pop_prov_df=pop_prov_df,
-        prov_list_df=prov_list_df,
-        area=area_selectbox,
-        group_column=group_column,
-        data_column=data_column,
-        data_filter=data_filter,
-        lag=lags,
-        days_to_predict=days_to_predict,
-        is_regional=is_regional,
-        pcm_data=pcm_data
-    )
+    with st.spinner("Training discrete SIRD"):
+        model = DeterministicSird(
+            data_df=data_df,
+            pop_prov_df=pop_prov_df,
+            prov_list_df=prov_list_df,
+            area=area_selectbox,
+            group_column=group_column,
+            data_column=data_column,
+            data_filter=data_filter,
+            lag=lags,
+            days_to_predict=days_to_predict,
+            is_regional=is_regional,
+            pcm_data=pcm_data
+        )
 
-    res = model.fit()
-    real_df = model.real_df
+        res = model.fit()
+        real_df = model.real_df
 
-    # Infected
-    st.plotly_chart(
-        general_plot(
-            t=real_df['data'],
-            title='Daily infected of ' + area_selectbox,
-            data=[
-                real_df['nuovi_positivi'].values,
-                res['nuovi_positivi'].values
-            ],
-            names=['Real', 'Prediction'],
-            modes=['markers', 'lines'],
-            blend_legend=False,
-            output_image=False,
-            output_figure=True,
-            xtitle='',
-            horiz_legend=True,
-            template='plotly_white'
-        ), use_container_width=True
-    )
+        # Infected
+        st.plotly_chart(
+            general_plot(
+                t=real_df['data'],
+                title='Daily infected of ' + area_selectbox,
+                data=[
+                    real_df['nuovi_positivi'].values,
+                    res['nuovi_positivi'].values
+                ],
+                names=['Real', 'Prediction'],
+                modes=['markers', 'lines'],
+                blend_legend=False,
+                output_image=False,
+                output_figure=True,
+                xtitle='',
+                horiz_legend=True,
+                template='plotly_white'
+            ), use_container_width=True
+        )
 
-    # Deaths
-    st.plotly_chart(
-        general_plot(
-            t=real_df['data'],
-            title='Cumulative deaths of ' + area_selectbox,
-            data=[
-                real_df['deceduti'].values,
-                res['deceduti'].values
-            ],
-            names=['Real', 'Prediction'],
-            modes=['markers', 'lines'],
-            blend_legend=False,
-            output_image=False,
-            output_figure=True,
-            xtitle='',
-            horiz_legend=True,
-            template='plotly_white'
-        ), use_container_width=True
-    )
+        # Deaths
+        st.plotly_chart(
+            general_plot(
+                t=real_df['data'],
+                title='Cumulative deaths of ' + area_selectbox,
+                data=[
+                    real_df['deceduti'].values,
+                    res['deceduti'].values
+                ],
+                names=['Real', 'Prediction'],
+                modes=['markers', 'lines'],
+                blend_legend=False,
+                output_image=False,
+                output_figure=True,
+                xtitle='',
+                horiz_legend=True,
+                template='plotly_white'
+            ), use_container_width=True
+        )
 
-    # Cumulative infected
-    st.plotly_chart(
-        general_plot(
-            t=real_df['data'],
-            title='Total positives of ' + area_selectbox,
-            data=[
-                real_df['totale_positivi'].values,
-                res['totale_positivi'].values
-            ],
-            names=['Real', 'Prediction'],
-            modes=['markers', 'lines'],
-            blend_legend=False,
-            output_image=False,
-            output_figure=True,
-            xtitle='',
-            horiz_legend=True,
-            template='plotly_white'
-        ), use_container_width=True
-    )
+        # Cumulative infected
+        st.plotly_chart(
+            general_plot(
+                t=real_df['data'],
+                title='Total positives of ' + area_selectbox,
+                data=[
+                    real_df['totale_positivi'].values,
+                    res['totale_positivi'].values
+                ],
+                names=['Real', 'Prediction'],
+                modes=['markers', 'lines'],
+                blend_legend=False,
+                output_image=False,
+                output_figure=True,
+                xtitle='',
+                horiz_legend=True,
+                template='plotly_white'
+            ), use_container_width=True
+        )
 
     # Show metrics
     mae_tot_pos = model.mae(compart='totale_positivi')
