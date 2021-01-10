@@ -351,7 +351,7 @@ def custom_plot(df,
                 y=icu,
                 line_dash='dash',
                 line_color='grey',
-                annotation_text='ICU capacity'
+                annotation_text='ICU capacity: ' + str(icu)
         )
 
     fig.update_layout(xaxis_title=xtitle,
