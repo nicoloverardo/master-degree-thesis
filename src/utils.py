@@ -164,7 +164,7 @@ def fix_trentino(df):
         df_filtered.denominazione_regione != 'P.A. Trento']
 
     df_res = pd.concat([df_filtered, res_df])
-    df_res.sort_values(by=['data', 'denominazione_regione'])
+    df_res.sort_values(by=['data', 'denominazione_regione'], inplace=True)
 
     return df_res
 
