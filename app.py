@@ -251,7 +251,7 @@ def load_homepage():
     st.markdown("* This page allows you to see predictions made using "
                 "stochastic and deterministic SIRD models with time-dependent "
                 "parameters.")
-    st.subheader("🪄 TensorFlow")
+    st.subheader("🗝️ TensorFlow")
     st.markdown("* This page serves to show predictions made using "
                 "neural networks (such as LSTM) implemented through "
                 "TensorFlow.")
@@ -1177,7 +1177,7 @@ def load_eda(covidpro_df, dpc_regioni_df, icu_df):
         ), use_container_width=True
     )
 
-    giorni_max_cor_prov = autocorr_df[
+    giorni_max_cor_prov = autocorr_df_prov[
         'crosscor_decessi_nuovi_positivi'].idxmax()
     val_max_cor_prov = round(
         autocorr_df_prov['crosscor_decessi_nuovi_positivi'].max(), 4)
