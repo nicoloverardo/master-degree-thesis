@@ -324,7 +324,8 @@ def custom_plot(df,
                 xanchor='right',
                 template='simple_white',
                 show_title=True,
-                horiz_legend=False):
+                horiz_legend=False,
+                icu=None):
 
     if legend_titles is None:
         legend_titles = ydata
@@ -345,14 +346,25 @@ def custom_plot(df,
             visible=traces_visibility[i])
         )
 
+    if icu is not None:
+        fig.add_hline(
+                y=icu,
+                line_dash='dash',
+                line_color='grey',
+                annotation_text='ICU capacity'
+        )
+
     fig.update_layout(xaxis_title=xtitle,
                       yaxis_title=ytitle,
                       template=template,
                       barmode='overlay')
 
-    if show_title:
+    if title is not None:
+        if show_title:
+            title = title + area_name,
+
         fig.update_layout(
-            title=title + area_name,
+            title=title,
             title_x=0.5)
 
     if blend_legend:

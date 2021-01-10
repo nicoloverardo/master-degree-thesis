@@ -27,6 +27,11 @@ def load_df():
 
 
 @st.cache(show_spinner=False)
+def load_icu_df():
+    return pd.read_csv(Path(DATA_PATH, "icu.csv"))
+
+
+@st.cache(show_spinner=False)
 def compute_sird(prov, pop_prov_df, prov_list_df=None,
                  r0_start=3.5, r0_end=0.9, k=0.9,
                  x0=20, alpha=0.1, gamma=1/7):
@@ -800,7 +805,7 @@ def load_sird_page(covidpro_df, dpc_regioni_df, pop_prov_df, prov_list_df):
     st.subheader("🏗 Page under construction")
 
 
-def load_eda(covidpro_df, dpc_regioni_df):
+def load_eda(covidpro_df, dpc_regioni_df, icu_df):
     """Explorative Data Analysis page"""
 
     st.sidebar.header('Options')
@@ -856,6 +861,10 @@ def load_eda(covidpro_df, dpc_regioni_df):
     daily_df = compute_daily_changes(dpc_final)
     autocorr_df = compute_autocorr_df(daily_df, 30)
 
+    icu = icu_df.loc[
+        (icu_df.Regione == region_selectbox),
+        "Posti"].values[0]
+
     if show_raw_data:
         st.subheader("Raw data")
         st.write("Regional data:")
@@ -880,7 +889,7 @@ def load_eda(covidpro_df, dpc_regioni_df):
                 'ricoverati_con_sintomi',
                 'terapia_intensiva',
                 'deceduti'],
-            title='',
+            title='Main indicators',
             xtitle='',
             ytitle='Individuals',
             group_column='denominazione_regione',
@@ -921,6 +930,24 @@ def load_eda(covidpro_df, dpc_regioni_df):
             template='plotly_white',
             show_title=False,
             horiz_legend=True
+        ), use_container_width=True)
+
+    # icu
+    st.plotly_chart(
+        custom_plot(
+            df=dpc_reg_filtered,
+            ydata=['terapia_intensiva'],
+            title='Intensive care occupancy vs capacity',
+            xtitle='',
+            ytitle='Individuals',
+            group_column='denominazione_regione',
+            area_name=region_selectbox,
+            blend_legend=True,
+            legend_titles=['Intesive care'],
+            template='plotly_white',
+            show_title=False,
+            horiz_legend=True,
+            icu=icu
         ), use_container_width=True)
 
     # Daily changes in the main indicators
@@ -1199,11 +1226,12 @@ def main():
 
     with st.spinner("Loading data"):
         covidpro_df, dpc_regioni_df, _, pop_prov_df, prov_list_df = load_df()
+        icu_df = load_icu_df()
 
     if app_mode == 'Homepage':
         load_homepage()
     elif app_mode == 'Data Exploration':
-        load_eda(covidpro_df, dpc_regioni_df)
+        load_eda(covidpro_df, dpc_regioni_df, icu_df)
     elif app_mode == 'Time Series':
         load_ts_page(covidpro_df, dpc_regioni_df)
     elif app_mode == 'SIRD':
