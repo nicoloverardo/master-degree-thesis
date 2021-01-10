@@ -405,10 +405,13 @@ def daily_main_indic_plot(area,
                           title=None,
                           horiz_legend=True):
 
-    fig = make_subplots(rows=4, cols=2)
+    n_data = len(y_cols)
+    n_rows = n_data // 2 if n_data % 2 == 0 else (n_data + 1) // 2
+
+    fig = make_subplots(rows=n_rows, cols=2)
 
     i = 0
-    for r in range(1, 5):
+    for r in range(1, n_rows + 1):
         for c in range(1, 3):
             fig.add_trace(
                 go.Bar(
