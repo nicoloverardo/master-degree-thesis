@@ -1,6 +1,10 @@
-[![Open in Streamlit](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://dse-thesis-verardo.herokuapp.com/)
-
 # A dashboard for COVID-19 prediction in Italy at regional and provincial level
+
+<p align="center">
+<a href="https://dse-thesis-verardo.herokuapp.com/"><img alt="Open dashboard" src="https://static.streamlit.io/badges/streamlit_badge_black_white.svg"></a>
+<a href="https://github.com/psf/black"><img alt="Code style: black" src="https://img.shields.io/badge/code%20style-black-000000.svg"></a>
+</p>
+
 Master thesis for the MSc in [Data Science and Economics](https://dse.cdl.unimi.it/en) at [Università degli Studi di Milano](https://www.unimi.it/en).
 
 ## Usage

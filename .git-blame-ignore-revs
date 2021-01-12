@@ -1,0 +1,5 @@
+# Migrate code style to Black
+00c7002cccdcb9f405f3361d25ad75fbd4d4fefa
+
+# Then run:
+# git blame myfile.py --ignore-revs-file .git-blame-ignore-revs
