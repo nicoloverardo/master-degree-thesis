@@ -8,10 +8,17 @@ import tensorflow as tf
 import matplotlib.pyplot as plt
 
 
-class WindowGenerator():
-    def __init__(self, input_width, label_width, shift,
-                 train_df, val_df, test_df,
-                 label_columns=None):
+class WindowGenerator:
+    def __init__(
+        self,
+        input_width,
+        label_width,
+        shift,
+        train_df,
+        val_df,
+        test_df,
+        label_columns=None,
+    ):
 
         # Store the raw data.
         self.train_df = train_df
@@ -21,11 +28,11 @@ class WindowGenerator():
         # Work out the label column indices.
         self.label_columns = label_columns
         if label_columns is not None:
-            self.label_columns_indices = {name: i for i, name in
-                                          enumerate(label_columns)}
+            self.label_columns_indices = {
+                name: i for i, name in enumerate(label_columns)
+            }
 
-        self.column_indices = {name: i for i, name in
-                               enumerate(train_df.columns)}
+        self.column_indices = {name: i for i, name in enumerate(train_df.columns)}
 
         # Work out the window parameters.
         self.input_width = input_width
@@ -35,11 +42,15 @@ class WindowGenerator():
         self.total_window_size = input_width + shift
 
         self.input_slice = slice(0, input_width)
-        self.input_indices = np.arange(self.total_window_size)[self.input_slice]  # nopep8
+        self.input_indices = np.arange(self.total_window_size)[
+            self.input_slice
+        ]
 
         self.label_start = self.total_window_size - self.label_width
         self.labels_slice = slice(self.label_start, None)
-        self.label_indices = np.arange(self.total_window_size)[self.labels_slice]  # nopep8
+        self.label_indices = np.arange(self.total_window_size)[
+            self.labels_slice
+        ]
 
     @property
     def train(self):
@@ -56,7 +67,7 @@ class WindowGenerator():
     @property
     def example(self):
         """Get and cache an example batch of `inputs, labels` for plotting."""
-        result = getattr(self, '_example', None)
+        result = getattr(self, "_example", None)
         if result is None:
             # No example batch was found, so get one from the `.train` dataset
             result = next(iter(self.train))
@@ -70,8 +81,12 @@ class WindowGenerator():
         labels = features[:, self.labels_slice, :]
         if self.label_columns is not None:
             labels = tf.stack(
-                [labels[:, :, self.column_indices[name]] for name in self.label_columns],  # nopep8
-                axis=-1)
+                [
+                    labels[:, :, self.column_indices[name]]
+                    for name in self.label_columns
+                ],
+                axis=-1,
+            )
 
         # Slicing doesn't preserve static shape information, so set the shapes
         # manually. This way the `tf.data.Datasets` are easier to inspect.
@@ -80,38 +95,57 @@ class WindowGenerator():
 
         return inputs, labels
 
-    def plot(self, model=None, plot_col='New_cases', max_subplots=1):
+    def plot(self, model=None, plot_col="New_cases", max_subplots=1):
         inputs, labels = self.example
         plt.figure(figsize=(12, 8))
         plot_col_index = self.column_indices[plot_col]
         max_n = min(max_subplots, len(inputs))
         for n in range(max_n):
-            plt.subplot(3, 1, n+1)
-            plt.ylabel(f'{plot_col} [normed]')
-            plt.plot(self.input_indices, inputs[n, :, plot_col_index],
-                     label='Inputs', marker='.', zorder=-10)
+            plt.subplot(3, 1, n + 1)
+            plt.ylabel(f"{plot_col} [normed]")
+            plt.plot(
+                self.input_indices,
+                inputs[n, :, plot_col_index],
+                label="Inputs",
+                marker=".",
+                zorder=-10,
+            )
 
             if self.label_columns:
-                label_col_index = self.label_columns_indices.get(plot_col, None)  # nopep8
+                label_col_index = self.label_columns_indices.get(
+                    plot_col, None
+                )
             else:
                 label_col_index = plot_col_index
 
             if label_col_index is None:
                 continue
 
-            plt.scatter(self.label_indices, labels[n, :, label_col_index],
-                        edgecolors='k', label='Labels', c='#2ca02c', s=64)
+            plt.scatter(
+                self.label_indices,
+                labels[n, :, label_col_index],
+                edgecolors="k",
+                label="Labels",
+                c="#2ca02c",
+                s=64,
+            )
 
             if model is not None:
                 predictions = model(inputs)
-                plt.scatter(self.label_indices, predictions[n, :, label_col_index],  # nopep8
-                            marker='X', edgecolors='k', label='Predictions',
-                            c='#ff7f0e', s=64)
+                plt.scatter(
+                    self.label_indices,
+                    predictions[n, :, label_col_index],
+                    marker="X",
+                    edgecolors="k",
+                    label="Predictions",
+                    c="#ff7f0e",
+                    s=64,
+                )
 
             if n == 0:
                 plt.legend()
 
-        plt.xlabel('Days')
+        plt.xlabel("Days")
         plt.show()
 
     def make_dataset(self, data):
@@ -122,18 +156,22 @@ class WindowGenerator():
             sequence_length=self.total_window_size,
             sequence_stride=1,
             shuffle=True,
-            batch_size=32)
+            batch_size=32,
+        )
 
         ds = ds.map(self.split_window)
 
         return ds
 
     def __repr__(self):
-        return '\n'.join([
-            f'Total window size: {self.total_window_size}',
-            f'Input indices: {self.input_indices}',
-            f'Label indices: {self.label_indices}',
-            f'Label column name(s): {self.label_columns}'])
+        return "\n".join(
+            [
+                f"Total window size: {self.total_window_size}",
+                f"Input indices: {self.input_indices}",
+                f"Label indices: {self.label_indices}",
+                f"Label column name(s): {self.label_columns}",
+            ]
+        )
 
 
 class Baseline(tf.keras.Model):
@@ -227,23 +265,27 @@ class FeedBack(tf.keras.Model):
 
 
 def compile_and_fit(model, window, patience=2, epochs=50):
-    early_stopping = tf.keras.callbacks.EarlyStopping(monitor='val_loss',
-                                                      patience=patience,
-                                                      mode='min')
+    early_stopping = tf.keras.callbacks.EarlyStopping(
+        monitor="val_loss", patience=patience, mode="min"
+    )
 
-    model.compile(loss=tf.losses.MeanSquaredError(),
-                  optimizer=tf.optimizers.Adam(),
-                  metrics=[tf.metrics.MeanAbsoluteError(),
-                           tf.metrics.MeanSquaredError()])
+    model.compile(
+        loss=tf.losses.MeanSquaredError(),
+        optimizer=tf.optimizers.Adam(),
+        metrics=[tf.metrics.MeanAbsoluteError(), tf.metrics.MeanSquaredError()],
+    )
 
-    history = model.fit(window.train, epochs=epochs,
-                        validation_data=window.val,
-                        callbacks=[early_stopping])
+    history = model.fit(
+        window.train,
+        epochs=epochs,
+        validation_data=window.val,
+        callbacks=[early_stopping],
+    )
     return history
 
 
 def plot_metrics(history):
-    colors = plt.rcParams['axes.prop_cycle'].by_key()['color']
+    colors = plt.rcParams["axes.prop_cycle"].by_key()["color"]
 
     metrics = list(history.history.keys())
 
@@ -257,19 +299,23 @@ def plot_metrics(history):
 
     for n, metric in enumerate(metrics):
         name = metric.replace("_", " ").capitalize()
-        plt.subplot(n_rows, n_cols, n+1)
+        plt.subplot(n_rows, n_cols, n + 1)
 
-        plt.plot(history.epoch, history.history[metric],
-                 color=colors[0], label='Train')
-        plt.plot(history.epoch, history.history[metric],
-                 color=colors[0], linestyle="--", label='Val')
+        plt.plot(history.epoch, history.history[metric], color=colors[0], label="Train")
+        plt.plot(
+            history.epoch,
+            history.history[metric],
+            color=colors[0],
+            linestyle="--",
+            label="Val",
+        )
 
-        plt.xlabel('Epoch')
+        plt.xlabel("Epoch")
         plt.ylabel(name)
 
-        if metric == 'loss':
+        if metric == "loss":
             plt.ylim([0, plt.ylim()[1]])
-        elif metric == 'auc':
+        elif metric == "auc":
             plt.ylim([0.8, 1])
         else:
             plt.ylim([0, 1])
@@ -280,10 +326,11 @@ def plot_metrics(history):
 
 
 def plot_comparison_results(metrics_names, val_performance, performance):
-    metrics = [metric
-               for metric in metrics_names
-               if 'loss' not in metric and 'val_' not in metric
-               ]
+    metrics = [
+        metric
+        for metric in metrics_names
+        if "loss" not in metric and "val_" not in metric
+    ]
 
     n_tot = len(metrics)
     n_cols = 2
@@ -294,14 +341,14 @@ def plot_comparison_results(metrics_names, val_performance, performance):
     width = 0.3
     plt.figure(figsize=(10, 5))
     for n, metric_name in enumerate(metrics):
-        plt.subplot(n_rows, n_cols, n+1)
+        plt.subplot(n_rows, n_cols, n + 1)
         metric_index = metrics_names.index(metric_name)
         val_mae = [v[metric_index] for v in val_performance.values()]
         test_mae = [v[metric_index] for v in performance.values()]
 
         plt.ylabel(metric_name.replace("_", " ").capitalize())
-        plt.bar(x - 0.17, val_mae, width, label='Validation')
-        plt.bar(x + 0.17, test_mae, width, label='Test')
+        plt.bar(x - 0.17, val_mae, width, label="Validation")
+        plt.bar(x + 0.17, test_mae, width, label="Test")
         plt.xticks(ticks=x, labels=performance.keys())
 
     plt.legend()

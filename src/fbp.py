@@ -9,14 +9,21 @@ from fbprophet.diagnostics import cross_validation, performance_metrics
 from sklearn.metrics import mean_absolute_error, mean_squared_error
 
 
-class ProphetModel():
-    def __init__(self, data, area,
-                 compart, group_column, date_column,
-                 prediction_size=14, query='20200701 > Date',
-                 holidays=True,
-                 growth='linear',
-                 cap=None,
-                 filter_df=True):
+class ProphetModel:
+    def __init__(
+        self,
+        data,
+        area,
+        compart,
+        group_column,
+        date_column,
+        prediction_size=14,
+        query="20200701 > Date",
+        holidays=True,
+        growth="linear",
+        cap=None,
+        filter_df=True,
+    ):
 
         self.data = data
         self.area = area
@@ -36,23 +43,23 @@ class ProphetModel():
 
     @property
     def train(self):
-        return self.df[:-self.prediction_size]
+        return self.df[: -self.prediction_size]
 
     @property
     def y_true(self):
-        return self.df['y'].values
+        return self.df["y"].values
 
     @property
     def y_pred(self):
-        return self.forecast['yhat'].values
+        return self.forecast["yhat"].values
 
     @property
     def future_df(self):
         fdf = self.m.make_future_dataframe(periods=self.prediction_size)
-        if self.growth is 'logistic':
+        if self.growth is "logistic":
             if self.cap is None:
-                self.cap = self.df['y'].max() + 20000
-            fdf['cap'] = self.cap
+                self.cap = self.df["y"].max() + 20000
+            fdf["cap"] = self.cap
         return fdf
 
     def mae(self):
@@ -65,9 +72,9 @@ class ProphetModel():
         return mean_squared_error(self.y_true, self.y_pred, squared=False)
 
     def print_metrics(self):
-        print('MAE: %.3f' % self.mae())
-        print('MSE: %.3f' % self.mse())
-        print('RMSE: %.3f' % self.rmse())
+        print("MAE: %.3f" % self.mae())
+        print("MSE: %.3f" % self.mse())
+        print("RMSE: %.3f" % self.rmse())
 
     def fit(self, **kwargs):
         self.make_df()
@@ -75,7 +82,7 @@ class ProphetModel():
         self.m = Prophet(growth=self.growth, **kwargs)
 
         if self.holidays:
-            self.m.add_country_holidays(country_name='IT')
+            self.m.add_country_holidays(country_name="IT")
 
         _ = self.m.fit(self.train)
 
@@ -83,62 +90,70 @@ class ProphetModel():
 
     def make_df(self):
         if self.filter_df:
-            df = self.data.loc[
-                (self.data[self.group_column] == self.area),
-                :].query(self.query)
+            df = self.data.loc[(self.data[self.group_column] == self.area), :].query(
+                self.query
+            )
         else:
             df = self.data
 
         df = df.loc[:, [self.date_column, self.compart]]
-        df.columns = ['ds', 'y']
+        df.columns = ["ds", "y"]
 
-        if self.growth is 'logistic':
+        if self.growth is "logistic":
             if self.cap is None:
-                self.cap = df['y'].max() + 20000
-            df['cap'] = self.cap
+                self.cap = df["y"].max() + 20000
+            df["cap"] = self.cap
 
         return df.reset_index(drop=True)
 
-    def fit_cv(self, param_grid=None, initial='80 days',
-               horizon='14 days', period='14 days',
-               rolling_window=1):
+    def fit_cv(
+        self,
+        param_grid=None,
+        initial="80 days",
+        horizon="14 days",
+        period="14 days",
+        rolling_window=1,
+    ):
 
         if param_grid is None:
             param_grid = {
-                'changepoint_prior_scale': [0.001, 0.01, 0.1, 0.5],
-                'seasonality_prior_scale': [0.01, 0.1, 1.0, 10.0],
+                "changepoint_prior_scale": [0.001, 0.01, 0.1, 0.5],
+                "seasonality_prior_scale": [0.01, 0.1, 1.0, 10.0],
             }
 
-        all_params = [dict(zip(param_grid.keys(), v))
-                      for v in itertools.product(*param_grid.values())]
+        all_params = [
+            dict(zip(param_grid.keys(), v))
+            for v in itertools.product(*param_grid.values())
+        ]
 
         # We manually set this cap otherwise are not able
         # to see the plots clearly. If we were to set the correct cap,
         # we would have used the total pop:
         # self.df['cap'] = get_region_pop(province, pop_prov_df, prov_list_df)
-        if self.growth is 'logistic':
+        if self.growth is "logistic":
             if self.cap is None:
-                self.cap = self.df['y'].max() + 20000
-            self.df['cap'] = self.cap
+                self.cap = self.df["y"].max() + 20000
+            self.df["cap"] = self.cap
 
         rmses = []
         for params in all_params:
             m = Prophet(self.growth, **params)
 
             if self.holidays:
-                m.add_country_holidays(country_name='IT')
+                m.add_country_holidays(country_name="IT")
 
             m.fit(self.df)
 
-            df_cv = cross_validation(m, initial=initial, horizon=horizon,
-                                     period=period, parallel="processes")
+            df_cv = cross_validation(
+                m, initial=initial, horizon=horizon, period=period, parallel="processes"
+            )
 
             df_p = performance_metrics(df_cv, rolling_window=rolling_window)
 
-            rmses.append(df_p['rmse'].values[0])
+            rmses.append(df_p["rmse"].values[0])
 
         tuning_results = pd.DataFrame(all_params)
-        tuning_results['rmse'] = rmses
+        tuning_results["rmse"] = rmses
 
         self.tuning_results = tuning_results
         self.best_params = all_params[np.argmin(rmses)]
@@ -147,9 +162,9 @@ class ProphetModel():
 
     def plot_data(self, figsize=(8, 5)):
         plt.figure(figsize=figsize)
-        plt.plot(self.df['ds'], self.df['y'])
-        plt.xlabel('Date')
-        plt.ylabel('Individuals')
+        plt.plot(self.df["ds"], self.df["y"])
+        plt.xlabel("Date")
+        plt.ylabel("Individuals")
         plt.title(self.compart)
         plt.show()
 
@@ -164,19 +179,22 @@ class ProphetModel():
     def plot(self, figsize=(8, 5)):
         plt.figure(figsize=figsize)
 
-        plt.plot(self.df['ds'], self.y_true, label='Actual')
-        plt.plot(self.df['ds'], self.y_pred, label='Predicted')
+        plt.plot(self.df["ds"], self.y_true, label="Actual")
+        plt.plot(self.df["ds"], self.y_pred, label="Predicted")
 
-        plt.fill_between(self.df[-self.prediction_size:]['ds'],
-                         self.forecast.yhat_lower[-self.prediction_size:],
-                         self.forecast.yhat_upper[-self.prediction_size:],
-                         alpha=.15)
+        plt.fill_between(
+            self.df[-self.prediction_size :]["ds"],
+            self.forecast.yhat_lower[-self.prediction_size :],
+            self.forecast.yhat_upper[-self.prediction_size :],
+            alpha=0.15,
+        )
 
-        plt.axvline(self.train.iloc[-1]['ds'],
-                    linestyle='dashed', color='grey', alpha=0.3)
+        plt.axvline(
+            self.train.iloc[-1]["ds"], linestyle="dashed", color="grey", alpha=0.3
+        )
 
         if self.cap is not None:
-            plt.axhline(self.cap, linestyle='dashed', color='b')
+            plt.axhline(self.cap, linestyle="dashed", color="b")
 
         plt.legend()
         plt.show()

@@ -11,3 +11,5 @@ matplotlib==3.3.2
 wget==3.2
 streamlit==0.73.1
 scikit_learn==0.24.0
+black==20.8b1
+flake8

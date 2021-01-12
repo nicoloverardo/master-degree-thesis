@@ -1,6 +1,1 @@
-__all__ = ["plots",
-           "sird",
-           "utils",
-           "ts",
-           "tfts",
-           "fbp"]
+__all__ = ["plots", "sird", "utils", "ts", "tfts", "fbp"]
