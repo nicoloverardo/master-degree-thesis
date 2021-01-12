@@ -1,9 +1,13 @@
+[![Open in Streamlit](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://dse-thesis-verardo.herokuapp.com/)
 # A dashboard for COVID-19 prediction in Italy at regional and provincial level
 
-<p align="center">
-<a href="https://dse-thesis-verardo.herokuapp.com/"><img alt="Open dashboard" src="https://static.streamlit.io/badges/streamlit_badge_black_white.svg"></a>
-<a href="https://github.com/psf/black"><img alt="Code style: black" src="https://img.shields.io/badge/code%20style-black-000000.svg"></a>
-</p>
+![Dashboard status](https://img.shields.io/website?down_color=lightgrey&down_message=offline&label=dashboard&up_color=brightgreen&up_message=online&url=https%3A%2F%2Fdse-thesis-verardo.herokuapp.com%2F)
+![GitHub](https://img.shields.io/github/license/nicoloverardo/master-degree-thesis)
+![GitHub last commit](https://img.shields.io/github/last-commit/nicoloverardo/master-degree-thesis)
+[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+![Lines of code](https://img.shields.io/tokei/lines/github/nicoloverardo/master-degree-thesis)
+
+
 
 Master thesis for the MSc in [Data Science and Economics](https://dse.cdl.unimi.it/en) at [Università degli Studi di Milano](https://www.unimi.it/en).
 
