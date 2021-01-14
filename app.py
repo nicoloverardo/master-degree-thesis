@@ -78,13 +78,13 @@ def compute_sird(
 
 
 @st.cache(show_spinner=False)
-def data_sird_plot(covidpro_df, column, comp_array, province_selectbox, is_regional):
+def data_sird_plot(df, column, comp_array, province_selectbox, is_regional):
 
     """Utility function that returns data useful for plots."""
 
     return data_for_plot(
         compart="Infected",
-        df=covidpro_df,
+        df=df,
         column=column,
         comp_array=comp_array,
         province=province_selectbox,
