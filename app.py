@@ -657,7 +657,7 @@ def load_sird_page(covidpro_df, dpc_regioni_df, pop_prov_df, prov_list_df):
         st.plotly_chart(
             general_plot(
                 t=times,
-                title="SIRD predictions comparison",
+                title="SIRD infected comparison",
                 data=data,
                 names=names,
                 modes=modes,
