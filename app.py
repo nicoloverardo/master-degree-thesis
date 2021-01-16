@@ -25,6 +25,7 @@ from src.plots import (
     plot_ts_decomp,
     plot_tstat_models,
     trend_corr_plot,
+    discsid_param_plot,
 )
 from src.sird import DeterministicSird, sird
 from src.ts import decompose_ts, adf_test_result, kpss_test_result
@@ -761,6 +762,29 @@ def load_sird_page(covidpro_df, dpc_regioni_df, pop_prov_df, prov_list_df):
                 data=[real_df["totale_positivi"].values, res["totale_positivi"].values],
                 names=["Real", "Prediction"],
                 modes=["markers", "lines"],
+                blend_legend=False,
+                output_image=False,
+                output_figure=True,
+                xtitle="",
+                horiz_legend=True,
+                template="plotly_white",
+            ),
+            use_container_width=True,
+        )
+
+        # Params plot
+        st.plotly_chart(
+            discsid_param_plot(
+                t=real_df["data"],
+                title="Parameters",
+                data=[
+                    res["beta"].values,
+                    res["gamma"].values,
+                    res["alpha"].values,
+                    res["R0"].values,
+                ],
+                names=["Beta", "Gamma", "Alpha", "R0"],
+                modes=["lines"] * 4,
                 blend_legend=False,
                 output_image=False,
                 output_figure=True,

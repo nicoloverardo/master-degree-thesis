@@ -1100,6 +1100,89 @@ def ac_plot(
             return fig.show()
 
 
+def discsid_param_plot(
+    t,
+    data,
+    title=None,
+    names=None,
+    traces_visibility=None,
+    modes=None,
+    blend_legend=False,
+    xanchor="right",
+    output_image=False,
+    width=800,
+    height=600,
+    scale=2,
+    xtitle="Time (days)",
+    ytitle=None,
+    template="simple_white",
+    output_figure=False,
+    horiz_legend=False,
+):
+
+    if traces_visibility is None:
+        traces_visibility = [True] * len(data)
+
+    if modes is None:
+        modes = ["lines"] * len(data)
+
+    n_data = len(data)
+    n_rows = n_data // 2 if n_data % 2 == 0 else (n_data + 1) // 2
+
+    fig = make_subplots(rows=n_rows, cols=2, shared_xaxes="all")
+
+    i = 0
+    for r in range(1, n_rows + 1):
+        for c in range(1, 3):
+            fig.add_trace(
+                go.Scatter(
+                    x=t,
+                    y=data[i],
+                    mode=modes[i],
+                    name=names[i],
+                    visible=traces_visibility[i],
+                ),
+                row=r,
+                col=c,
+            )
+
+            i += 1
+
+    fig.update_layout(
+        title=title,
+        xaxis_title=xtitle,
+        yaxis_title=ytitle,
+        template=template,
+        barmode="overlay",
+        title_x=0.5,
+        height=height,
+        xaxis_showticklabels=True,
+        xaxis2_showticklabels=True,
+    )
+
+    if blend_legend:
+        xpos = 0.99 if xanchor == "right" else 0.08
+
+        fig.update_layout(legend=dict(yanchor="top", y=0.99, xanchor=xanchor, x=xpos))
+
+    if horiz_legend:
+        ypos = -0.2 if xtitle == "" else -0.3
+
+        fig.update_layout(
+            legend=dict(orientation="h", yanchor="top", xanchor="center", x=0.5, y=ypos)
+        )
+
+    if output_image:
+        return Image(
+            fig.to_image(format="png", width=width, height=height, scale=scale)
+        )
+    else:
+        if output_figure:
+            return fig
+        else:
+            return fig.show()
+
+
 def data_for_plot(
     compart,
     df,
