@@ -732,6 +732,7 @@ def load_sird_page(covidpro_df, dpc_regioni_df, pop_prov_df, prov_list_df):
                 xtitle="",
                 horiz_legend=True,
                 template="plotly_white",
+                prediction_size=days_to_predict,
             ),
             use_container_width=True,
         )
@@ -750,6 +751,8 @@ def load_sird_page(covidpro_df, dpc_regioni_df, pop_prov_df, prov_list_df):
                 xtitle="",
                 horiz_legend=True,
                 template="plotly_white",
+                prediction_size=days_to_predict,
+                pred_label_top=False,
             ),
             use_container_width=True,
         )
@@ -768,6 +771,7 @@ def load_sird_page(covidpro_df, dpc_regioni_df, pop_prov_df, prov_list_df):
                 xtitle="",
                 horiz_legend=True,
                 template="plotly_white",
+                prediction_size=days_to_predict,
             ),
             use_container_width=True,
         )

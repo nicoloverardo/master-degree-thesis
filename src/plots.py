@@ -190,6 +190,8 @@ def general_plot(
     template="simple_white",
     output_figure=False,
     horiz_legend=False,
+    prediction_size=None,
+    pred_label_top=True,
 ):
     """
     Plots a SIRD model output
@@ -274,6 +276,28 @@ def general_plot(
         barmode="overlay",
         title_x=0.5,
     )
+
+    if prediction_size is not None:
+        ylbl_pos = data[0].max() - 1 if pred_label_top else 3
+        fig.add_trace(
+            go.Scatter(
+                x=[t.iloc[-prediction_size]],
+                y=[ylbl_pos],
+                text="prediction<br>start",
+                mode="text",
+                name="",
+                showlegend=False,
+            )
+        )
+        fig.add_shape(
+            type="line",
+            y0=data[0].min(),
+            y1=data[0].max(),
+            x0=t.iloc[-prediction_size],
+            x1=t.iloc[-prediction_size],
+            line=dict(width=1.5, dash="dash"),
+            opacity=0.4,
+        )
 
     if blend_legend:
         xpos = 0.99 if xanchor == "right" else 0.08
