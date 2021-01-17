@@ -12,6 +12,9 @@ from statsmodels.tsa.stattools import adfuller, kpss
 
 from sklearn.metrics import mean_absolute_error
 
+import plotly.graph_objects as go
+from IPython.display import Image
+
 
 def visualize_ts(df, date, column, province):
     plt.figure(figsize=(12, 5))
@@ -94,6 +97,46 @@ def plot_detrended_deseason(data, province, column, title):
     plt.plot(data)
     plt.title(title + " " + column + " of " + province, fontsize=16)
     plt.show()
+
+
+def plot_detrended_deseason_plotly(
+    data,
+    province,
+    column,
+    title=None,
+    output_image=True,
+    output_figure=False,
+    width=800,
+    height=400,
+    scale=2,
+    ytitle="Number of individuals",
+    template="plotly_white",
+):
+
+    fig = go.Figure()
+    fig.add_trace(
+        go.Scatter(
+            x=data.index,
+            y=data.values
+        )
+    )
+
+    fig.update_layout(
+        title=title,
+        yaxis_title=ytitle,
+        template=template,
+        title_x=0.5,
+    )
+
+    if output_image:
+        return Image(
+            fig.to_image(format="png", width=width, height=height, scale=scale)
+        )
+    else:
+        if output_figure:
+            return fig
+        else:
+            return fig.show()
 
 
 def plot_deseason_ma(df, column, province, windows=[7, 30]):
