@@ -112,12 +112,7 @@ def plot_detrended_deseason_plotly(
 ):
 
     fig = go.Figure()
-    fig.add_trace(
-        go.Scatter(
-            x=data.index,
-            y=data.values
-        )
-    )
+    fig.add_trace(go.Scatter(x=data.index, y=data.values))
 
     fig.update_layout(
         title=title,
