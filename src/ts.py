@@ -101,8 +101,6 @@ def plot_detrended_deseason(data, province, column, title):
 
 def plot_detrended_deseason_plotly(
     data,
-    province,
-    column,
     title=None,
     output_image=True,
     output_figure=False,
