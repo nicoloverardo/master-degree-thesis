@@ -212,7 +212,7 @@ def run_fbp(train, data_column, column, days_to_pred):
     train_df = train_df.loc[:, [data_column, column]]
     train_df.columns = ["ds", "y"]
 
-    m = Prophet()
+    m = Prophet(interval_width=0.95)
     m.add_country_holidays(country_name="IT")
     m.fit(train_df)
 
