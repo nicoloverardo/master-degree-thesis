@@ -3,8 +3,14 @@ import pandas as pd
 import numpy as np
 
 import matplotlib.pyplot as plt
+import matplotlib.dates as mdates
+from IPython.display import Image
+
+import plotly.graph_objects as go
+from plotly.subplots import make_subplots
 
 from fbprophet import Prophet
+from fbprophet.plot import plot_plotly
 from fbprophet.diagnostics import cross_validation, performance_metrics
 from sklearn.metrics import mean_absolute_error, mean_squared_error
 
@@ -56,7 +62,7 @@ class ProphetModel:
     @property
     def future_df(self):
         fdf = self.m.make_future_dataframe(periods=self.prediction_size)
-        if self.growth is "logistic":
+        if self.growth == "logistic":
             if self.cap is None:
                 self.cap = self.df["y"].max() + 20000
             fdf["cap"] = self.cap
@@ -99,7 +105,7 @@ class ProphetModel:
         df = df.loc[:, [self.date_column, self.compart]]
         df.columns = ["ds", "y"]
 
-        if self.growth is "logistic":
+        if self.growth == "logistic":
             if self.cap is None:
                 self.cap = df["y"].max() + 20000
             df["cap"] = self.cap
@@ -130,7 +136,7 @@ class ProphetModel:
         # to see the plots clearly. If we were to set the correct cap,
         # we would have used the total pop:
         # self.df['cap'] = get_region_pop(province, pop_prov_df, prov_list_df)
-        if self.growth is "logistic":
+        if self.growth == "logistic":
             if self.cap is None:
                 self.cap = self.df["y"].max() + 20000
             self.df["cap"] = self.cap
@@ -161,15 +167,172 @@ class ProphetModel:
         self.fit(**self.best_params)
 
     def plot_data(self, figsize=(8, 5)):
-        plt.figure(figsize=figsize)
-        plt.plot(self.df["ds"], self.df["y"])
+        fig, ax = plt.subplots(figsize=figsize)
+        locator = mdates.AutoDateLocator(minticks=3)
+        formatter = mdates.ConciseDateFormatter(locator)
+        ax.xaxis.set_major_locator(locator)
+        ax.xaxis.set_major_formatter(formatter)
+
+        ax.plot(self.df["ds"], self.df["y"])
         plt.xlabel("Date")
         plt.ylabel("Individuals")
         plt.title(self.compart)
         plt.show()
 
-    def plot_comp(self, output_figure=False):
-        fig = self.m.plot_components(self.forecast)
+    def plot_forecast(self):
+        fig1 = plot_plotly(self.m, self.forecast)
+        fig1.update_layout(
+            title="Forecast",
+            yaxis_title="Number of individuals",
+            template="plotly_white",
+            title_x=0.5,
+        )
+
+    def plot_comp_plotly(
+        self,
+        df=None,
+        template="plotly_white",
+        title="Forecast components",
+        output_image=False,
+        width=800,
+        height=800,
+        scale=2,
+        output_figure=False
+    ):
+
+        if df is None:
+            df = self.forecast
+
+        fig = make_subplots(rows=3, cols=1, subplot_titles=("Trend", "Holidays", "Weekly"))
+        fig.add_trace(
+            go.Scatter(x=df.ds, y=df.trend.values, name="Trend", mode="lines"), row=1, col=1
+        )
+        fig.add_trace(
+            go.Scatter(
+                name="Upper Bound",
+                x=df.ds,
+                y=df.trend_upper,
+                mode="lines",
+                marker=dict(color="#444"),
+                line=dict(width=0),
+                hoverinfo="skip",
+                showlegend=False,
+            ),
+            row=1,
+            col=1,
+        )
+        fig.add_trace(
+            go.Scatter(
+                name="Lower Bound",
+                x=df.ds,
+                y=df.trend_lower,
+                marker=dict(color="#444"),
+                line=dict(width=0),
+                mode="lines",
+                fillcolor="rgba(68, 68, 68, 0.3)",
+                fill="tonexty",
+                hoverinfo="skip",
+                showlegend=False,
+            ),
+            row=1,
+            col=1,
+        )
+
+        fig.add_trace(
+            go.Scatter(x=df.ds, y=df.holidays.values, name="Holidays", mode="lines"),
+            row=2,
+            col=1,
+        )
+        fig.add_trace(
+            go.Scatter(
+                name="Upper Bound",
+                x=df.ds,
+                y=df.holidays_upper,
+                mode="lines",
+                marker=dict(color="#444"),
+                line=dict(width=0),
+                hoverinfo="skip",
+                showlegend=False,
+            ),
+            row=2,
+            col=1,
+        )
+        fig.add_trace(
+            go.Scatter(
+                name="Lower Bound",
+                x=df.ds,
+                y=df.holidays_lower,
+                marker=dict(color="#444"),
+                line=dict(width=0),
+                mode="lines",
+                fillcolor="rgba(68, 68, 68, 0.3)",
+                fill="tonexty",
+                hoverinfo="skip",
+                showlegend=False,
+            ),
+            row=2,
+            col=1,
+        )
+
+        days = [x.day_name() for x in df.iloc[:7]["ds"]]
+
+        fig.add_trace(
+            go.Scatter(x=days, y=df.iloc[:7].weekly.values, name="Weekly", mode="lines"),
+            row=3,
+            col=1,
+        )
+        fig.add_trace(
+            go.Scatter(
+                name="Upper Bound",
+                x=days,
+                y=df.iloc[:7].weekly_upper,
+                mode="lines",
+                marker=dict(color="#444"),
+                line=dict(width=0),
+                hoverinfo="skip",
+                showlegend=False,
+            ),
+            row=3,
+            col=1,
+        )
+        fig.add_trace(
+            go.Scatter(
+                name="Lower Bound",
+                x=days,
+                y=df.iloc[:7].weekly_lower,
+                marker=dict(color="#444"),
+                line=dict(width=0),
+                mode="lines",
+                fillcolor="rgba(68, 68, 68, 0.3)",
+                fill="tonexty",
+                hoverinfo="skip",
+                showlegend=False,
+            ),
+            row=3,
+            col=1,
+        )
+
+        if title is not None:
+            fig.update_layout(title=title, title_x=0.5)
+
+        fig.update_layout(
+            template=template,
+            height=height,
+            showlegend=False,
+        )
+
+        if output_image:
+            return Image(
+                fig.to_image(format="png", width=width, height=height, scale=scale)
+            )
+        else:
+            if output_figure:
+                return fig
+            else:
+                return fig.show()
+
+    def plot_comp(self, output_figure=False, figsize=None):
+        fig = self.m.plot_components(self.forecast, figsize=figsize)
 
         if not output_figure:
             plt.show()
@@ -177,24 +340,28 @@ class ProphetModel:
             return fig
 
     def plot(self, figsize=(8, 5)):
-        plt.figure(figsize=figsize)
+        fig, ax = plt.subplots(figsize=figsize)
+        locator = mdates.AutoDateLocator(minticks=3)
+        formatter = mdates.ConciseDateFormatter(locator)
+        ax.xaxis.set_major_locator(locator)
+        ax.xaxis.set_major_formatter(formatter)
 
-        plt.plot(self.df["ds"], self.y_true, label="Actual")
-        plt.plot(self.df["ds"], self.y_pred, label="Predicted")
+        ax.plot(self.df["ds"], self.y_true, label="Actual")
+        ax.plot(self.df["ds"], self.y_pred, label="Predicted")
 
-        plt.fill_between(
+        ax.fill_between(
             self.df[-self.prediction_size :]["ds"],
             self.forecast.yhat_lower[-self.prediction_size :],
             self.forecast.yhat_upper[-self.prediction_size :],
             alpha=0.15,
         )
 
-        plt.axvline(
+        ax.axvline(
             self.train.iloc[-1]["ds"], linestyle="dashed", color="grey", alpha=0.3
         )
 
         if self.cap is not None:
-            plt.axhline(self.cap, linestyle="dashed", color="b")
+            ax.hline(self.cap, linestyle="dashed", color="b")
 
-        plt.legend()
+        ax.legend()
         plt.show()
