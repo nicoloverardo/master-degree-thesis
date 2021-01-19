@@ -142,7 +142,7 @@ class ProphetModel:
                 self.cap = self.df["y"].max() + 20000
             self.df["cap"] = self.cap
 
-        rmses = []
+        rmses, mae, mse = [], [], []
         for params in all_params:
             m = Prophet(self.growth, **params)
 
@@ -158,9 +158,13 @@ class ProphetModel:
             df_p = performance_metrics(df_cv, rolling_window=rolling_window)
 
             rmses.append(df_p["rmse"].values[0])
+            mae.append(df_p["mae"].values[0])
+            mse.append(df_p["mse"].values[0])
 
         tuning_results = pd.DataFrame(all_params)
         tuning_results["rmse"] = rmses
+        tuning_results["mae"] = mae
+        tuning_results["mse"] = mse
 
         self.tuning_results = tuning_results
         self.best_params = all_params[np.argmin(rmses)]
