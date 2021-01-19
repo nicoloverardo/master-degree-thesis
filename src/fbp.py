@@ -125,7 +125,7 @@ class ProphetModel:
             param_grid = {
                 "changepoint_prior_scale": [0.001, 0.01, 0.1, 0.5],
                 "seasonality_prior_scale": [0.01, 0.1, 1.0, 10.0],
-                "holidays_prior_scale": [0.01, 0.1, 1.0, 10.0]
+                "holidays_prior_scale": [0.01, 0.1, 1.0, 10.0],
             }
 
         all_params = [
@@ -189,7 +189,7 @@ class ProphetModel:
         width=800,
         height=600,
         scale=2,
-        output_figure=False
+        output_figure=False,
     ):
 
         fig = plot_plotly(self.m, self.forecast)
@@ -219,15 +219,19 @@ class ProphetModel:
         width=800,
         height=800,
         scale=2,
-        output_figure=False
+        output_figure=False,
     ):
 
         if df is None:
             df = self.forecast
 
-        fig = make_subplots(rows=3, cols=1, subplot_titles=("Trend", "Holidays", "Weekly"))
+        fig = make_subplots(
+            rows=3, cols=1, subplot_titles=("Trend", "Holidays", "Weekly")
+        )
         fig.add_trace(
-            go.Scatter(x=df.ds, y=df.trend.values, name="Trend", mode="lines"), row=1, col=1
+            go.Scatter(x=df.ds, y=df.trend.values, name="Trend", mode="lines"),
+            row=1,
+            col=1,
         )
         fig.add_trace(
             go.Scatter(
@@ -299,7 +303,9 @@ class ProphetModel:
         days = [x.day_name() for x in df.iloc[:7]["ds"]]
 
         fig.add_trace(
-            go.Scatter(x=days, y=df.iloc[:7].weekly.values, name="Weekly", mode="lines"),
+            go.Scatter(
+                x=days, y=df.iloc[:7].weekly.values, name="Weekly", mode="lines"
+            ),
             row=3,
             col=1,
         )
