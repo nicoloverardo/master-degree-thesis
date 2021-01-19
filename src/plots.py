@@ -883,15 +883,17 @@ def plot_fbp_comp(
         col=1,
     )
 
+    days = [x.day_name() for x in df.iloc[:7]["ds"]]
+
     fig.add_trace(
-        go.Scatter(x=df.ds, y=df.weekly.values, name="Weekly", mode="lines"),
+        go.Scatter(x=days, y=df.weekly.values, name="Weekly", mode="lines"),
         row=3,
         col=1,
     )
     fig.add_trace(
         go.Scatter(
             name="Upper Bound",
-            x=df.ds,
+            x=days,
             y=df.weekly_upper,
             mode="lines",
             marker=dict(color="#444"),
@@ -905,7 +907,7 @@ def plot_fbp_comp(
     fig.add_trace(
         go.Scatter(
             name="Lower Bound",
-            x=df.ds,
+            x=days,
             y=df.weekly_lower,
             marker=dict(color="#444"),
             line=dict(width=0),

@@ -519,6 +519,7 @@ def load_ts_page(covidpro_df, dpc_regioni_df):
     st.write("")
     st.write("")
 
+    # Prophet
     st.subheader("Facebook Prophet")
 
     with st.spinner("Training model"):
