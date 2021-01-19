@@ -85,7 +85,7 @@ class ProphetModel:
     def fit(self, **kwargs):
         self.make_df()
 
-        self.m = Prophet(growth=self.growth, **kwargs)
+        self.m = Prophet(interval_width=0.95, growth=self.growth, **kwargs)
 
         if self.holidays:
             self.m.add_country_holidays(country_name="IT")
@@ -117,7 +117,7 @@ class ProphetModel:
         param_grid=None,
         initial="80 days",
         horizon="14 days",
-        period="14 days",
+        period="14 day",
         rolling_window=1,
     ):
 
@@ -125,6 +125,7 @@ class ProphetModel:
             param_grid = {
                 "changepoint_prior_scale": [0.001, 0.01, 0.1, 0.5],
                 "seasonality_prior_scale": [0.01, 0.1, 1.0, 10.0],
+                "holidays_prior_scale": [0.01, 0.1, 1.0, 10.0]
             }
 
         all_params = [
@@ -179,14 +180,35 @@ class ProphetModel:
         plt.title(self.compart)
         plt.show()
 
-    def plot_forecast(self):
-        fig1 = plot_plotly(self.m, self.forecast)
-        fig1.update_layout(
-            title="Forecast",
-            yaxis_title="Number of individuals",
-            template="plotly_white",
+    def plot_forecast(
+        self,
+        title="Forecast",
+        template="plotly_white",
+        yaxis_title="Number of individuals",
+        output_image=False,
+        width=800,
+        height=600,
+        scale=2,
+        output_figure=False
+    ):
+
+        fig = plot_plotly(self.m, self.forecast)
+        fig.update_layout(
+            title=title,
+            yaxis_title=yaxis_title,
+            template=template,
             title_x=0.5,
         )
+
+        if output_image:
+            return Image(
+                fig.to_image(format="png", width=width, height=height, scale=scale)
+            )
+        else:
+            if output_figure:
+                return fig
+            else:
+                return fig.show()
 
     def plot_comp_plotly(
         self,
