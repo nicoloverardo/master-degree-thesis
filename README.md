@@ -4,6 +4,7 @@
 ![GitHub](https://img.shields.io/github/license/nicoloverardo/master-degree-thesis)
 ![GitHub last commit](https://img.shields.io/github/last-commit/nicoloverardo/master-degree-thesis)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+[![Code quality](https://www.codefactor.io/repository/github/nicoloverardo/master-degree-thesis/badge)](https://www.codefactor.io/repository/github/nicoloverardo/master-degree-thesis)
 ![Lines of code](https://img.shields.io/tokei/lines/github/nicoloverardo/master-degree-thesis)
 
 
