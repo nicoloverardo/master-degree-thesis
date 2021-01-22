@@ -223,8 +223,8 @@ class DeterministicSird:
 
         if not return_all:
             return X[-1, 1:]
-        else:
-            return X[:, 1:], X[:, 0]
+
+        return X[:, 1:], X[:, 0]
 
     def _prepare_data_regional(self):
         data_df = self.data_df.loc[
@@ -518,38 +518,38 @@ class DeterministicSird:
     def _get_real_data(self):
         if not self.is_regional:
             return self._realdf
-        else:
-            real_df = self.data_df[self.data_df[self.group_column] == self.area][
-                [
-                    "data",
-                    "totale_positivi",
-                    "dimessi_guariti",
-                    "deceduti",
-                    "totale_casi",
-                    "nuovi_positivi",
-                ]
+
+        real_df = self.data_df[self.data_df[self.group_column] == self.area][
+            [
+                "data",
+                "totale_positivi",
+                "dimessi_guariti",
+                "deceduti",
+                "totale_casi",
+                "nuovi_positivi",
             ]
+        ]
 
-            query = (
-                pd.Timestamp(self.data_filter) + pd.DateOffset(self.days_to_predict)
-            ).strftime("%Y%m%d") + " > data"
+        query = (
+            pd.Timestamp(self.data_filter) + pd.DateOffset(self.days_to_predict)
+        ).strftime("%Y%m%d") + " > data"
 
-            real_df = real_df.query(query)
-            real_df["suscettibili"] = self.pop - real_df["totale_casi"]
-            real_df = real_df[
-                [
-                    "data",
-                    "totale_positivi",
-                    "dimessi_guariti",
-                    "deceduti",
-                    "suscettibili",
-                    "nuovi_positivi",
-                ]
+        real_df = real_df.query(query)
+        real_df["suscettibili"] = self.pop - real_df["totale_casi"]
+        real_df = real_df[
+            [
+                "data",
+                "totale_positivi",
+                "dimessi_guariti",
+                "deceduti",
+                "suscettibili",
+                "nuovi_positivi",
             ]
+        ]
 
-            self._realdf = real_df
+        self._realdf = real_df
 
-            return real_df
+        return real_df
 
     def extract_ys(self, y_true, y_pred, compart):
         if y_true is None or y_pred is None:

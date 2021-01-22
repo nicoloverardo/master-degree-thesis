@@ -208,11 +208,11 @@ class ProphetModel:
             return Image(
                 fig.to_image(format="png", width=width, height=height, scale=scale)
             )
-        else:
-            if output_figure:
-                return fig
-            else:
-                return fig.show()
+
+        if output_figure:
+            return fig
+
+        return fig.show()
 
     def plot_comp_plotly(
         self,
@@ -357,19 +357,19 @@ class ProphetModel:
             return Image(
                 fig.to_image(format="png", width=width, height=height, scale=scale)
             )
-        else:
-            if output_figure:
-                return fig
-            else:
-                return fig.show()
+
+        if output_figure:
+            return fig
+
+        return fig.show()
 
     def plot_comp(self, output_figure=False, figsize=None):
         fig = self.m.plot_components(self.forecast, figsize=figsize)
 
         if not output_figure:
             plt.show()
-        else:
-            return fig
+
+        return fig
 
     def plot(self, figsize=(8, 5)):
         fig, ax = plt.subplots(figsize=figsize)

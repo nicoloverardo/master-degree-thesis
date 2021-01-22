@@ -357,22 +357,22 @@ def pre_process_csv(
 def convert_nan(x):
     if x is np.NaN or x < 0:
         return 0
-    else:
-        return x
+
+    return x
 
 
 def compute_ratio_NP(x):
     if x["Curr_pos_cases"] == 0:
         return 0
-    else:
-        return x["New_cases"] / x["Curr_pos_cases"]
+
+    return x["New_cases"] / x["Curr_pos_cases"]
 
 
 def compute_ratio_DR(x):
     if x["Curr_pos_cases"] == 0:
         return 0
-    else:
-        return x["Deaths"] / x["Curr_pos_cases"]
+
+    return x["Deaths"] / x["Curr_pos_cases"]
 
 
 def load_data(path):

@@ -125,11 +125,11 @@ def plot_detrended_deseason_plotly(
         return Image(
             fig.to_image(format="png", width=width, height=height, scale=scale)
         )
-    else:
-        if output_figure:
-            return fig
-        else:
-            return fig.show()
+
+    if output_figure:
+        return fig
+
+    return fig.show()
 
 
 def plot_deseason_ma(df, column, province, windows=[7, 30]):
