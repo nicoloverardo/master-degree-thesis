@@ -339,5 +339,5 @@ def anom_plot(
 
     if output_figure:
         return fig
-    else:
-        plt.show()
+
+    plt.show()

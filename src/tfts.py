@@ -42,15 +42,11 @@ class WindowGenerator:
         self.total_window_size = input_width + shift
 
         self.input_slice = slice(0, input_width)
-        self.input_indices = np.arange(self.total_window_size)[
-            self.input_slice
-        ]
+        self.input_indices = np.arange(self.total_window_size)[self.input_slice]
 
         self.label_start = self.total_window_size - self.label_width
         self.labels_slice = slice(self.label_start, None)
-        self.label_indices = np.arange(self.total_window_size)[
-            self.labels_slice
-        ]
+        self.label_indices = np.arange(self.total_window_size)[self.labels_slice]
 
     @property
     def train(self):
@@ -112,9 +108,7 @@ class WindowGenerator:
             )
 
             if self.label_columns:
-                label_col_index = self.label_columns_indices.get(
-                    plot_col, None
-                )
+                label_col_index = self.label_columns_indices.get(plot_col, None)
             else:
                 label_col_index = plot_col_index
 
@@ -264,9 +258,11 @@ class FeedBack(tf.keras.Model):
         return prediction, state
 
 
-def compile_and_fit(model, window, patience=2, epochs=50):
+def compile_and_fit(
+    model, window, patience=5, epochs=50, monitor="val_loss", verbose=1
+):
     early_stopping = tf.keras.callbacks.EarlyStopping(
-        monitor="val_loss", patience=patience, mode="min"
+        monitor=monitor, patience=patience, mode="min"
     )
 
     model.compile(
@@ -280,6 +276,7 @@ def compile_and_fit(model, window, patience=2, epochs=50):
         epochs=epochs,
         validation_data=window.val,
         callbacks=[early_stopping],
+        verbose=verbose,
     )
     return history
 
@@ -313,12 +310,12 @@ def plot_metrics(history):
         plt.xlabel("Epoch")
         plt.ylabel(name)
 
-        if metric == "loss":
-            plt.ylim([0, plt.ylim()[1]])
-        elif metric == "auc":
-            plt.ylim([0.8, 1])
-        else:
-            plt.ylim([0, 1])
+        # if metric == "loss":
+        #     plt.ylim([0, plt.ylim()[1]])
+        # elif metric == "auc":
+        #     plt.ylim([0.8, 1])
+        # else:
+        #     plt.ylim([0, 1])
 
         plt.legend()
 
