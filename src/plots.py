@@ -168,8 +168,8 @@ def inter_dropdown_plot(
                 format="png", width=width, height=height, scale=scale
             )
         )
-    else:
-        return widget
+
+    return widget
 
 
 def general_plot(
@@ -315,11 +315,11 @@ def general_plot(
         return Image(
             fig.to_image(format="png", width=width, height=height, scale=scale)
         )
-    else:
-        if output_figure:
-            return fig
-        else:
-            return fig.show()
+
+    if output_figure:
+        return fig
+
+    return fig.show()
 
 
 def custom_plot(
@@ -453,11 +453,11 @@ def daily_main_indic_plot(
         return Image(
             fig.to_image(format="png", width=width, height=height, scale=scale)
         )
-    else:
-        if output_figure:
-            return fig
-        else:
-            return fig.show()
+
+    if output_figure:
+        return fig
+
+    return fig.show()
 
 
 def autocorr_indicators_plot(
@@ -536,11 +536,11 @@ def autocorr_indicators_plot(
         return Image(
             fig.to_image(format="png", width=width, height=height, scale=scale)
         )
-    else:
-        if output_figure:
-            return fig
-        else:
-            return fig.show()
+
+    if output_figure:
+        return fig
+
+    return fig.show()
 
 
 def cross_corr_cases_plot(
@@ -575,11 +575,11 @@ def cross_corr_cases_plot(
         return Image(
             fig.to_image(format="png", width=width, height=height, scale=scale)
         )
-    else:
-        if output_figure:
-            return fig
-        else:
-            return fig.show()
+
+    if output_figure:
+        return fig
+
+    return fig.show()
 
 
 def trend_corr_plot(
@@ -648,11 +648,11 @@ def trend_corr_plot(
         return Image(
             fig.to_image(format="png", width=width, height=height, scale=scale)
         )
-    else:
-        if output_figure:
-            return fig
-        else:
-            return fig.show()
+
+    if output_figure:
+        return fig
+
+    return fig.show()
 
 
 def plot_ts_decomp(
@@ -691,11 +691,11 @@ def plot_ts_decomp(
         return Image(
             fig.to_image(format="png", width=width, height=height, scale=scale)
         )
-    else:
-        if output_figure:
-            return fig
-        else:
-            return fig.show()
+
+    if output_figure:
+        return fig
+
+    return fig.show()
 
 
 def plot_tstat_models(
@@ -794,11 +794,11 @@ def plot_tstat_models(
         return Image(
             fig.to_image(format="png", width=width, height=height, scale=scale)
         )
-    else:
-        if output_figure:
-            return fig
-        else:
-            return fig.show()
+
+    if output_figure:
+        return fig
+
+    return fig.show()
 
 
 def plot_fbp_comp(
@@ -934,11 +934,11 @@ def plot_fbp_comp(
         return Image(
             fig.to_image(format="png", width=width, height=height, scale=scale)
         )
-    else:
-        if output_figure:
-            return fig
-        else:
-            return fig.show()
+
+    if output_figure:
+        return fig
+
+    return fig.show()
 
 
 def anomalies_plot(
@@ -1045,11 +1045,11 @@ def anomalies_plot(
         return Image(
             fig.to_image(format="png", width=width, height=height, scale=scale)
         )
-    else:
-        if output_figure:
-            return fig
-        else:
-            return fig.show()
+
+    if output_figure:
+        return fig
+
+    return fig.show()
 
 
 def ac_plot(
@@ -1119,11 +1119,11 @@ def ac_plot(
         return Image(
             fig.to_image(format="png", width=width, height=height, scale=scale)
         )
-    else:
-        if output_figure:
-            return fig
-        else:
-            return fig.show()
+
+    if output_figure:
+        return fig
+
+    return fig.show()
 
 
 def discsid_param_plot(
@@ -1202,11 +1202,11 @@ def discsid_param_plot(
         return Image(
             fig.to_image(format="png", width=width, height=height, scale=scale)
         )
-    else:
-        if output_figure:
-            return fig
-        else:
-            return fig.show()
+
+    if output_figure:
+        return fig
+
+    return fig.show()
 
 
 def data_for_plot(

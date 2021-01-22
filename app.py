@@ -897,10 +897,10 @@ def load_eda(covidpro_df, dpc_regioni_df, icu_df):
     if show_raw_data:
         st.subheader("Raw data")
         st.write("Regional data:")
-        daily_df
+        st.write(daily_df)
 
         st.write("Corr. and auto-corr. data:")
-        autocorr_df
+        st.write(autocorr_df)
 
     # Plots
     st.subheader("Main trendlines")
@@ -1112,7 +1112,7 @@ def load_eda(covidpro_df, dpc_regioni_df, icu_df):
     if show_raw_data:
         st.subheader("Raw data")
         st.write("Provincial data:")
-        covidpro_final
+        st.write(covidpro_final)
 
     # Plots
     st.subheader("Main trendlines")
