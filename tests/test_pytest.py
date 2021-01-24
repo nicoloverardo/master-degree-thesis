@@ -1,6 +1,7 @@
 import pandas as pd
 from src.utils import load_data
 from src.sird import beta, logistic_R0
+from src.fbp import ProphetModel
 
 
 def test_data_loading():
@@ -24,3 +25,25 @@ def test_beta_R0():
     assert betas[-1] <= betas[-2]
     assert R0s[0] >= R0s[1]
     assert R0s[-1] <= R0s[-2]
+
+
+def test_fbprophet():
+    covidpro_df, _, _, _, _ = load_data("data")
+    province = "Torino"
+    compart = "New_cases"
+    date = 'Date'
+    group_column = 'Province'
+
+    pm = ProphetModel(
+        data=covidpro_df,
+        area=province,
+        compart=compart,
+        group_column=group_column,
+        date_column=date)
+
+    pm.fit()
+
+    assert len(pm.df) > 0
+    assert len(pm.train) > 0
+    assert len(pm.forecast) > 0
+    assert pm.y_true.shape[0] == pm.y_true.shape[0]
