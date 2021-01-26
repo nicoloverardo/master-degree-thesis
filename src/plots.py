@@ -725,7 +725,7 @@ def plot_tstat_models(
         fig.add_trace(
             go.Scatter(
                 x=yhat.index,
-                y=yhat["mean_ci_lower"] - yhat["mean"],
+                y=yhat["mean_ci_lower"] + yhat["mean_se"],
                 mode="lines",
                 line=dict(width=0),
                 hoverinfo="skip",
@@ -735,7 +735,7 @@ def plot_tstat_models(
         fig.add_trace(
             go.Scatter(
                 x=yhat.index,
-                y=yhat["mean_ci_upper"] - yhat["mean"],
+                y=yhat["mean_ci_upper"] - yhat["mean_se"],
                 line=dict(width=0),
                 mode="lines",
                 fillcolor="rgba(80, 148, 197, 0.25)",
