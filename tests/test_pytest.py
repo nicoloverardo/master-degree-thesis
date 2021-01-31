@@ -1,10 +1,17 @@
 import pandas as pd
 import numpy as np
 import plotly.graph_objects
+from ipywidgets import widgets
 from src.utils import load_data, get_region_pop
 from src.sird import beta, logistic_R0, sird, DeterministicSird
 from src.fbp import ProphetModel
-from src.plots import general_plot, custom_plot, daily_main_indic_plot, plot_fbp_comp
+from src.plots import (
+    general_plot,
+    custom_plot,
+    daily_main_indic_plot,
+    plot_fbp_comp,
+    inter_dropdown_plot,
+)
 
 
 def test_data_loading():
@@ -96,7 +103,24 @@ def test_custom_plot():
         show_title=False,
     )
 
+    fig2 = inter_dropdown_plot(
+        options=dpc_regioni_df.denominazione_regione.unique(),
+        default_value="Lombardia",
+        dropdown_label="Regione",
+        y=["totale_casi"],
+        legend_titles=["Total cases"],
+        data=dpc_regioni_df,
+        group_column="denominazione_regione",
+        x="data",
+        title="",
+        xtitle="",
+        ytitle="Individuals",
+        output_image=False,
+        blend_legend=False,
+    )
+
     assert isinstance(fig, plotly.graph_objects.Figure)
+    assert isinstance(fig2, widgets.VBox)
 
 
 def test_daily_plot():
