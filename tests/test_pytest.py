@@ -4,7 +4,7 @@ import plotly.graph_objects
 from src.utils import load_data, get_region_pop
 from src.sird import beta, logistic_R0, sird, DeterministicSird
 from src.fbp import ProphetModel
-from src.plots import general_plot, custom_plot, daily_main_indic_plot
+from src.plots import general_plot, custom_plot, daily_main_indic_plot, plot_fbp_comp
 
 
 def test_data_loading():
@@ -149,7 +149,10 @@ def test_fbprophet():
 
     pm.fit()
 
+    fig = plot_fbp_comp(df=pm.forecast, title="Forecast components", output_figure=True)
+
     assert len(pm.df) > 0
     assert len(pm.train) > 0
     assert len(pm.forecast) > 0
     assert pm.y_true.shape[0] == pm.y_true.shape[0]
+    assert isinstance(fig, plotly.graph_objects.Figure)
