@@ -32,6 +32,15 @@ from src.ts import decompose_ts, adf_test_result, kpss_test_result
 from fbprophet import Prophet
 from fbprophet.plot import plot_plotly
 
+import tensorflow as tf
+from src.tfts import (
+    WindowGenerator,
+    Baseline,
+    compile_and_fit,
+    plot_metrics,
+    plot_comparison_results,
+)
+
 
 import os
 
@@ -559,6 +568,173 @@ def load_ts_page(covidpro_df, dpc_regioni_df):
 
 
 def load_tf_page(covidpro_df, dpc_regioni_df):
+    """Neural Networks with TensorFlow page"""
+
+    # Sidebar setup
+    st.sidebar.header("Options")
+    area_radio = st.sidebar.radio(
+        "Regional or provincial predictions:", ["Regional", "Provincial"], index=1
+    )
+
+    group_column = "denominazione_regione"
+    data_df = dpc_regioni_df
+    data_column = "data"
+    column = "nuovi_positivi"
+
+    if area_radio == "Regional":
+        area_selectbox = st.sidebar.selectbox(
+            "Region:",
+            dpc_regioni_df.denominazione_regione.unique(),
+            int((dpc_regioni_df.denominazione_regione == "Piemonte").argmax()),
+            key="area_selectbox_reg",
+        )
+    else:
+        area_selectbox = st.sidebar.selectbox(
+            "Province:",
+            covidpro_df.Province.unique(),
+            int((covidpro_df.Province == "Firenze").argmax()),
+            key="area_selectbox_prov",
+        )
+
+        group_column = "Province"
+        data_df = covidpro_df
+        data_column = "Date"
+        column = "New_cases"
+
+    last_avail_date = data_df.iloc[-1][data_column]
+
+    # Date pickers
+    start_date_ts = st.sidebar.date_input(
+        "Start date",
+        datetime.date(2020, 2, 24),
+        datetime.date(2020, 2, 24),
+        last_avail_date,
+    )
+    end_date_ts = st.sidebar.date_input(
+        "End date",
+        datetime.date(2020, 7, 1),
+        datetime.date(2020, 2, 24),
+        last_avail_date,
+    )
+
+    # Filter data
+    df_filtered = data_df.query(
+        end_date_ts.strftime("%Y%m%d")
+        + " >= "
+        + data_column
+        + " >= "
+        + start_date_ts.strftime("%Y%m%d")
+    )
+    df_final = df_filtered.loc[(df_filtered[group_column] == area_selectbox), :]
+
+    df_date_idx = df_final.set_index(data_column)
+    df_date_idx = df_date_idx.loc[:, [column]]
+
+    column_indices = {name: i for i, name in enumerate(df_date_idx.columns)}
+
+    n = len(df_date_idx)
+    train_df = df_date_idx[0 : int(n * 0.4)]
+    val_df = df_date_idx[int(n * 0.4) : int(n * 0.7)]
+    test_df = df_date_idx[int(n * 0.7) :]
+
+    max_size = min(len(train_df), len(val_df), len(test_df))
+
+    days_to_pred = st.sidebar.slider(
+        "Input length/Days to predict", 1, max_size, max_size // 2
+    )
+
+    wide_window = WindowGenerator(
+        input_width=days_to_pred,
+        label_width=days_to_pred,
+        shift=days_to_pred,
+        train_df=train_df,
+        val_df=val_df,
+        test_df=test_df,
+        label_columns=[column],
+    )
+
+    val_performance = {}
+    performance = {}
+
+    st.header("Baseline")
+    with st.spinner("Training model"):
+        baseline = Baseline(label_index=column_indices[column])
+
+        baseline.compile(
+            loss=tf.losses.MeanSquaredError(),
+            metrics=[tf.metrics.MeanAbsoluteError(), tf.metrics.MeanSquaredError()],
+        )
+
+        st.pyplot(wide_window.plot(baseline), use_container_width=True)
+
+        with st.beta_expander("Show training results"):
+            val_performance["Baseline"] = baseline.evaluate(wide_window.val, verbose=0)
+            performance["Baseline"] = baseline.evaluate(wide_window.test, verbose=0)
+
+            st.text("Val. MAE: " + str(val_performance["Baseline"][1]))
+            st.text("Test MAE: " + str(performance["Baseline"][1]))
+            st.text("")
+            st.text("Val. MSE: " + str(val_performance["Baseline"][2]))
+            st.text("Test MSE: " + str(performance["Baseline"][2]))
+
+    st.header("Dense")
+    with st.spinner("Training model"):
+        dense = tf.keras.Sequential(
+            [
+                tf.keras.layers.Dense(units=64, activation="relu"),
+                tf.keras.layers.Dense(units=64, activation="relu"),
+                tf.keras.layers.Dense(units=1),
+            ]
+        )
+
+        history = compile_and_fit(dense, wide_window)
+
+        st.pyplot(wide_window.plot(dense), use_container_width=True)
+
+        with st.beta_expander("Show training results"):
+            val_performance["Dense"] = dense.evaluate(wide_window.val, verbose=0)
+            performance["Dense"] = dense.evaluate(wide_window.test, verbose=0)
+
+            st.text("Val. MAE: " + str(val_performance["Dense"][1]))
+            st.text("Test MAE: " + str(performance["Dense"][1]))
+            st.text("")
+            st.text("Val. MSE: " + str(val_performance["Dense"][2]))
+            st.text("Test MSE: " + str(performance["Dense"][2]))
+
+            st.pyplot(plot_metrics(history))
+
+    st.header("LSTM")
+    with st.spinner("Training model"):
+        lstm_model = tf.keras.models.Sequential(
+            [
+                # Shape [batch, time, features] => [batch, time, lstm_units]
+                tf.keras.layers.LSTM(32, return_sequences=True),
+                # Shape => [batch, time, features]
+                tf.keras.layers.Dense(units=1),
+            ]
+        )
+
+        history = compile_and_fit(lstm_model, wide_window)
+
+        st.pyplot(wide_window.plot(lstm_model), use_container_width=True)
+
+        with st.beta_expander("Show training results"):
+            val_performance["LSTM"] = lstm_model.evaluate(wide_window.val, verbose=0)
+            performance["LSTM"] = lstm_model.evaluate(wide_window.test, verbose=0)
+
+            st.text("Val. MAE: " + str(val_performance["LSTM"][1]))
+            st.text("Test MAE: " + str(performance["LSTM"][1]))
+            st.text("")
+            st.text("Val. MSE: " + str(val_performance["LSTM"][2]))
+            st.text("Test MSE: " + str(performance["LSTM"][2]))
+
+            st.pyplot(plot_metrics(history))
+
+    st.header("Comparison")
+    st.pyplot(
+        plot_comparison_results(lstm_model.metrics_names, val_performance, performance)
+    )
+
     st.subheader("🏗 Page under construction")
 
 

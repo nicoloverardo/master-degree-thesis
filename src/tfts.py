@@ -91,7 +91,14 @@ class WindowGenerator:
 
         return inputs, labels
 
-    def plot(self, model=None, plot_col="New_cases", max_subplots=1):
+    def plot(
+        self,
+        model=None,
+        plot_col="New_cases",
+        max_subplots=1,
+        figsize=(12, 8),
+        output_figure=False,
+    ):
         inputs, labels = self.example
         plt.figure(figsize=(12, 8))
         plot_col_index = self.column_indices[plot_col]
@@ -140,6 +147,10 @@ class WindowGenerator:
                 plt.legend()
 
         plt.xlabel("Days")
+
+        #if output_figure:
+        #    return fig
+
         plt.show()
 
     def make_dataset(self, data):
