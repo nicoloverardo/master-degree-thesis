@@ -259,7 +259,7 @@ class FeedBack(tf.keras.Model):
 
 
 def compile_and_fit(
-    model, window, patience=5, epochs=50, monitor="val_loss", verbose=1
+    model, window, patience=5, epochs=100, monitor="val_loss", verbose=1
 ):
     early_stopping = tf.keras.callbacks.EarlyStopping(
         monitor=monitor, patience=patience, mode="min"
@@ -322,7 +322,9 @@ def plot_metrics(history):
     plt.show()
 
 
-def plot_comparison_results(metrics_names, val_performance, performance):
+def plot_comparison_results(
+    metrics_names, val_performance, performance, figsize=(10, 5)
+):
     metrics = [
         metric
         for metric in metrics_names
@@ -336,7 +338,7 @@ def plot_comparison_results(metrics_names, val_performance, performance):
 
     x = np.arange(len(performance))
     width = 0.3
-    plt.figure(figsize=(10, 5))
+    plt.figure(figsize=figsize)
     for n, metric_name in enumerate(metrics):
         plt.subplot(n_rows, n_cols, n + 1)
         metric_index = metrics_names.index(metric_name)
