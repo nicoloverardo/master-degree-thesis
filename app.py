@@ -4,6 +4,7 @@ import streamlit as st
 import datetime
 
 from pathlib import Path
+from PIL import Image
 
 from sklearn.metrics import mean_absolute_error, mean_squared_error
 
@@ -37,7 +38,6 @@ from src.tfts import (
     WindowGenerator,
     Baseline,
     compile_and_fit,
-    plot_metrics,
     plot_comparison_results,
 )
 
@@ -637,6 +637,13 @@ def load_tf_page(covidpro_df, dpc_regioni_df):
     val_df = df_date_idx[int(n * 0.4) : int(n * 0.7)]
     test_df = df_date_idx[int(n * 0.7) :]
 
+    train_mean = train_df.mean()
+    train_std = train_df.std()
+
+    train_df = (train_df - train_mean) / train_std
+    val_df = (val_df - train_mean) / train_std
+    test_df = (test_df - train_mean) / train_std
+
     max_size = min(len(train_df), len(val_df), len(test_df))
 
     days_to_pred = st.sidebar.slider(
@@ -656,6 +663,7 @@ def load_tf_page(covidpro_df, dpc_regioni_df):
     val_performance = {}
     performance = {}
 
+    # Baseline
     st.header("Baseline")
     with st.spinner("Training model"):
         baseline = Baseline(label_index=column_indices[column])
@@ -665,7 +673,9 @@ def load_tf_page(covidpro_df, dpc_regioni_df):
             metrics=[tf.metrics.MeanAbsoluteError(), tf.metrics.MeanSquaredError()],
         )
 
-        st.pyplot(wide_window.plot(baseline), use_container_width=True)
+        st.pyplot(
+            wide_window.plot(baseline, output_figure=True), use_container_width=True
+        )
 
         with st.beta_expander("Show training results"):
             val_performance["Baseline"] = baseline.evaluate(wide_window.val, verbose=0)
@@ -677,6 +687,7 @@ def load_tf_page(covidpro_df, dpc_regioni_df):
             st.text("Val. MSE: " + str(val_performance["Baseline"][2]))
             st.text("Test MSE: " + str(performance["Baseline"][2]))
 
+    # Dense
     st.header("Dense")
     with st.spinner("Training model"):
         dense = tf.keras.Sequential(
@@ -687,9 +698,9 @@ def load_tf_page(covidpro_df, dpc_regioni_df):
             ]
         )
 
-        history = compile_and_fit(dense, wide_window)
+        _ = compile_and_fit(dense, wide_window)
 
-        st.pyplot(wide_window.plot(dense), use_container_width=True)
+        st.pyplot(wide_window.plot(dense, output_figure=True), use_container_width=True)
 
         with st.beta_expander("Show training results"):
             val_performance["Dense"] = dense.evaluate(wide_window.val, verbose=0)
@@ -701,8 +712,17 @@ def load_tf_page(covidpro_df, dpc_regioni_df):
             st.text("Val. MSE: " + str(val_performance["Dense"][2]))
             st.text("Test MSE: " + str(performance["Dense"][2]))
 
-            st.pyplot(plot_metrics(history))
+            st.text("")
+            st.text("")
 
+            Path("results").mkdir(parents=True, exist_ok=True)
+            _ = tf.keras.utils.plot_model(
+                dense, to_file="results/dense.png", show_shapes=True
+            )
+            image = Image.open("results/dense.png")
+            st.image(image, width=400)
+
+    # LSTM
     st.header("LSTM")
     with st.spinner("Training model"):
         lstm_model = tf.keras.models.Sequential(
@@ -714,9 +734,11 @@ def load_tf_page(covidpro_df, dpc_regioni_df):
             ]
         )
 
-        history = compile_and_fit(lstm_model, wide_window)
+        _ = compile_and_fit(lstm_model, wide_window)
 
-        st.pyplot(wide_window.plot(lstm_model), use_container_width=True)
+        st.pyplot(
+            wide_window.plot(lstm_model, output_figure=True), use_container_width=True
+        )
 
         with st.beta_expander("Show training results"):
             val_performance["LSTM"] = lstm_model.evaluate(wide_window.val, verbose=0)
@@ -728,14 +750,29 @@ def load_tf_page(covidpro_df, dpc_regioni_df):
             st.text("Val. MSE: " + str(val_performance["LSTM"][2]))
             st.text("Test MSE: " + str(performance["LSTM"][2]))
 
-            st.pyplot(plot_metrics(history))
+            st.text("")
+            st.text("")
 
+            Path("results").mkdir(parents=True, exist_ok=True)
+            _ = tf.keras.utils.plot_model(
+                dense, to_file="results/lstm.png", show_shapes=True
+            )
+
+            image = Image.open("results/lstm.png")
+            st.image(image, width=400)
+
+    # Comparison plot
     st.header("Comparison")
     st.pyplot(
-        plot_comparison_results(lstm_model.metrics_names, val_performance, performance)
+        plot_comparison_results(
+            lstm_model.metrics_names, val_performance, performance, output_figure=True
+        )
     )
 
+    st.text("")
+    st.text("")
     st.subheader("🏗 Page under construction")
+    st.warning("We are working hard to port the plots in this page to plotly.")
 
 
 def load_sird_page(covidpro_df, dpc_regioni_df, pop_prov_df, prov_list_df):

@@ -96,35 +96,33 @@ class WindowGenerator:
         model=None,
         plot_col="New_cases",
         max_subplots=1,
-        figsize=(12, 8),
+        figsize=(8, 3),
         output_figure=False,
     ):
+
+        fig, ax = plt.subplots(figsize=figsize)
+
         inputs, labels = self.example
-        plt.figure(figsize=(12, 8))
         plot_col_index = self.column_indices[plot_col]
-        max_n = min(max_subplots, len(inputs))
-        for n in range(max_n):
-            plt.subplot(3, 1, n + 1)
-            plt.ylabel(f"{plot_col} [normed]")
-            plt.plot(
-                self.input_indices,
-                inputs[n, :, plot_col_index],
-                label="Inputs",
-                marker=".",
-                zorder=-10,
-            )
 
-            if self.label_columns:
-                label_col_index = self.label_columns_indices.get(plot_col, None)
-            else:
-                label_col_index = plot_col_index
+        plt.ylabel(f"{plot_col} [normed]")
+        ax.plot(
+            self.input_indices,
+            inputs[0, :, plot_col_index],
+            label="Inputs",
+            marker=".",
+            zorder=-10,
+        )
 
-            if label_col_index is None:
-                continue
+        if self.label_columns:
+            label_col_index = self.label_columns_indices.get(plot_col, None)
+        else:
+            label_col_index = plot_col_index
 
-            plt.scatter(
+        if label_col_index is not None:
+            ax.scatter(
                 self.label_indices,
-                labels[n, :, label_col_index],
+                labels[0, :, label_col_index],
                 edgecolors="k",
                 label="Labels",
                 c="#2ca02c",
@@ -133,9 +131,9 @@ class WindowGenerator:
 
             if model is not None:
                 predictions = model(inputs)
-                plt.scatter(
+                ax.scatter(
                     self.label_indices,
-                    predictions[n, :, label_col_index],
+                    predictions[0, :, label_col_index],
                     marker="X",
                     edgecolors="k",
                     label="Predictions",
@@ -143,13 +141,12 @@ class WindowGenerator:
                     s=64,
                 )
 
-            if n == 0:
-                plt.legend()
+        plt.legend()
 
         plt.xlabel("Days")
 
-        #if output_figure:
-        #    return fig
+        if output_figure:
+            return fig
 
         plt.show()
 
@@ -321,12 +318,12 @@ def plot_metrics(history):
         plt.xlabel("Epoch")
         plt.ylabel(name)
 
-        # if metric == "loss":
-        #     plt.ylim([0, plt.ylim()[1]])
-        # elif metric == "auc":
-        #     plt.ylim([0.8, 1])
-        # else:
-        #     plt.ylim([0, 1])
+        if metric == "loss":
+            plt.ylim([0, plt.ylim()[1]])
+        elif metric == "auc":
+            plt.ylim([0.8, 1])
+        else:
+            plt.ylim([0, 1])
 
         plt.legend()
 
@@ -334,7 +331,7 @@ def plot_metrics(history):
 
 
 def plot_comparison_results(
-    metrics_names, val_performance, performance, figsize=(10, 5)
+    metrics_names, val_performance, performance, figsize=(10, 5), output_figure=False
 ):
     metrics = [
         metric
@@ -348,18 +345,24 @@ def plot_comparison_results(
     n_rows += n_tot % n_cols
 
     x = np.arange(len(performance))
+    xs = range(len(performance))
     width = 0.3
-    plt.figure(figsize=figsize)
-    for n, metric_name in enumerate(metrics):
-        plt.subplot(n_rows, n_cols, n + 1)
-        metric_index = metrics_names.index(metric_name)
+    fig, axs = plt.subplots(n_rows, n_cols, figsize=figsize)
+
+    for i, ax in enumerate(axs.flat):
+        metric_index = metrics_names.index(metrics[i])
         val_mae = [v[metric_index] for v in val_performance.values()]
         test_mae = [v[metric_index] for v in performance.values()]
 
-        plt.ylabel(metric_name.replace("_", " ").capitalize())
-        plt.bar(x - 0.17, val_mae, width, label="Validation")
-        plt.bar(x + 0.17, test_mae, width, label="Test")
-        plt.xticks(ticks=x, labels=performance.keys())
+        ax.set_ylabel(metrics[i].replace("_", " ").capitalize())
+        ax.bar(x - 0.17, val_mae, width, label="Validation")
+        ax.bar(x + 0.17, test_mae, width, label="Test")
+        ax.set_xticks(xs)
+        ax.set_xticklabels(list(performance.keys()))
 
     plt.legend()
+
+    if output_figure:
+        return fig
+
     plt.show()
