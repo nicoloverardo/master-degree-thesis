@@ -499,7 +499,7 @@ def plot_comparison_results_plotly(
 
     fig = make_subplots(rows=n_rows, cols=n_cols)
 
-    for i in range(len(metrics)):
+    for i, _ in enumerate(metrics):
         metric_index = metrics_names.index(metrics[i])
         val_mae = [v[metric_index] for v in val_performance.values()]
         test_mae = [v[metric_index] for v in performance.values()]
