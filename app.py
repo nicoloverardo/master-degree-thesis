@@ -639,13 +639,6 @@ def load_tf_page(covidpro_df, dpc_regioni_df):
     val_df = df_date_idx[int(n * 0.4) : int(n * 0.7)]
     test_df = df_date_idx[int(n * 0.7) :]
 
-    train_mean = train_df.mean()
-    train_std = train_df.std()
-
-    train_df = (train_df - train_mean) / train_std
-    val_df = (val_df - train_mean) / train_std
-    test_df = (test_df - train_mean) / train_std
-
     wide_window = WindowGenerator(
         input_width=days_to_pred,
         label_width=days_to_pred,
@@ -669,8 +662,8 @@ def load_tf_page(covidpro_df, dpc_regioni_df):
             metrics=[tf.metrics.MeanAbsoluteError(), tf.metrics.MeanSquaredError()],
         )
 
-        st.pyplot(
-            wide_window.plot(baseline, plot_col=column, output_figure=True),
+        st.plotly_chart(
+            wide_window.plot_plotly(baseline, plot_col=column, output_figure=True),
             use_container_width=True,
         )
 
@@ -701,8 +694,8 @@ def load_tf_page(covidpro_df, dpc_regioni_df):
 
         _ = compile_and_fit(dense, wide_window)
 
-        st.pyplot(
-            wide_window.plot(dense, plot_col=column, output_figure=True),
+        st.plotly_chart(
+            wide_window.plot_plotly(dense, plot_col=column, output_figure=True),
             use_container_width=True,
         )
 
@@ -744,8 +737,8 @@ def load_tf_page(covidpro_df, dpc_regioni_df):
 
         _ = compile_and_fit(lstm_model, wide_window)
 
-        st.pyplot(
-            wide_window.plot(lstm_model, plot_col=column, output_figure=True),
+        st.plotly_chart(
+            wide_window.plot_plotly(dense, plot_col=column, output_figure=True),
             use_container_width=True,
         )
 
