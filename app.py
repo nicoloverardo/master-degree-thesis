@@ -38,7 +38,7 @@ from src.tfts import (
     WindowGenerator,
     Baseline,
     compile_and_fit,
-    plot_comparison_results,
+    plot_comparison_results_plotly,
 )
 
 
@@ -628,7 +628,7 @@ def load_tf_page(covidpro_df, dpc_regioni_df):
     df_final = df_filtered.loc[(df_filtered[group_column] == area_selectbox), :]
 
     df_date_idx = df_final.set_index(data_column)
-    df_date_idx = df_date_idx.loc[:, [column]]
+    df_date_idx = df_date_idx.loc[:, [column, "Deaths"]]
 
     column_indices = {name: i for i, name in enumerate(df_date_idx.columns)}
 
@@ -638,6 +638,23 @@ def load_tf_page(covidpro_df, dpc_regioni_df):
     train_df = df_date_idx[0 : int(n * 0.4)]
     val_df = df_date_idx[int(n * 0.4) : int(n * 0.7)]
     test_df = df_date_idx[int(n * 0.7) :]
+
+    train_mean = train_df.mean()
+    train_std = train_df.std()
+
+    train_df = (train_df - train_mean) / train_std
+    val_df = (val_df - train_mean) / train_std
+    test_df = (test_df - train_mean) / train_std
+
+    single_step_window = WindowGenerator(
+        input_width=1,
+        label_width=1,
+        shift=1,
+        train_df=train_df,
+        val_df=val_df,
+        test_df=test_df,
+        label_columns=[column],
+    )
 
     wide_window = WindowGenerator(
         input_width=days_to_pred,
@@ -686,13 +703,13 @@ def load_tf_page(covidpro_df, dpc_regioni_df):
     with st.spinner("Training model"):
         dense = tf.keras.Sequential(
             [
-                tf.keras.layers.Dense(units=64, activation="relu"),
-                tf.keras.layers.Dense(units=64, activation="relu"),
+                tf.keras.layers.Dense(units=64, activation='relu'),
+                tf.keras.layers.Dense(units=64, activation='relu'),
                 tf.keras.layers.Dense(units=1),
             ]
         )
 
-        _ = compile_and_fit(dense, wide_window)
+        _ = compile_and_fit(dense, single_step_window, verbose=0)
 
         st.plotly_chart(
             wide_window.plot_plotly(dense, plot_col=column, output_figure=True),
@@ -700,8 +717,8 @@ def load_tf_page(covidpro_df, dpc_regioni_df):
         )
 
         with st.beta_expander("Show training results"):
-            val_performance["Dense"] = dense.evaluate(wide_window.val, verbose=0)
-            performance["Dense"] = dense.evaluate(wide_window.test, verbose=0)
+            val_performance["Dense"] = dense.evaluate(single_step_window.val, verbose=0)
+            performance["Dense"] = dense.evaluate(single_step_window.test, verbose=0)
 
             st.text("Val. MAE: " + str(val_performance["Dense"][1]))
             st.text("Test MAE: " + str(performance["Dense"][1]))
@@ -735,7 +752,7 @@ def load_tf_page(covidpro_df, dpc_regioni_df):
             ]
         )
 
-        _ = compile_and_fit(lstm_model, wide_window)
+        _ = compile_and_fit(lstm_model, wide_window, verbose=0)
 
         st.plotly_chart(
             wide_window.plot_plotly(dense, plot_col=column, output_figure=True),
@@ -757,7 +774,7 @@ def load_tf_page(covidpro_df, dpc_regioni_df):
 
             Path("results").mkdir(parents=True, exist_ok=True)
             _ = tf.keras.utils.plot_model(
-                dense, to_file="results/lstm.png", show_shapes=True
+                lstm_model, to_file="results/lstm.png", show_shapes=True
             )
 
             image = Image.open("results/lstm.png")
@@ -769,39 +786,26 @@ def load_tf_page(covidpro_df, dpc_regioni_df):
 
     # Comparison plot
     st.header("Comparison")
-    st.pyplot(
-        plot_comparison_results(
+    st.plotly_chart(
+        plot_comparison_results_plotly(
             lstm_model.metrics_names, val_performance, performance, output_figure=True
-        )
+        ),
+        use_container_width=True,
     )
 
-    with st.beta_expander("Show raw table"):
+    with st.beta_expander("Show raw data"):
+        models = ["Baseline", "Dense", "LSTM"]
         arrays = [
-            ["Baseline", "Baseline", "Dense", "Dense", "LSTM", "LSTM"],
-            ["Validation", "Test", "Validation", "Test", "Validation", "Test"],
+            [item for item in models for i in range(2)],
+            ["Validation", "Test"]*len(models),
         ]
         index = pd.MultiIndex.from_arrays(arrays, names=("Model", "Split"))
 
-        all_maes_val = [
-            val_performance["Baseline"][1],
-            val_performance["Dense"][1],
-            val_performance["LSTM"][1],
-        ]
-        all_maes_test = [
-            performance["Baseline"][1],
-            performance["Dense"][1],
-            performance["LSTM"][1],
-        ]
-        all_mse_val = [
-            val_performance["Baseline"][2],
-            val_performance["Dense"][2],
-            val_performance["LSTM"][2],
-        ]
-        all_mse_test = [
-            performance["Baseline"][2],
-            performance["Dense"][2],
-            performance["LSTM"][2],
-        ]
+        all_maes_val = [v[1] for k, v in val_performance.items()]
+        all_maes_test = [v[1] for k, v in performance.items()]
+        all_mse_val = [v[2] for k, v in val_performance.items()]
+        all_mse_test = [v[2] for k, v in performance.items()]
+
         df = pd.DataFrame(
             {"MAE": all_maes_val + all_maes_test, "MSE": all_mse_val + all_mse_test},
             index=index,

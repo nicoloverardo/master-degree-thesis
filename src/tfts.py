@@ -8,6 +8,7 @@ import tensorflow as tf
 import matplotlib.pyplot as plt
 
 import plotly.graph_objects as go
+from plotly.subplots import make_subplots
 from IPython.display import Image
 
 
@@ -122,8 +123,8 @@ class WindowGenerator:
                 name="Inputs",
                 marker_size=6,
                 hovertemplate=(
-                    "<b>Inputs</b><br>Day: "
-                    "%{x}<br>%{text}: %{y}<extra></extra>"),
+                    "<b>Inputs</b><br>Day: " "%{x}<br>%{text}: %{y}<extra></extra>"
+                ),
                 text=[plot_col_str] * len(self.input_indices),
             )
         )
@@ -143,35 +144,36 @@ class WindowGenerator:
                     ),
                     name="Labels",
                     hovertemplate=(
-                        "<b>Labels</b><br>Day: "
-                        "%{x}<br>%{text}: %{y}<extra></extra>"),
+                        "<b>Labels</b><br>Day: " "%{x}<br>%{text}: %{y}<extra></extra>"
+                    ),
                     text=[plot_col_str] * len(self.label_indices),
                 )
             )
 
-            if model is not None:
-                predictions = model(inputs)
-                fig.add_trace(
-                    go.Scatter(
-                        x=self.label_indices,
-                        y=predictions[0, :, label_col_index],
-                        mode="markers",
-                        marker_symbol="x",
-                        marker_line_color="black",
-                        marker_color="#ff7f0e",
-                        marker_line_width=1,
-                        marker_size=12,
-                        name="Predictions",
-                        hovertemplate=(
-                            "<b>Predictions</b><br>Day: "
-                            "%{x}<br>%{text}: %{y}<extra></extra>"),
-                        text=[plot_col_str] * len(self.label_indices),
-                    )
+        if model is not None:
+            predictions = model(inputs)
+            fig.add_trace(
+                go.Scatter(
+                    x=self.label_indices,
+                    y=predictions[0, :, label_col_index],
+                    mode="markers",
+                    marker_symbol="x",
+                    marker_line_color="black",
+                    marker_color="#ff7f0e",
+                    marker_line_width=1,
+                    marker_size=12,
+                    name="Predictions",
+                    hovertemplate=(
+                        "<b>Predictions</b><br>Day: "
+                        "%{x}<br>%{text}: %{y}<extra></extra>"
+                    ),
+                    text=[plot_col_str] * len(self.label_indices),
                 )
+            )
 
         fig.update_layout(
             xaxis_title="Days",
-            yaxis_title=f"{plot_col_str}",
+            yaxis_title=f"{plot_col_str} (normalized)",
             template=template,
             barmode="overlay",
         )
@@ -470,3 +472,85 @@ def plot_comparison_results(
         return fig
 
     plt.show()
+
+
+def plot_comparison_results_plotly(
+    metrics_names,
+    val_performance,
+    performance,
+    template="plotly_white",
+    output_image=False,
+    width=900,
+    height=500,
+    scale=2,
+    output_figure=False,
+    horiz_legend=True,
+):
+    metrics = [
+        metric
+        for metric in metrics_names
+        if "loss" not in metric and "val_" not in metric
+    ]
+
+    n_tot = len(metrics)
+    n_cols = 2
+    n_rows = n_tot // n_cols
+    n_rows += n_tot % n_cols
+
+    fig = make_subplots(rows=n_rows, cols=n_cols)
+
+    for i in range(len(metrics)):
+        metric_index = metrics_names.index(metrics[i])
+        val_mae = [v[metric_index] for v in val_performance.values()]
+        test_mae = [v[metric_index] for v in performance.values()]
+
+        sl = True
+        if i > 0:
+            sl = False
+
+        fig.add_trace(
+            go.Bar(
+                name="Validation",
+                x=list(performance.keys()),
+                y=val_mae,
+                marker_color="#1f77b4",
+                legendgroup="group1",
+                showlegend=sl,
+            ),
+            row=1,
+            col=i + 1,
+        )
+        fig.add_trace(
+            go.Bar(
+                name="Test",
+                x=list(performance.keys()),
+                y=test_mae,
+                marker_color="#ff7f0e",
+                legendgroup="group2",
+                showlegend=sl,
+            ),
+            row=1,
+            col=i + 1,
+        )
+
+    fig.update_layout(
+        template=template,
+        barmode="group",
+    )
+
+    if horiz_legend:
+        ypos = -0.3
+
+        fig.update_layout(
+            legend=dict(orientation="h", yanchor="top", xanchor="center", x=0.5, y=ypos)
+        )
+
+    if output_image:
+        return Image(
+            fig.to_image(format="png", width=width, height=height, scale=scale)
+        )
+
+    if output_figure:
+        return fig
+
+    return fig.show()
