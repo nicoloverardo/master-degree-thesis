@@ -1,0 +1,10 @@
+services:
+  app:
+    image: master-degree-thesis
+    build:
+      dockerfile: ./Dockerfile
+      context: .
+    environment:
+        - PORT=${PORT}
+    ports:
+        - ${PORT}:${PORT}

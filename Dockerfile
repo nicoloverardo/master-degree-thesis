@@ -11,4 +11,4 @@ RUN pip install -r /tmp/requirements.txt
 ADD . .
 WORKDIR .
 
-CMD streamlit run app.py
+CMD ["sh", "-c", "streamlit run --server.port $PORT app.py"] 
