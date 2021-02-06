@@ -632,6 +632,8 @@ def load_tf_page(covidpro_df, dpc_regioni_df):
 
     column_indices = {name: i for i, name in enumerate(df_date_idx.columns)}
 
+    days_to_pred = st.sidebar.slider("Input length/Days to predict", 1, 30, 14)
+
     n = len(df_date_idx)
     train_df = df_date_idx[0 : int(n * 0.4)]
     val_df = df_date_idx[int(n * 0.4) : int(n * 0.7)]
@@ -643,12 +645,6 @@ def load_tf_page(covidpro_df, dpc_regioni_df):
     train_df = (train_df - train_mean) / train_std
     val_df = (val_df - train_mean) / train_std
     test_df = (test_df - train_mean) / train_std
-
-    max_size = min(len(train_df), len(val_df), len(test_df))
-
-    days_to_pred = st.sidebar.slider(
-        "Input length/Days to predict", 1, max_size, max_size // 2
-    )
 
     wide_window = WindowGenerator(
         input_width=days_to_pred,
@@ -674,7 +670,8 @@ def load_tf_page(covidpro_df, dpc_regioni_df):
         )
 
         st.pyplot(
-            wide_window.plot(baseline, output_figure=True), use_container_width=True
+            wide_window.plot(baseline, plot_col=column, output_figure=True),
+            use_container_width=True,
         )
 
         with st.beta_expander("Show training results"):
@@ -704,7 +701,10 @@ def load_tf_page(covidpro_df, dpc_regioni_df):
 
         _ = compile_and_fit(dense, wide_window)
 
-        st.pyplot(wide_window.plot(dense, output_figure=True), use_container_width=True)
+        st.pyplot(
+            wide_window.plot(dense, plot_col=column, output_figure=True),
+            use_container_width=True,
+        )
 
         with st.beta_expander("Show training results"):
             val_performance["Dense"] = dense.evaluate(wide_window.val, verbose=0)
@@ -745,7 +745,8 @@ def load_tf_page(covidpro_df, dpc_regioni_df):
         _ = compile_and_fit(lstm_model, wide_window)
 
         st.pyplot(
-            wide_window.plot(lstm_model, output_figure=True), use_container_width=True
+            wide_window.plot(lstm_model, plot_col=column, output_figure=True),
+            use_container_width=True,
         )
 
         with st.beta_expander("Show training results"):

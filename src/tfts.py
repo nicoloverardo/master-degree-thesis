@@ -105,7 +105,7 @@ class WindowGenerator:
         inputs, labels = self.example
         plot_col_index = self.column_indices[plot_col]
 
-        plt.ylabel(f"{plot_col} [normed]")
+        plt.ylabel(f"{plot_col}")
         ax.plot(
             self.input_indices,
             inputs[0, :, plot_col_index],
