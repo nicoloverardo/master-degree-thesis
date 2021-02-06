@@ -687,6 +687,10 @@ def load_tf_page(covidpro_df, dpc_regioni_df):
             st.text("Val. MSE: " + str(val_performance["Baseline"][2]))
             st.text("Test MSE: " + str(performance["Baseline"][2]))
 
+    st.text("")
+    st.text("")
+    st.text("")
+
     # Dense
     st.header("Dense")
     with st.spinner("Training model"):
@@ -721,6 +725,10 @@ def load_tf_page(covidpro_df, dpc_regioni_df):
             )
             image = Image.open("results/dense.png")
             st.image(image, width=400)
+
+    st.text("")
+    st.text("")
+    st.text("")
 
     # LSTM
     st.header("LSTM")
@@ -761,6 +769,10 @@ def load_tf_page(covidpro_df, dpc_regioni_df):
             image = Image.open("results/lstm.png")
             st.image(image, width=400)
 
+    st.text("")
+    st.text("")
+    st.text("")
+
     # Comparison plot
     st.header("Comparison")
     st.pyplot(
@@ -768,6 +780,39 @@ def load_tf_page(covidpro_df, dpc_regioni_df):
             lstm_model.metrics_names, val_performance, performance, output_figure=True
         )
     )
+
+    with st.beta_expander("Show raw table"):
+        arrays = [
+            ["Baseline", "Baseline", "Dense", "Dense", "LSTM", "LSTM"],
+            ["Validation", "Test", "Validation", "Test", "Validation", "Test"],
+        ]
+        index = pd.MultiIndex.from_arrays(arrays, names=("Model", "Split"))
+
+        all_maes_val = [
+            val_performance["Baseline"][1],
+            val_performance["Dense"][1],
+            val_performance["LSTM"][1],
+        ]
+        all_maes_test = [
+            performance["Baseline"][1],
+            performance["Dense"][1],
+            performance["LSTM"][1],
+        ]
+        all_mse_val = [
+            val_performance["Baseline"][2],
+            val_performance["Dense"][2],
+            val_performance["LSTM"][2],
+        ]
+        all_mse_test = [
+            performance["Baseline"][2],
+            performance["Dense"][2],
+            performance["LSTM"][2],
+        ]
+        df = pd.DataFrame(
+            {"MAE": all_maes_val + all_maes_test, "MSE": all_mse_val + all_mse_test},
+            index=index,
+        )
+        st.dataframe(df)
 
     st.text("")
     st.text("")
