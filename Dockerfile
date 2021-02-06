@@ -1,4 +1,4 @@
-FROM heroku/miniconda
+FROM heroku/miniconda:3
 FROM python:3.8
 
 # Grab requirements.txt.
