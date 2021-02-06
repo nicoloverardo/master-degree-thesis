@@ -628,7 +628,7 @@ def load_tf_page(covidpro_df, dpc_regioni_df):
     df_final = df_filtered.loc[(df_filtered[group_column] == area_selectbox), :]
 
     df_date_idx = df_final.set_index(data_column)
-    df_date_idx = df_date_idx.loc[:, [column, "Deaths"]]
+    df_date_idx = df_date_idx.loc[:, [column]]
 
     column_indices = {name: i for i, name in enumerate(df_date_idx.columns)}
 
