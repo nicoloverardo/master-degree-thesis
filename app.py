@@ -815,7 +815,6 @@ def load_tf_page(covidpro_df, dpc_regioni_df):
     st.text("")
     st.text("")
     st.subheader("🏗 Page under construction")
-    st.warning("We are working hard to port the plots in this page to plotly.")
 
 
 def load_sird_page(covidpro_df, dpc_regioni_df, pop_prov_df, prov_list_df):
