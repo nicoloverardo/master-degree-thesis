@@ -13,6 +13,9 @@ from src.plots import (
     inter_dropdown_plot,
 )
 
+import tensorflow as tf
+from src.tfts import WindowGenerator
+
 
 def test_data_loading():
     covidpro_df, dpc_regioni_df, dpc_province_df, pop_prov_df, prov_list_df = load_data(
@@ -180,3 +183,25 @@ def test_fbprophet():
     assert len(pm.forecast) > 0
     assert pm.y_true.shape[0] == pm.y_true.shape[0]
     assert isinstance(fig, plotly.graph_objects.Figure)
+
+
+def test_window_generator():
+    df = pd.DataFrame(np.random.randint(0, 100, 100), columns=["Cases"])
+
+    n = len(df)
+    train_df = df[0 : int(n * 0.4)]
+    val_df = df[int(n * 0.4) : int(n * 0.7)]
+    test_df = df[int(n * 0.7) :]
+
+    single_step_window = WindowGenerator(
+        input_width=1,
+        label_width=1,
+        shift=1,
+        train_df=train_df,
+        val_df=val_df,
+        test_df=test_df,
+        label_columns=["Cases"],
+    )
+
+    assert single_step_window.total_window_size == 2
+    assert isinstance(single_step_window.train, tf.data.Dataset)
