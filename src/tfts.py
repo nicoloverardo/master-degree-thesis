@@ -97,7 +97,7 @@ class WindowGenerator:
 
     def plot_plotly(
         self,
-        model,
+        model=None,
         plot_col="New_cases",
         template="plotly_white",
         output_image=False,
