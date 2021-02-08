@@ -703,8 +703,8 @@ def load_tf_page(covidpro_df, dpc_regioni_df):
     with st.spinner("Training model"):
         dense = tf.keras.Sequential(
             [
-                tf.keras.layers.Dense(units=64, activation='relu'),
-                tf.keras.layers.Dense(units=64, activation='relu'),
+                tf.keras.layers.Dense(units=64, activation="relu"),
+                tf.keras.layers.Dense(units=64, activation="relu"),
                 tf.keras.layers.Dense(units=1),
             ]
         )
@@ -797,7 +797,7 @@ def load_tf_page(covidpro_df, dpc_regioni_df):
         models = ["Baseline", "Dense", "LSTM"]
         arrays = [
             [item for item in models for i in range(2)],
-            ["Validation", "Test"]*len(models),
+            ["Validation", "Test"] * len(models),
         ]
         index = pd.MultiIndex.from_arrays(arrays, names=("Model", "Split"))
 
