@@ -633,6 +633,7 @@ def load_tf_page(covidpro_df, dpc_regioni_df):
     column_indices = {name: i for i, name in enumerate(df_date_idx.columns)}
 
     days_to_pred = st.sidebar.slider("Input length/Days to predict", 1, 30, 14)
+    shift = st.sidebar.slider("Shift", 1, days_to_pred, days_to_pred)
 
     n = len(df_date_idx)
     train_df = df_date_idx[0 : int(n * 0.4)]
@@ -659,7 +660,7 @@ def load_tf_page(covidpro_df, dpc_regioni_df):
     wide_window = WindowGenerator(
         input_width=days_to_pred,
         label_width=days_to_pred,
-        shift=days_to_pred,
+        shift=shift,
         train_df=train_df,
         val_df=val_df,
         test_df=test_df,
