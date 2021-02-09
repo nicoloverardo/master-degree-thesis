@@ -497,7 +497,7 @@ def plot_comparison_results_plotly(
     n_rows = n_tot // n_cols
     n_rows += n_tot % n_cols
 
-    fig = make_subplots(rows=n_rows, cols=n_cols)
+    fig = make_subplots(rows=n_rows, cols=n_cols, horizontal_spacing=0.17)
 
     for i, _ in enumerate(metrics):
         metric_index = metrics_names.index(metrics[i])
@@ -531,6 +531,10 @@ def plot_comparison_results_plotly(
             ),
             row=1,
             col=i + 1,
+        )
+
+        fig.update_yaxes(
+            title_text=metrics[i].replace("_", " ").capitalize(), row=1, col=i + 1
         )
 
     fig.update_layout(
