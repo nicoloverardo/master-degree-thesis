@@ -378,8 +378,8 @@ class ProphetModel:
         ax.xaxis.set_major_locator(locator)
         ax.xaxis.set_major_formatter(formatter)
 
-        ax.plot(self.df["ds"], self.y_true, label="Actual")
         ax.plot(self.df["ds"], self.y_pred, label="Predicted")
+        ax.scatter(self.df["ds"], self.y_true, label="Actual", color="black", s=3)
 
         ax.fill_between(
             self.df[-self.prediction_size :]["ds"],
