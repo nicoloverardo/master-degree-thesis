@@ -12,7 +12,7 @@
 
 Master thesis for the MSc in [Data Science and Economics](https://dse.cdl.unimi.it/en) at [Università degli Studi di Milano](https://www.unimi.it/en).
 
-The complete analysis can be found in the `notebooks` folder. The source code can be found in the `src` folder and in the `app.py` script.
+The complete analysis can be found in the `notebooks` folder. The source code for models, plot, etc. can be found in the `src` folder and in the `app.py` script.
 
 
 ## Usage
