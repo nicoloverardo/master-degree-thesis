@@ -1518,6 +1518,19 @@ def main():
     elif app_mode == "TensorFlow":
         load_tf_page(covidpro_df, dpc_regioni_df)
 
+    st.sidebar.header("About")
+    st.sidebar.markdown(
+        """
+        Made by Nicolò Verardo, 2021.
+        Licensed under [BSD 3-Clause]
+        (https://github.com/nicoloverardo/master-degree-thesis/blob/main/LICENSE)."""
+    )
+    st.sidebar.markdown(
+        """[![View source code on GitHub]
+        (https://img.shields.io/badge/Source%20code-grey?logo=github)]
+        (https://github.com/nicoloverardo/master-degree-thesis)"""
+    )
+
 
 if __name__ == "__main__":
     main()
