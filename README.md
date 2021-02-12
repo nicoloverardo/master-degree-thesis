@@ -12,6 +12,9 @@
 
 Master thesis for the MSc in [Data Science and Economics](https://dse.cdl.unimi.it/en) at [Università degli Studi di Milano](https://www.unimi.it/en).
 
+The complete analysis can be found in the `notebooks` folder. The source code can be found in the `src` folder and in the `app.py` script.
+
+
 ## Usage
 While the work is still in progress, you can see a preview of the dashboard by clicking on the badge "Open in Streamlit" below
 
