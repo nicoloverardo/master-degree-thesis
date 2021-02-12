@@ -16,11 +16,11 @@ The complete analysis can be found in the `notebooks` folder. The source code fo
 
 
 ## Usage
-While the work is still in progress, you can see a preview of the dashboard by clicking on the badge "Open in Streamlit" below
+You can see a preview of the dashboard by clicking on the badge "Open in Streamlit" below
 
 [![Open in Streamlit](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://dse-thesis-verardo.herokuapp.com/)
 
-or you can run a pre-alpha version of the dashboard on your machine by executing:
+or you can run the development version of the dashboard on your machine by executing:
 ```bash
 $ git clone https://github.com/nicoloverardo/master-degree-thesis.git
 $ cd master-degree-thesis
