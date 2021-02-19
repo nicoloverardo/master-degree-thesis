@@ -371,7 +371,13 @@ class ProphetModel:
 
         return fig
 
-    def plot(self, figsize=(8, 5)):
+    def plot(
+        self,
+        figsize=(8, 5),
+        ylabel="Number of individuals",
+        zoom=False,
+        rect=[0.63, 0.6, 0.25, 0.25],
+    ):
         fig, ax = plt.subplots(figsize=figsize)
         locator = mdates.AutoDateLocator(minticks=3)
         formatter = mdates.ConciseDateFormatter(locator)
@@ -395,5 +401,33 @@ class ProphetModel:
         if self.cap is not None:
             ax.hline(self.cap, linestyle="dashed", color="b")
 
-        ax.legend()
+        plt.legend()
+        plt.ylabel(ylabel)
+
+        if zoom:
+            ax_new = fig.add_axes(rect)
+            ax_new.plot(
+                self.df[-self.prediction_size :]["ds"],
+                self.y_pred[-self.prediction_size :],
+                label="Predicted",
+            )
+            ax_new.scatter(
+                self.df[-self.prediction_size :]["ds"],
+                self.y_true[-self.prediction_size :],
+                label="Actual",
+                color="black",
+                s=3,
+            )
+
+            ax_new.fill_between(
+                self.df[-self.prediction_size :]["ds"],
+                self.forecast.yhat_lower[-self.prediction_size :],
+                self.forecast.yhat_upper[-self.prediction_size :],
+                alpha=0.15,
+            )
+            locator = mdates.AutoDateLocator(minticks=2, maxticks=5)
+            formatter = mdates.ConciseDateFormatter(locator)
+            ax_new.xaxis.set_major_locator(locator)
+            ax_new.xaxis.set_major_formatter(formatter)
+
         plt.show()
