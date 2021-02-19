@@ -1498,9 +1498,10 @@ def main():
     )
 
     st.sidebar.title("Menu")
-    app_mode = st.sidebar.selectbox(
-        "Please select a page",
-        ["Homepage", "Data Exploration", "Time Series", "SIRD", "TensorFlow"],
+
+    app_mode = st.sidebar.radio(
+        "Go to:",
+        ["Homepage", "Data Exploration", "Time Series", "SIRD", "TensorFlow"]
     )
 
     with st.spinner("Loading data"):
