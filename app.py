@@ -3,6 +3,8 @@ import pandas as pd
 import streamlit as st
 import datetime
 
+import lmfit
+
 from pathlib import Path
 from PIL import Image
 
@@ -12,7 +14,7 @@ from statsmodels.tsa.holtwinters import ExponentialSmoothing
 from statsmodels.tsa.statespace.sarimax import SARIMAX
 from statsmodels.tsa.stattools import acf, pacf
 
-from src.utils import load_data
+from src.utils import load_data, get_region_pop
 from src.plots import (
     ac_plot,
     anomalies_plot,
@@ -28,7 +30,7 @@ from src.plots import (
     trend_corr_plot,
     discsid_param_plot,
 )
-from src.sird import DeterministicSird, sird
+from src.sird import DeterministicSird, sird, Model
 from src.ts import decompose_ts, adf_test_result, kpss_test_result
 from fbprophet import Prophet
 from fbprophet.plot import plot_plotly
@@ -834,6 +836,7 @@ def load_sird_page(covidpro_df, dpc_regioni_df, pop_prov_df, prov_list_df):
     data_column = "data"
     prov_df = prov_list_df
     column = "totale_positivi"
+    traces_visibility = [True, "legendonly", True]
 
     if area_radio == "Regional":
         area_selectbox = st.sidebar.selectbox(
@@ -842,6 +845,8 @@ def load_sird_page(covidpro_df, dpc_regioni_df, pop_prov_df, prov_list_df):
             int((dpc_regioni_df.denominazione_regione == "Piemonte").argmax()),
             key="area_selectbox_reg",
         )
+
+        N = get_region_pop(area_selectbox, pop_prov_df, prov_df)
     else:
         area_selectbox = st.sidebar.selectbox(
             "Province:",
@@ -856,6 +861,11 @@ def load_sird_page(covidpro_df, dpc_regioni_df, pop_prov_df, prov_list_df):
         data_column = "Date"
         prov_df = None
         column = "New_cases"
+
+        traces_visibility = ["legendonly"] + [True] * 2
+        N = pop_prov_df.loc[
+            (pop_prov_df.Territorio == area_selectbox) & (pop_prov_df.Eta == "Total")
+        ]["Value"].values[0]
 
     # ---------------
     # Continuous SIRD
@@ -873,6 +883,11 @@ def load_sird_page(covidpro_df, dpc_regioni_df, pop_prov_df, prov_list_df):
     alpha_value = col3.slider("Death rate", 0.001, 1.0, 0.01)
     gamma_value = col3.slider("Recovery rate", 0.001, 1.0, 1 / 7)
 
+    st.text("")
+    st.text("")
+
+    param_est_button = col2.button("Estimate parameters")
+
     # Compute SIRD
     with st.spinner("Training continuous SIRD"):
         sirsol = compute_sird(
@@ -887,8 +902,93 @@ def load_sird_page(covidpro_df, dpc_regioni_df, pop_prov_df, prov_list_df):
             gamma_value,
         )
 
-        S, I, R, D = sirsol
+        if param_est_button:
+            mapping = {
+                "New_cases": 2,
+                "Curr_pos_cases": 2,
+                "Tot_deaths": 4,
+                "Deaths": 4,
+                "Infected": 2,
+                "nuovi_positivi": 2,
+                "totale_positivi": 2,
+                "deceduti_giorni": 4,
+                "deceduti": 4,
+            }
 
+            def fitter(x, R_0_start, k, x0, R_0_end, alpha, gamma):
+                ret = Model(days, N, R_0_start, k, x0, R_0_end, alpha, gamma)
+                return ret[mapping[column]][x]
+
+            def get_model(
+                province,
+                compart,
+                data_df,
+                pop_df,
+                N,
+                params_init_min_max=None,
+                query="20200603 > Date",
+                outbreak_shift=0,
+                window=7,
+            ):
+                data = data_df.query("20200603 > " + data_column)
+                data = data.loc[(data[group_column] == area_selectbox), compart]
+
+                if compart in [
+                    "New_cases",
+                    "Deaths",
+                    "nuovi_positivi",
+                    "deceduti_giorno",
+                ]:
+                    data = data.rolling(window).mean().fillna(0)
+
+                # {parameter: (initial guess, min value, max value)}
+                if params_init_min_max is None:
+                    params_init_min_max = {
+                        "R_0_start": (3.5, 1.0, 6),
+                        "k": (0.3, 0.01, 5.0),
+                        "x0": (20, 0, 100),
+                        "R_0_end": (0.9, 0.01, 3.5),
+                        "alpha": (0.1, 0.00000001, 1),
+                        "gamma": (1 / 7, 0.00000001, 1),
+                    }
+
+                days = outbreak_shift + len(data)
+
+                if outbreak_shift >= 0:
+                    y_data = np.concatenate((np.zeros(outbreak_shift), data))
+
+                # [0, 1, ..., days]
+                x_data = np.linspace(0, days - 1, days, dtype=int)
+
+                mod = lmfit.Model(fitter)
+
+                for kwarg, (init, mini, maxi) in params_init_min_max.items():
+                    mod.set_param_hint(
+                        str(kwarg), value=init, min=mini, max=maxi, vary=True
+                    )
+
+                params = mod.make_params()
+
+                return mod, params, y_data, x_data, days
+
+            mod, params, y_data, x_data, days = get_model(
+                area_selectbox, column, data_df, pop_prov_df, N
+            )
+            result = mod.fit(y_data, params, method="leastsq", x=x_data)
+
+            sirsol = compute_sird(
+                area_selectbox,
+                pop_prov_df,
+                prov_df,
+                result.best_values["R_0_start"],
+                result.best_values["R_0_end"],
+                result.best_values["k"],
+                result.best_values["x0"],
+                result.best_values["alpha"],
+                result.best_values["gamma"],
+            )
+
+        S, I, R, D = sirsol
         times = list(range(sirsol.shape[1]))
 
         # SIRD plot
@@ -920,7 +1020,7 @@ def load_sird_page(covidpro_df, dpc_regioni_df, pop_prov_df, prov_list_df):
                 modes=modes,
                 blend_legend=False,
                 output_image=False,
-                traces_visibility=["legendonly"] + [True] * 2,
+                traces_visibility=traces_visibility,
                 template="plotly_white",
                 output_figure=True,
                 horiz_legend=True,
@@ -934,9 +1034,14 @@ def load_sird_page(covidpro_df, dpc_regioni_df, pop_prov_df, prov_list_df):
         rmse = mean_squared_error(data[1], data[2], squared=False)
 
         with st.beta_expander("Show metrics"):
-            st.info("MAE: " + str(np.round(mae, 3)))
-            st.info("MSE: " + str(np.round(mse, 3)))
-            st.info("RMSE: " + str(np.round(rmse, 3)))
+            st.text("MAE: " + str(np.round(mae, 3)))
+            st.text("MSE: " + str(np.round(mse, 3)))
+            st.text("RMSE: " + str(np.round(rmse, 3)))
+
+            if param_est_button:
+                st.text("")
+
+                st.text(result.fit_report())
 
     st.text("")
     st.text("")
@@ -1500,8 +1605,7 @@ def main():
     st.sidebar.title("Menu")
 
     app_mode = st.sidebar.radio(
-        "Go to:",
-        ["Homepage", "Data Exploration", "Time Series", "SIRD", "TensorFlow"]
+        "Go to:", ["Homepage", "Data Exploration", "Time Series", "SIRD", "TensorFlow"]
     )
 
     with st.spinner("Loading data"):
