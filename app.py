@@ -733,11 +733,15 @@ def load_tf_page(covidpro_df, dpc_regioni_df):
             st.text("")
 
             Path("results").mkdir(parents=True, exist_ok=True)
-            _ = tf.keras.utils.plot_model(
-                dense, to_file="results/dense.png", show_shapes=True
-            )
-            image = Image.open("results/dense.png")
-            st.image(image, width=400)
+            try:
+                _ = tf.keras.utils.plot_model(
+                    dense, to_file="results/dense.png", show_shapes=True
+                )
+
+                image = Image.open("results/dense.png")
+                st.image(image, width=400)
+            except Exception:
+                st.warning("Cannot show model architecture plot")
 
     st.text("")
     st.text("")
@@ -776,12 +780,15 @@ def load_tf_page(covidpro_df, dpc_regioni_df):
             st.text("")
 
             Path("results").mkdir(parents=True, exist_ok=True)
-            _ = tf.keras.utils.plot_model(
-                lstm_model, to_file="results/lstm.png", show_shapes=True
-            )
+            try:
+                _ = tf.keras.utils.plot_model(
+                    lstm_model, to_file="results/lstm.png", show_shapes=True
+                )
 
-            image = Image.open("results/lstm.png")
-            st.image(image, width=400)
+                image = Image.open("results/lstm.png")
+                st.image(image, width=400)
+            except Exception:
+                st.warning("Cannot show model architecture plot")
 
     st.text("")
     st.text("")
