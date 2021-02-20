@@ -872,8 +872,20 @@ def load_sird_page(covidpro_df, dpc_regioni_df, pop_prov_df, prov_list_df):
     # ---------------
 
     st.header("Continuous SIRD")
+    st.write(
+        """
+        Here you can either manually choose the values for
+        the parameters of this SIRD model, or you can
+        automatically estimate them. If you choose automatic
+        estimation, be aware that:
 
-    # Sird parameters
+        1. The sliders below will not reflect the new optimized value
+        2. You can optimize the values only for one compartment at time
+        """
+    )
+
+    # Manual parameters
+    st.subheader("Parameters - manual selection")
     col1, col2, col3 = st.beta_columns(3)
 
     r0_start = col1.slider("R0 start", 1.0, 6.0, 2.0)
@@ -883,10 +895,31 @@ def load_sird_page(covidpro_df, dpc_regioni_df, pop_prov_df, prov_list_df):
     alpha_value = col3.slider("Death rate", 0.001, 1.0, 0.01)
     gamma_value = col3.slider("Recovery rate", 0.001, 1.0, 1 / 7)
 
-    st.text("")
-    st.text("")
+    # Auto estimation
+    st.subheader("Parameters - auto estimation")
+    col1, col2 = st.beta_columns(2)
+    compart = col1.selectbox(
+        "Compartment:",
+        ["Infected", "Deaths"],
+        0,
+        key="comp_param",
+    )
 
-    param_est_button = col2.button("Estimate parameters")
+    if is_regional:
+        if compart == "Infected":
+            column = "totale_positivi"
+        else:
+            column = "deceduti"
+    else:
+        if compart == "Infected":
+            column = "New_cases"
+        else:
+            column = "Tot_deaths"
+            traces_visibility = [True, "legendonly", True]
+
+    col2.text("")
+    col2.text("")
+    param_est_button = col2.button("Optimize")
 
     # Compute SIRD
     with st.spinner("Training continuous SIRD"):
@@ -920,13 +953,9 @@ def load_sird_page(covidpro_df, dpc_regioni_df, pop_prov_df, prov_list_df):
                 return ret[mapping[column]][x]
 
             def get_model(
-                province,
                 compart,
                 data_df,
-                pop_df,
-                N,
                 params_init_min_max=None,
-                query="20200603 > Date",
                 outbreak_shift=0,
                 window=7,
             ):
@@ -972,7 +1001,7 @@ def load_sird_page(covidpro_df, dpc_regioni_df, pop_prov_df, prov_list_df):
                 return mod, params, y_data, x_data, days
 
             mod, params, y_data, x_data, days = get_model(
-                area_selectbox, column, data_df, pop_prov_df, N
+                column, data_df, outbreak_shift=0
             )
             result = mod.fit(y_data, params, method="leastsq", x=x_data)
 
@@ -1006,15 +1035,20 @@ def load_sird_page(covidpro_df, dpc_regioni_df, pop_prov_df, prov_list_df):
             use_container_width=True,
         )
 
-        names, title, data, modes = data_sird_plot(
-            data_df, column, I, area_selectbox, is_regional
+        if compart == "Infected":
+            comp_array = I
+        else:
+            comp_array = D
+
+        names, _, data, modes = data_sird_plot(
+            data_df, column, comp_array, area_selectbox, is_regional
         )
 
         # Comparison SIRD plot
         st.plotly_chart(
             general_plot(
                 t=times,
-                title="SIRD infected comparison",
+                title="Comparison with real data - " + compart,
                 data=data,
                 names=names,
                 modes=modes,
@@ -1084,8 +1118,8 @@ def load_sird_page(covidpro_df, dpc_regioni_df, pop_prov_df, prov_list_df):
         st.plotly_chart(
             general_plot(
                 t=real_df["data"],
-                title="Daily infected of " + area_selectbox,
-                data=[real_df["nuovi_positivi"].values, res["nuovi_positivi"].values],
+                title="Cumulative infected of " + area_selectbox,
+                data=[real_df["totale_positivi"].values, res["totale_positivi"].values],
                 names=["Real", "Prediction"],
                 modes=["markers", "lines"],
                 blend_legend=False,
@@ -1119,12 +1153,12 @@ def load_sird_page(covidpro_df, dpc_regioni_df, pop_prov_df, prov_list_df):
             use_container_width=True,
         )
 
-        # Cumulative infected
+        # Recovered
         st.plotly_chart(
             general_plot(
                 t=real_df["data"],
-                title="Total positives of " + area_selectbox,
-                data=[real_df["totale_positivi"].values, res["totale_positivi"].values],
+                title="Cumulative recovered of " + area_selectbox,
+                data=[real_df["dimessi_guariti"].values, res["dimessi_guariti"].values],
                 names=["Real", "Prediction"],
                 modes=["markers", "lines"],
                 blend_legend=False,
@@ -1134,6 +1168,7 @@ def load_sird_page(covidpro_df, dpc_regioni_df, pop_prov_df, prov_list_df):
                 horiz_legend=True,
                 template="plotly_white",
                 prediction_size=days_to_predict,
+                pred_label_top=False,
             ),
             use_container_width=True,
         )
@@ -1188,10 +1223,6 @@ def load_sird_page(covidpro_df, dpc_regioni_df, pop_prov_df, prov_list_df):
                 "Average MSE: "
                 + str(np.round(np.mean([mse_tot_pos, mse_deaths, mse_rec]), 2))
             )
-
-    st.text("")
-    st.text("")
-    st.subheader("🏗 Page under construction")
 
 
 def load_eda(covidpro_df, dpc_regioni_df, icu_df):
