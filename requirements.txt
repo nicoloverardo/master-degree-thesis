@@ -12,4 +12,5 @@ matplotlib==3.3.2
 wget==3.2
 streamlit==0.73.1
 scikit_learn==0.24.1
+lmfit==1.0.1
 pmdarima==1.8.0
