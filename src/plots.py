@@ -388,7 +388,7 @@ def custom_plot(
 
     if horiz_legend:
         fig.update_layout(
-            legend=dict(orientation="h", yanchor="top", xanchor="center", x=0.5, y=-0.2)
+            legend=dict(orientation="h", yanchor="top", xanchor="center", x=0.5, y=-0.3)
         )
 
     return fig
