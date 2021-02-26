@@ -563,11 +563,6 @@ def load_ts_page(covidpro_df, dpc_regioni_df):
 
             st.dataframe(forecast)
 
-    st.write("")
-    st.write("")
-    st.write("")
-    st.subheader("🏗 Page under construction")
-
 
 def load_tf_page(covidpro_df, dpc_regioni_df):
     """Neural Networks with TensorFlow page"""
