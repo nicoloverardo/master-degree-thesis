@@ -1634,9 +1634,7 @@ def main():
         page_title="Master Degree Thesis - Verardo", page_icon="🎓", layout="centered"
     )
 
-    st.title(
-        "COVID-19 prediction in Italy at regional and provincial level"
-    )
+    st.title("COVID-19 prediction in Italy at regional and provincial level")
 
     st.write("")
     st.write("")
