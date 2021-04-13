@@ -1,5 +1,5 @@
 numpy==1.19.5
-Cython==0.29.21
+Cython==0.29.17
 pystan==2.19.1.1
 convertdate==2.2.0
 tensorflow==2.4.1
