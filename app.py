@@ -294,6 +294,14 @@ def load_homepage():
         'check "Show app in wide mode" and finally click on "Save".'
     )
 
+    st.write("")
+
+    st.write(
+        "To switch between Light and Dark mode, please click on"
+        'the top-right hamburger menu icon ☰, then click on "Settings"'
+        'and finally, under "Theme", you can toogle between Dark or Light mode.'
+    )
+
 
 def load_ts_page(covidpro_df, dpc_regioni_df):
     """Time series analysis and forecast page"""
@@ -816,10 +824,6 @@ def load_tf_page(covidpro_df, dpc_regioni_df):
             index=index,
         )
         st.dataframe(df)
-
-    st.text("")
-    st.text("")
-    st.subheader("🏗 Page under construction")
 
 
 def load_sird_page(covidpro_df, dpc_regioni_df, pop_prov_df, prov_list_df):
@@ -1631,9 +1635,13 @@ def main():
     )
 
     st.title(
-        "A dashboard for COVID-19 prediction in Italy "
-        "at regional and provincial level"
+        "COVID-19 prediction in Italy at regional and provincial level"
     )
+
+    st.write("")
+    st.write("")
+    st.write("")
+    st.write("")
 
     st.sidebar.title("Menu")
 
