@@ -18,7 +18,8 @@ The complete analysis can be found in the `notebooks` folder. The source code fo
 ## Usage
 You can see a preview of the dashboard by clicking on the badge "Open in Streamlit" below
 
-[![Open in Streamlit](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://dse-thesis-verardo.herokuapp.com/)
+[![Open in Streamlit](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://dse-thesis-verardo.streamlit.app/)
+
 
 or you can run the development version of the dashboard on your machine by executing:
 ```bash
